@@ -650,29 +650,19 @@
         }
 
         // Sample data
-        const outlets = [
-            { id: 1, code: 'JKJSTT1', name: 'APOTEK ALPRO TEBET TIMUR', am: 'JESIKA SILITONGA' },
-            { id: 2, code: 'JKJSTT2', name: 'APOTEK ALPRO TEBET BARAT', am: 'JESIKA SILITONGA' },
-            { id: 3, code: 'JKJRSP1', name: 'APOTEK ALPRO RASUNA', am: 'JESIKA SILITONGA' },
-            { id: 4, code: 'JKJRSP2', name: 'APOTEK ALPRO RASAMALA', am: 'JESIKA SILITONGA' },
-            { id: 5, code: 'JBBSOC1', name: 'APOTEK ALPRO OLYMPIC CIKARANG', am: 'ADE IRMA SEPTIANI AIDHA' },
-            { id: 6, code: 'JKJTOM1', name: 'APOTEK ALPRO TOMANG', am: 'HANNA DOLI KABAN' },
-            { id: 7, code: 'JKJBEL1', name: 'APOTEK ALPRO BELLEZA', am: 'HANNA DOLI KABAN' },
-            { id: 8, code: 'JKJGOV1', name: 'APOTEK ALPRO GOLDEN VIENNA', am: 'HANNA DOLI KABAN' },
-            { id: 9, code: 'JKJSUT1', name: 'APOTEK ALPRO SUTERA UTAMA', am: 'HANNA DOLI KABAN' },
-            { id: 10, code: 'JKJSUK1', name: 'APOTEK ALPRO SUNTER KEMAYORAN', am: 'HANNA DOLI KABAN' },
-            { id: 11, code: 'JKJBTS1', name: 'APOTEK ALPRO BINTARO SEKTOR 9', am: 'DESI ARIANI' },
-            { id: 12, code: 'JKJVER1', name: 'APOTEK ALPRO VERSAILLES', am: 'DESI ARIANI' },
-            { id: 13, code: 'JKJBOL1', name: 'APOTEK ALPRO BOLSENA ILAGGO', am: 'DESI ARIANI' },
-            { id: 14, code: 'JKJGRA1', name: 'APOTEK ALPRO GRAHA RAYA', am: 'DESI ARIANI' },
-            { id: 15, code: 'JKJKAL1', name: 'APOTEK ALPRO KALIBATA CITY', am: 'DESI ARIANI' },
-            { id: 16, code: 'JKJGRE1', name: 'APOTEK ALPRO GREENVILLE', am: 'YUNI ASTUTI' },
-            { id: 17, code: 'JKJMAN1', name: 'APOTEK ALPRO MANGGA BESAR', am: 'YUNI ASTUTI' },
-            { id: 18, code: 'JKJBAN1', name: 'APOTEK ALPRO BANJAR WIJAYA', am: 'YUNI ASTUTI' },
-            { id: 19, code: 'JKJBT21', name: 'APOTEK ALPRO BINTARO SEKTOR 2', am: 'YUNI ASTUTI' },
-            { id: 20, code: 'JKJREM1', name: 'APOTEK ALPRO REMPOA RAYA', am: 'YUNI ASTUTI' },
-            { id: 21, code: 'JKJGED1', name: 'APOTEK ALPRO GEDUNG HIJAU', am: 'DINI MARLINA' }
+        // Generate outlets from Google Sheets outlet codes - showing first 30 for demo
+        const outletCodes = [
+            'JKJSTT1', 'JKJSVR1', 'JKJBTM1', 'JKJSBZ1', 'BTTSGV1', 'BTTSSU1', 'JKJUSK1', 'BTTSB91', 'BTTSVS1', 'BTTGBI1',
+            'BTTSGR1', 'JKJSTB1', 'JKJSKC1', 'JKJBGV1', 'JKJPMB1', 'BTTGBW1', 'BTTSB21', 'JKJSRR1', 'JKJSGH1', 'JBBSOC1',
+            'JBBGCV1', 'JBDPAU1', 'JBDPMR1', 'JBBSMT1', 'BTTGEK1', 'JBDPSW1', 'JKJTTH1', 'JKJSRD1', 'JKJBRS1', 'JBBGCC1'
         ];
+
+        const outlets = outletCodes.map((code, index) => ({
+            id: index + 1,
+            code: code,
+            name: `APOTEK ALPRO ${code}`,
+            am: 'SYSTEM AM'
+        }));
 
         const templates = [
             {

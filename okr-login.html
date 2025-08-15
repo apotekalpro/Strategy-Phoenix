@@ -227,30 +227,30 @@
 
     <script>
         // Mock data structure - in production, this would come from Google Sheets API
-        const outletCredentials = {
-            // From Google Sheets - Column A (user) and Column D (password)
-            'JKJSTT1': { password: 'Alpro@123', outletName: 'APOTEK ALPRO TEBET TIMUR', am: 'JESIKA SILITONGA' },
-            'JKJSTT2': { password: 'Alpro@123', outletName: 'APOTEK ALPRO TEBET BARAT', am: 'JESIKA SILITONGA' },
-            'JKJRSP1': { password: 'Alpro@123', outletName: 'APOTEK ALPRO RASUNA', am: 'JESIKA SILITONGA' },
-            'JKJRSP2': { password: 'Alpro@123', outletName: 'APOTEK ALPRO RASAMALA', am: 'JESIKA SILITONGA' },
-            'JBBSOC1': { password: 'Alpro@123', outletName: 'APOTEK ALPRO OLYMPIC CIKARANG', am: 'ADE IRMA SEPTIANI AIDHA' },
-            'JKJTOM1': { password: 'Alpro@123', outletName: 'APOTEK ALPRO TOMANG', am: 'HANNA DOLI KABAN' },
-            'JKJBEL1': { password: 'Alpro@123', outletName: 'APOTEK ALPRO BELLEZA', am: 'HANNA DOLI KABAN' },
-            'JKJGOV1': { password: 'Alpro@123', outletName: 'APOTEK ALPRO GOLDEN VIENNA', am: 'HANNA DOLI KABAN' },
-            'JKJSUT1': { password: 'Alpro@123', outletName: 'APOTEK ALPRO SUTERA UTAMA', am: 'HANNA DOLI KABAN' },
-            'JKJSUK1': { password: 'Alpro@123', outletName: 'APOTEK ALPRO SUNTER KEMAYORAN', am: 'HANNA DOLI KABAN' },
-            'JKJBTS1': { password: 'Alpro@123', outletName: 'APOTEK ALPRO BINTARO SEKTOR 9', am: 'DESI ARIANI' },
-            'JKJVER1': { password: 'Alpro@123', outletName: 'APOTEK ALPRO VERSAILLES', am: 'DESI ARIANI' },
-            'JKJBOL1': { password: 'Alpro@123', outletName: 'APOTEK ALPRO BOLSENA ILAGGO', am: 'DESI ARIANI' },
-            'JKJGRA1': { password: 'Alpro@123', outletName: 'APOTEK ALPRO GRAHA RAYA', am: 'DESI ARIANI' },
-            'JKJKAL1': { password: 'Alpro@123', outletName: 'APOTEK ALPRO KALIBATA CITY', am: 'DESI ARIANI' },
-            'JKJGRE1': { password: 'Alpro@123', outletName: 'APOTEK ALPRO GREENVILLE', am: 'YUNI ASTUTI' },
-            'JKJMAN1': { password: 'Alpro@123', outletName: 'APOTEK ALPRO MANGGA BESAR', am: 'YUNI ASTUTI' },
-            'JKJBAN1': { password: 'Alpro@123', outletName: 'APOTEK ALPRO BANJAR WIJAYA', am: 'YUNI ASTUTI' },
-            'JKJBT21': { password: 'Alpro@123', outletName: 'APOTEK ALPRO BINTARO SEKTOR 2', am: 'YUNI ASTUTI' },
-            'JKJREM1': { password: 'Alpro@123', outletName: 'APOTEK ALPRO REMPOA RAYA', am: 'YUNI ASTUTI' },
-            'JKJGED1': { password: 'Alpro@123', outletName: 'APOKET ALPRO GEDUNG HIJAU', am: 'DINI MARLINA' }
-        };
+        // Complete outlet credentials from Google Sheets - Column A (user) and Column D (password)
+        // All outlets use password: 'Alpro@123'
+        const outletCodes = [
+            'JKJSTT1', 'JKJSVR1', 'JKJBTM1', 'JKJSBZ1', 'BTTSGV1', 'BTTSSU1', 'JKJUSK1', 'BTTSB91', 'BTTSVS1', 'BTTGBI1',
+            'BTTSGR1', 'JKJSTB1', 'JKJSKC1', 'JKJBGV1', 'JKJPMB1', 'BTTGBW1', 'BTTSB21', 'JKJSRR1', 'JKJSGH1', 'JBBSOC1',
+            'JBBGCV1', 'JBDPAU1', 'JBDPMR1', 'JBBSMT1', 'BTTGEK1', 'JBDPSW1', 'JKJTTH1', 'JKJSRD1', 'JKJBRS1', 'JBBGCC1',
+            'JKJBKB1', 'JKJPDA1', 'JBBSJB1', 'BTTSRF1', 'JKJUSI1', 'JBBGRC1', 'JKJSTS1', 'JBBSTR1', 'BTTSRG1', 'BTTGSG1',
+            'JKJPMS1', 'JKJBDK1', 'BTTSRC1', 'JKJUBR1', 'JBBGBR1', 'JKJSPI1', 'JKJTPL1', 'JKJTLB1', 'JKJUTG1', 'JKJSRS1',
+            'BTTGBR1', 'JBBSSR1', 'JBBGWU1', 'JKJSRM1', 'BTTSBB1', 'JBBSKP1', 'JKJBHI1', 'JBBSGI1', 'BTTGPS1', 'JKJUWB1',
+            'JBBSGW1', 'BTTGPP1', 'JKJSKR1', 'JKJPSB1', 'JKJBHL1', 'JKJSBI1', 'JBBGLW1', 'JKJUPI1', 'JKJBCS1', 'JBBSCC1',
+            'BTTGCR1', 'JKJSMP1', 'JKJUGK1', 'JKJPTR1', 'JKJSTM1', 'JKJTPD1', 'JBBGWC1', 'BTTGGB1', 'JKJUGB1', 'JKJUGN1',
+            'JKJPMP1', 'JBBSLH1', 'BTTGKS1', 'JBBGBD1', 'JBBSJM1', 'JKJBSC1', 'JKJBPL1', 'BTTSWS1', 'BTTGPB1', 'JKJSKB1',
+            'JKJSPR1', 'JBBGPS1', 'JBBGTC1', 'JBDPRK1', 'JKJTMM1', 'JBBSKH1', 'BTTGLK1', 'BTTSDL1', 'JKJUMJ1'
+        ];
+
+        // Generate outlet credentials object
+        const outletCredentials = {};
+        outletCodes.forEach(code => {
+            outletCredentials[code] = {
+                password: 'Alpro@123',
+                outletName: `APOTEK ALPRO ${code}`,
+                am: 'SYSTEM AM'
+            };
+        });
 
         const hqCredentials = {
             // From Google Sheets - Column B (email) and Column H (password)
@@ -258,7 +258,7 @@
                 password: 'HQPass123', 
                 name: 'JESIKA SILITONGA', 
                 role: 'AM',
-                outlets: ['JKJSTT1', 'JKJSTT2', 'JKJRSP1', 'JKJRSP2'] // outlets they manage
+                outlets: ['JKJSTT1', 'JKJSVR1', 'JKJSTB1', 'JKJRSP1', 'JKJRSP2'] // outlets they manage
             },
             'ade.aidha@alpro.com': { 
                 password: 'HQPass123', 
@@ -270,19 +270,19 @@
                 password: 'HQPass123', 
                 name: 'HANNA DOLI KABAN', 
                 role: 'AM',
-                outlets: ['JKJTOM1', 'JKJBEL1', 'JKJGOV1', 'JKJSUT1', 'JKJSUK1'] // outlets they manage
+                outlets: ['JKJBTM1', 'JKJSBZ1', 'BTTSGV1', 'BTTSSU1', 'JKJUSK1'] // outlets they manage
             },
             'desi.ariani@alpro.com': { 
                 password: 'HQPass123', 
                 name: 'DESI ARIANI', 
                 role: 'AM',
-                outlets: ['JKJBTS1', 'JKJVER1', 'JKJBOL1', 'JKJGRA1', 'JKJKAL1'] // outlets they manage
+                outlets: ['BTTSB91', 'BTTSVS1', 'BTTGBI1', 'BTTSGR1', 'JKJSKC1'] // outlets they manage
             },
             'yuni.astuti@alpro.com': { 
                 password: 'HQPass123', 
                 name: 'YUNI ASTUTI', 
                 role: 'AM',
-                outlets: ['JKJGRE1', 'JKJMAN1', 'JKJBAN1', 'JKJBT21', 'JKJREM1'] // outlets they manage
+                outlets: ['JKJBGV1', 'JKJPMB1', 'JKJBAN1', 'JKJBT21', 'JKJREM1'] // outlets they manage
             },
             'dini.marlina@alpro.com': { 
                 password: 'HQPass123', 
