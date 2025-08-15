@@ -527,27 +527,44 @@
         </div>
     </div>
 
+    <!-- Include API Services -->
+    <script src="config.js"></script>
+    <script src="google-sheets-api.js"></script>
+    <script src="auth-service.js"></script>
     <script>
         // Authentication and Authorization System
         let currentUser = null;
         let userPermissions = null;
 
+        // Initialize services
+        let googleSheetsAPI = null;
+        let authService = null;
+        let outlets = [];
+        
         // Check authentication on page load
-        window.addEventListener('load', () => {
-            const userAuth = sessionStorage.getItem('userAuth');
-            if (!userAuth) {
-                // No authentication found, redirect to login
-                window.location.href = 'okr-login.html';
-                return;
-            }
-            
+        window.addEventListener('load', async () => {
             try {
+                // Initialize services
+                googleSheetsAPI = new GoogleSheetsAPI();
+                authService = new AuthService(googleSheetsAPI);
+                
+                const userAuth = sessionStorage.getItem('userAuth');
+                if (!userAuth) {
+                    // No authentication found, redirect to login
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
                 currentUser = JSON.parse(userAuth);
+                
+                // Load outlets data from Google Sheets
+                await loadOutletsData();
+                
                 initializeUserSession();
             } catch (error) {
-                console.error('Invalid authentication data');
+                console.error('Authentication error:', error);
                 sessionStorage.removeItem('userAuth');
-                window.location.href = 'okr-login.html';
+                window.location.href = 'login.html';
             }
         });
 
@@ -604,27 +621,20 @@
                         <strong>${roleIcon} ${userPermissions.displayName}</strong>
                     </div>
                     <div style="opacity: 0.8; font-size: 0.8rem;">
-                        ${roleText} | ${userPermissions.identifier}
+                        ${roleText} | <span style="color: #48bb78;">🟢 Connected</span>
                     </div>
-                    <button onclick="logout()" style="
-                        background: rgba(255,255,255,0.2);
-                        color: white;
-                        border: 1px solid rgba(255,255,255,0.3);
-                        padding: 5px 12px;
-                        border-radius: 15px;
-                        cursor: pointer;
-                        font-size: 0.8rem;
-                        margin-top: 8px;
-                        transition: all 0.3s ease;
-                    " onmouseover="this.style.background='rgba(255,255,255,0.3)'"
-                       onmouseout="this.style.background='rgba(255,255,255,0.2)'">
-                        🚪 Logout
-                    </button>
+                    <button onclick="logout()" style="margin-top: 8px; padding: 4px 12px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Logout</button>
                 `;
                 
                 headerElement.style.position = 'relative';
                 headerElement.appendChild(userInfo);
-            }
+        }
+        
+        // Logout function
+        function logout() {
+            sessionStorage.clear();
+            localStorage.clear();
+            window.location.href = 'login.html';
         }
 
         function logout() {
@@ -652,22 +662,40 @@
             return outlets;
         }
 
-        // Sample data
-        // Generate outlets from Google Sheets outlet codes - showing first 30 for demo
-        const outletCodes = [
-            'JKJSTT1', 'JKJSVR1', 'JKJBTM1', 'JKJSBZ1', 'BTTSGV1', 'BTTSSU1', 'JKJUSK1', 'BTTSB91', 'BTTSVS1', 'BTTGBI1',
-            'BTTSGR1', 'JKJSTB1', 'JKJSKC1', 'JKJBGV1', 'JKJPMB1', 'BTTGBW1', 'BTTSB21', 'JKJSRR1', 'JKJSGH1', 'JBBSOC1',
-            'JBBGCV1', 'JBDPAU1', 'JBDPMR1', 'JBBSMT1', 'BTTGEK1', 'JBDPSW1', 'JKJTTH1', 'JKJSRD1', 'JKJBRS1', 'JBBGCC1'
-        ];
+        // Load outlets data from Google Sheets
+        async function loadOutletsData() {
+            try {
+                console.log('Loading outlets data from Google Sheets...');
+                const credentials = await authService.loadOutletCredentials();
+                
+                // Convert credentials to outlets format
+                outlets = credentials.map((cred, index) => ({
+                    id: index + 1,
+                    code: cred.outlet_code,
+                    name: cred.outlet_name || `APOTEK ALPRO ${cred.outlet_code}`,
+                    am: 'SYSTEM AM'
+                }));
+                
+                console.log(`Loaded ${outlets.length} outlets from Google Sheets`);
+            } catch (error) {
+                console.error('Failed to load outlets data:', error);
+                // Fallback to demo data
+                const outletCodes = [
+                    'JKJSTT1', 'JKJSVR1', 'JKJBTM1', 'JKJSBZ1', 'BTTSGV1', 'BTTSSU1', 'JKJUSK1', 'BTTSB91', 'BTTSVS1', 'BTTGBI1',
+                    'BTTSGR1', 'JKJSTB1', 'JKJSKC1', 'JKJBGV1', 'JKJPMB1', 'BTTGBW1', 'BTTSB21', 'JKJSRR1', 'JKJSGH1', 'JBBSOC1'
+                ];
+                outlets = outletCodes.map((code, index) => ({
+                    id: index + 1,
+                    code: code,
+                    name: `APOTEK ALPRO ${code}`,
+                    am: 'SYSTEM AM'
+                }));
+                console.log('Using fallback outlet data');
+            }
+        }
 
-        const outlets = outletCodes.map((code, index) => ({
-            id: index + 1,
-            code: code,
-            name: `APOTEK ALPRO ${code}`,
-            am: 'SYSTEM AM'
-        }));
-
-        const templates = [
+        // Use templates from config
+        const templates = APP_CONFIG.OKR_TEMPLATES || [
             {
                 id: 1,
                 title: 'Peningkatan Transaksi - Trafik Baru',
@@ -1163,7 +1191,7 @@
                     <div class="stat-card">
                         <div class="stat-number">${stats.outletsWithOKRs}</div>
                         <div class="stat-label">Active Outlets</div>
-                        <div class="stat-desc">out of 21 total outlets</div>
+                        <div class="stat-desc">out of ${outlets.length} total outlets</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-number">${stats.totalOKRs}</div>

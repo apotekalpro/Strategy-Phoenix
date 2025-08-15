@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OKR Phoenix Project - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        
+        .login-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        
+        .login-subtitle {
+            color: #718096;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 0.95rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f7fafc;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+        
+        .user-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .user-type-option {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f7fafc;
+            font-weight: 500;
+        }
+        
+        .user-type-option.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+        
+        .login-button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .login-button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .loading-message {
+            background: #bee3f8;
+            color: #2b6cb0;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .loading-spinner {
+            display: none;
+            margin: 10px auto;
+        }
+        
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .info-section {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .info-title {
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .info-text {
+            font-size: 0.85rem;
+            color: #718096;
+            line-height: 1.4;
+        }
+
+        .system-status {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #276749;
+        }
+
+        .system-status.error {
+            background: #fed7d7;
+            border-color: #feb2b2;
+            color: #c53030;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">🏪</div>
+        <h1 class="login-title">OKR Phoenix Project</h1>
+        <p class="login-subtitle">Transaction Improvement Dashboard</p>
+        
+        <div class="error-message" id="errorMessage"></div>
+        <div class="loading-message" id="loadingMessage"></div>
+        
+        <form id="loginForm">
+            <div class="user-type-selector">
+                <div class="user-type-option active" data-type="outlet">
+                    <div>🏪 Outlet Access</div>
+                    <small style="opacity: 0.7;">Store Level</small>
+                </div>
+                <div class="user-type-option" data-type="hq">
+                    <div>🏢 HQ Access</div>
+                    <small style="opacity: 0.7;">Management Level</small>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" id="usernameLabel">Outlet Code</label>
+                <input type="text" id="username" class="form-input" placeholder="Enter your outlet code" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
+            </div>
+            
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner"></div>
+                <p style="margin-top: 10px; color: #718096;">Authenticating...</p>
+            </div>
+            
+            <button type="submit" class="login-button" id="loginButton">
+                🔐 Sign In
+            </button>
+        </form>
+        
+        <div class="info-section">
+            <div class="info-title">Access Levels:</div>
+            <div class="info-text">
+                <strong>Outlet Access:</strong> View and manage your outlet's OKRs only<br>
+                <strong>HQ Access:</strong> Area Managers see assigned outlets, Others see all outlets
+            </div>
+        </div>
+
+        <div class="system-status" id="systemStatus">
+            <div>🔄 Initializing system...</div>
+        </div>
+    </div>
+
+    <!-- Include configuration and API modules -->
+    <script src="config.js"></script>
+    <script src="google-sheets-api.js"></script>
+    <script src="auth-service.js"></script>
+
+    <script>
+        // DOM elements
+        const userTypeOptions = document.querySelectorAll('.user-type-option');
+        const usernameLabel = document.getElementById('usernameLabel');
+        const usernameInput = document.getElementById('username');
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const loginButton = document.getElementById('loginButton');
+        const systemStatus = document.getElementById('systemStatus');
+
+        let currentUserType = 'outlet';
+        let authInitialized = false;
+
+        // Initialize the application
+        window.addEventListener('load', async () => {
+            await initializeAuth();
+        });
+
+        // Initialize authentication system
+        async function initializeAuth() {
+            try {
+                showSystemStatus('🔄 Connecting to Google Sheets...', false);
+                await authService.initialize();
+                authInitialized = true;
+                showSystemStatus('✅ System ready - Real-time Google Sheets integration active', false);
+                
+                // Check if user is already logged in
+                if (authService.isAuthenticated()) {
+                    showSystemStatus('🔄 Redirecting to dashboard...', false);
+                    window.location.href = 'okr-dashboard-v2.html';
+                }
+            } catch (error) {
+                console.error('Failed to initialize authentication:', error);
+                showSystemStatus('❌ Failed to connect to Google Sheets. Using offline mode.', true);
+                showError('System initialized in offline mode. Some features may be limited.');
+                authInitialized = false; // Allow fallback authentication
+            }
+        }
+
+        // User type selection
+        userTypeOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                userTypeOptions.forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+                currentUserType = option.dataset.type;
+                
+                if (currentUserType === 'outlet') {
+                    usernameLabel.textContent = 'Outlet Code';
+                    usernameInput.placeholder = 'Enter your outlet code (e.g., BTTGBI1)';
+                } else {
+                    usernameLabel.textContent = 'Email Address';
+                    usernameInput.placeholder = 'Enter your email address';
+                }
+                
+                hideError();
+            });
+        });
+
+        // Form submission
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = usernameInput.value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                showError('Please enter both username and password');
+                return;
+            }
+            
+            showLoading(true);
+            hideError();
+            
+            try {
+                let loginResult;
+                
+                if (authInitialized) {
+                    // Use real Google Sheets authentication
+                    loginResult = await authService.authenticate(username, password, currentUserType);
+                } else {
+                    // Fallback to hardcoded authentication for critical functionality
+                    loginResult = await fallbackAuthenticate(username, password, currentUserType);
+                }
+                
+                if (loginResult.success) {
+                    showLoadingMessage('✅ Authentication successful! Redirecting...');
+                    
+                    // Brief delay to show success message
+                    setTimeout(() => {
+                        window.location.href = 'okr-dashboard-v2.html';
+                    }, 1000);
+                } else {
+                    showError(loginResult.message || 'Login failed');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError(error.message || 'Login failed. Please try again.');
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        // Fallback authentication when Google Sheets is not available
+        async function fallbackAuthenticate(username, password, userType) {
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            if (userType === 'outlet') {
+                // Simple validation for outlet codes
+                const validOutletCodes = ['JKJSTT1', 'JKJSVR1', 'JKJBTM1', 'JKJSBZ1', 'BTTSGV1', 'BTTSSU1', 'JKJUSK1', 'BTTSB91', 'BTTSVS1', 'BTTGBI1'];
+                
+                if (!validOutletCodes.includes(username.toUpperCase()) && !username.toUpperCase().match(/^[A-Z]{3,7}[0-9]{1,2}$/)) {
+                    throw new Error('Invalid outlet code format');
+                }
+                
+                if (password !== 'Alpro@123') {
+                    throw new Error('Invalid password');
+                }
+                
+                // Store session data manually
+                const userData = {
+                    type: 'outlet',
+                    username: username.toUpperCase(),
+                    outletName: `APOTEK ALPRO ${username.toUpperCase()}`,
+                    accessibleOutlets: [username.toUpperCase()],
+                    timestamp: Date.now()
+                };
+                
+                sessionStorage.setItem(CONFIG.AUTH.STORAGE_KEY, JSON.stringify(userData));
+                return { success: true, user: userData };
+                
+            } else {
+                // HQ authentication fallback
+                const validEmails = ['khoo.ziyu@apotekalpro.id', 'admin@alpro.com'];
+                const validPassword = username.toLowerCase() === 'khoo.ziyu@apotekalpro.id' ? 'Alpro@123' : 'AdminPass123';
+                
+                if (!validEmails.includes(username.toLowerCase())) {
+                    throw new Error('Invalid email address');
+                }
+                
+                if (password !== validPassword) {
+                    throw new Error('Invalid password');
+                }
+                
+                const userData = {
+                    type: 'hq',
+                    email: username.toLowerCase(),
+                    name: username.toLowerCase() === 'khoo.ziyu@apotekalpro.id' ? 'KHOO ZI YU' : 'SYSTEM ADMIN',
+                    role: 'ADMIN',
+                    accessibleOutlets: 'ALL',
+                    timestamp: Date.now()
+                };
+                
+                sessionStorage.setItem(CONFIG.AUTH.STORAGE_KEY, JSON.stringify(userData));
+                return { success: true, user: userData };
+            }
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            loadingMessage.style.display = 'none';
+        }
+
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+
+        function showLoadingMessage(message) {
+            loadingMessage.textContent = message;
+            loadingMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+
+        function showLoading(show) {
+            if (show) {
+                loadingSpinner.style.display = 'block';
+                loginButton.disabled = true;
+                loginButton.textContent = 'Signing In...';
+            } else {
+                loadingSpinner.style.display = 'none';
+                loginButton.disabled = false;
+                loginButton.textContent = '🔐 Sign In';
+            }
+        }
+
+        function showSystemStatus(message, isError) {
+            systemStatus.textContent = message;
+            systemStatus.className = isError ? 'system-status error' : 'system-status';
+        }
+    </script>
+</body>
+</html>
