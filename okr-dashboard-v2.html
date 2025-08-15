@@ -528,29 +528,150 @@
     </div>
 
     <script>
+        // Authentication and Authorization System
+        let currentUser = null;
+        let userPermissions = null;
+
+        // Check authentication on page load
+        window.addEventListener('load', () => {
+            const userAuth = sessionStorage.getItem('userAuth');
+            if (!userAuth) {
+                // No authentication found, redirect to login
+                window.location.href = 'okr-login.html';
+                return;
+            }
+            
+            try {
+                currentUser = JSON.parse(userAuth);
+                initializeUserSession();
+            } catch (error) {
+                console.error('Invalid authentication data');
+                sessionStorage.removeItem('userAuth');
+                window.location.href = 'okr-login.html';
+            }
+        });
+
+        function initializeUserSession() {
+            // Setup user permissions based on role
+            if (currentUser.type === 'outlet') {
+                userPermissions = {
+                    canViewAllOutlets: false,
+                    accessibleOutlets: currentUser.accessibleOutlets,
+                    canManageOKRs: true,
+                    userType: 'outlet',
+                    displayName: currentUser.outletName,
+                    identifier: currentUser.username
+                };
+            } else if (currentUser.type === 'hq') {
+                userPermissions = {
+                    canViewAllOutlets: currentUser.accessibleOutlets === 'ALL',
+                    accessibleOutlets: currentUser.accessibleOutlets === 'ALL' ? [] : currentUser.accessibleOutlets,
+                    canManageOKRs: true,
+                    userType: 'hq',
+                    displayName: currentUser.name,
+                    identifier: currentUser.email,
+                    role: currentUser.role
+                };
+            }
+            
+            // Update header with user info and render dashboard
+            updateUserInterface();
+            renderDashboard();
+        }
+
+        function updateUserInterface() {
+            // Add user info to header
+            const headerElement = document.querySelector('.header');
+            if (headerElement && currentUser) {
+                const userInfo = document.createElement('div');
+                userInfo.style.cssText = `
+                    position: absolute;
+                    top: 20px;
+                    right: 40px;
+                    text-align: right;
+                    font-size: 0.9rem;
+                `;
+                
+                const roleIcon = currentUser.type === 'outlet' ? '🏪' : '🏢';
+                const roleText = currentUser.type === 'outlet' ? 'Outlet User' : 
+                               (currentUser.role === 'ADMIN' ? 'System Admin' : 'Area Manager');
+                
+                userInfo.innerHTML = `
+                    <div style="margin-bottom: 5px;">
+                        <strong>${roleIcon} ${userPermissions.displayName}</strong>
+                    </div>
+                    <div style="opacity: 0.8; font-size: 0.8rem;">
+                        ${roleText} | ${userPermissions.identifier}
+                    </div>
+                    <button onclick="logout()" style="
+                        background: rgba(255,255,255,0.2);
+                        color: white;
+                        border: 1px solid rgba(255,255,255,0.3);
+                        padding: 5px 12px;
+                        border-radius: 15px;
+                        cursor: pointer;
+                        font-size: 0.8rem;
+                        margin-top: 8px;
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.3)'"
+                       onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                        🚪 Logout
+                    </button>
+                `;
+                
+                headerElement.style.position = 'relative';
+                headerElement.appendChild(userInfo);
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('userAuth');
+            window.location.href = 'okr-login.html';
+        }
+
+        function filterOutletsByPermission(outlets) {
+            if (userPermissions.canViewAllOutlets) {
+                return outlets; // Admin sees all
+            }
+            
+            if (currentUser.type === 'outlet') {
+                // Outlet users only see their own outlet
+                return outlets.filter(outlet => 
+                    userPermissions.accessibleOutlets.includes(outlet.code)
+                );
+            } else if (currentUser.type === 'hq' && currentUser.role === 'AM') {
+                // Area Managers only see their assigned outlets
+                return outlets.filter(outlet => 
+                    userPermissions.accessibleOutlets.includes(outlet.code)
+                );
+            }
+            
+            return outlets;
+        }
+
         // Sample data
         const outlets = [
-            { id: 1, code: '0001', name: 'APOTEK ALPRO TEBET TIMUR' },
-            { id: 2, code: '0002', name: 'APOTEK ALPRO VETERAN RAYA' },
-            { id: 3, code: '0003', name: 'APOTEK ALPRO TOMANG' },
-            { id: 4, code: '0004', name: 'APOTEK ALPRO BELLEZA' },
-            { id: 5, code: '0005', name: 'APOTEK ALPRO GOLDEN VIENNA' },
-            { id: 6, code: '0006', name: 'APOTEK ALPRO SUTERA UTAMA' },
-            { id: 7, code: '0007', name: 'APOTEK ALPRO SUNTER KEMAYORAN' },
-            { id: 8, code: '0008', name: 'APOTEK ALPRO BINTARO SEKTOR 9' },
-            { id: 9, code: '0009', name: 'APOTEK ALPRO VERSAILLES' },
-            { id: 10, code: '0010', name: 'APOTEK ALPRO BOLSENA ILAGGO' },
-            { id: 11, code: '0012', name: 'APOTEK ALPRO GRAHA RAYA' },
-            { id: 12, code: '0013', name: 'APOTEK ALPRO TEBET BARAT' },
-            { id: 13, code: '0014', name: 'APOTEK ALPRO KALIBATA CITY' },
-            { id: 14, code: '0015', name: 'APOTEK ALPRO GREENVILLE' },
-            { id: 15, code: '0016', name: 'APOTEK ALPRO MANGGA BESAR' },
-            { id: 16, code: '0017', name: 'APOTEK ALPRO BANJAR WIJAYA' },
-            { id: 17, code: '0018', name: 'APOTEK ALPRO BINTARO SEKTOR 2' },
-            { id: 18, code: '0019', name: 'APOTEK ALPRO REMPOA RAYA' },
-            { id: 19, code: '0020', name: 'APOTEK ALPRO GEDUNG HIJAU' },
-            { id: 20, code: '0021', name: 'APOTEK ALPRO OLYMPIC CIKARANG' },
-            { id: 21, code: '0022', name: 'APOTEK ALPRO CIMANGGU VILLA' }
+            { id: 1, code: 'JKJSTT1', name: 'APOTEK ALPRO TEBET TIMUR', am: 'JESIKA SILITONGA' },
+            { id: 2, code: 'JKJSTT2', name: 'APOTEK ALPRO TEBET BARAT', am: 'JESIKA SILITONGA' },
+            { id: 3, code: 'JKJRSP1', name: 'APOTEK ALPRO RASUNA', am: 'JESIKA SILITONGA' },
+            { id: 4, code: 'JKJRSP2', name: 'APOTEK ALPRO RASAMALA', am: 'JESIKA SILITONGA' },
+            { id: 5, code: 'JBBSOC1', name: 'APOTEK ALPRO OLYMPIC CIKARANG', am: 'ADE IRMA SEPTIANI AIDHA' },
+            { id: 6, code: 'JKJTOM1', name: 'APOTEK ALPRO TOMANG', am: 'HANNA DOLI KABAN' },
+            { id: 7, code: 'JKJBEL1', name: 'APOTEK ALPRO BELLEZA', am: 'HANNA DOLI KABAN' },
+            { id: 8, code: 'JKJGOV1', name: 'APOTEK ALPRO GOLDEN VIENNA', am: 'HANNA DOLI KABAN' },
+            { id: 9, code: 'JKJSUT1', name: 'APOTEK ALPRO SUTERA UTAMA', am: 'HANNA DOLI KABAN' },
+            { id: 10, code: 'JKJSUK1', name: 'APOTEK ALPRO SUNTER KEMAYORAN', am: 'HANNA DOLI KABAN' },
+            { id: 11, code: 'JKJBTS1', name: 'APOTEK ALPRO BINTARO SEKTOR 9', am: 'DESI ARIANI' },
+            { id: 12, code: 'JKJVER1', name: 'APOTEK ALPRO VERSAILLES', am: 'DESI ARIANI' },
+            { id: 13, code: 'JKJBOL1', name: 'APOTEK ALPRO BOLSENA ILAGGO', am: 'DESI ARIANI' },
+            { id: 14, code: 'JKJGRA1', name: 'APOTEK ALPRO GRAHA RAYA', am: 'DESI ARIANI' },
+            { id: 15, code: 'JKJKAL1', name: 'APOTEK ALPRO KALIBATA CITY', am: 'DESI ARIANI' },
+            { id: 16, code: 'JKJGRE1', name: 'APOTEK ALPRO GREENVILLE', am: 'YUNI ASTUTI' },
+            { id: 17, code: 'JKJMAN1', name: 'APOTEK ALPRO MANGGA BESAR', am: 'YUNI ASTUTI' },
+            { id: 18, code: 'JKJBAN1', name: 'APOTEK ALPRO BANJAR WIJAYA', am: 'YUNI ASTUTI' },
+            { id: 19, code: 'JKJBT21', name: 'APOTEK ALPRO BINTARO SEKTOR 2', am: 'YUNI ASTUTI' },
+            { id: 20, code: 'JKJREM1', name: 'APOTEK ALPRO REMPOA RAYA', am: 'YUNI ASTUTI' },
+            { id: 21, code: 'JKJGED1', name: 'APOTEK ALPRO GEDUNG HIJAU', am: 'DINI MARLINA' }
         ];
 
         const templates = [
@@ -736,13 +857,23 @@
         ];
 
         function calculateStats() {
-            const outletsWithOKRs = Object.keys(allOKRS).filter(outletId => allOKRS[outletId].length > 0).length;
-            const totalOKRs = Object.values(allOKRS).reduce((sum, okrs) => sum + okrs.length, 0);
-            const completedOKRs = Object.values(allOKRS).reduce((sum, okrs) => 
-                sum + okrs.filter(okr => okr.progress === 100).length, 0);
+            // Filter stats based on user permissions
+            const allowedOutlets = filterOutletsByPermission(outlets);
+            const allowedOutletIds = allowedOutlets.map(outlet => outlet.id.toString());
+            
+            const outletsWithOKRs = Object.keys(allOKRS)
+                .filter(outletId => allOKRS[outletId].length > 0 && allowedOutletIds.includes(outletId))
+                .length;
+                
+            const allowedOKRs = Object.keys(allOKRS)
+                .filter(outletId => allowedOutletIds.includes(outletId))
+                .map(outletId => allOKRS[outletId])
+                .flat();
+                
+            const totalOKRs = allowedOKRs.length;
+            const completedOKRs = allowedOKRs.filter(okr => okr.progress === 100).length;
             const avgProgress = totalOKRs > 0 ? 
-                Math.round(Object.values(allOKRS).reduce((sum, okrs) => 
-                    sum + okrs.reduce((okrSum, okr) => okrSum + okr.progress, 0), 0) / totalOKRs) : 0;
+                Math.round(allowedOKRs.reduce((sum, okr) => sum + okr.progress, 0) / totalOKRs) : 0;
 
             return { outletsWithOKRs, totalOKRs, completedOKRs, avgProgress };
         }
@@ -751,9 +882,17 @@
             const stats = calculateStats();
             const app = document.getElementById('app');
             
-            // Get outlets with OKRs for display
+            // Filter outlets based on user permissions
+            const allowedOutlets = filterOutletsByPermission(outlets);
+            
+            // Get outlets with OKRs for display (filtered by permissions)
             const outletsWithOKRs = Object.keys(allOKRS)
-                .filter(outletId => allOKRS[outletId].length > 0)
+                .filter(outletId => {
+                    const hasOKRs = allOKRS[outletId].length > 0;
+                    const outlet = outlets.find(o => o.id === parseInt(outletId));
+                    const isAllowed = allowedOutlets.some(allowedOutlet => allowedOutlet.id === outlet?.id);
+                    return hasOKRs && isAllowed;
+                })
                 .map(outletId => {
                     const outlet = outlets.find(o => o.id === parseInt(outletId));
                     const okrs = allOKRS[outletId];
@@ -898,7 +1037,7 @@
                     <div class="outlet-selector">
                         <select class="outlet-dropdown" onchange="selectOutletFromDropdown(this.value)">
                             <option value="">Choose an outlet to start OKR tracking...</option>
-                            ${outlets.filter(outlet => !allOKRS[outlet.id] || allOKRS[outlet.id].length === 0).map(outlet => `
+                            ${allowedOutlets.filter(outlet => !allOKRS[outlet.id] || allOKRS[outlet.id].length === 0).map(outlet => `
                                 <option value="${outlet.id}">
                                     ${outlet.code} - ${outlet.name} (No OKRs yet)
                                 </option>
@@ -925,7 +1064,16 @@
         }
 
         function selectOutlet(outletId) {
-            selectedOutlet = outlets.find(o => o.id === parseInt(outletId));
+            const outlet = outlets.find(o => o.id === parseInt(outletId));
+            const allowedOutlets = filterOutletsByPermission(outlets);
+            
+            // Check if user has permission to access this outlet
+            if (!allowedOutlets.some(allowedOutlet => allowedOutlet.id === outlet?.id)) {
+                alert('You do not have permission to access this outlet.');
+                return;
+            }
+            
+            selectedOutlet = outlet;
             currentView = 'outlet';
             renderOutletDashboard();
         }
@@ -1339,7 +1487,7 @@
         }
 
         // Initialize the app
-        renderDashboard();
+        // Dashboard will be rendered after authentication check
     </script>
 </body>
 </html>
