@@ -574,6 +574,9 @@
                 };
             }
             
+            // Load performance data and initialize outlets
+            loadPerformanceData();
+            
             // Update header with user info and render dashboard
             updateUserInterface();
             renderDashboard();
@@ -790,6 +793,168 @@
         let currentView = 'dashboard';
         let selectedOutlet = null;
         let allOKRS = {}; // Store OKRs by outlet ID
+
+        // Revenue and Transaction Tracking Data Structure
+        let outletPerformanceData = {};
+
+        // Initialize performance data for outlets
+        function initializePerformanceData(outletId) {
+            if (!outletPerformanceData[outletId]) {
+                outletPerformanceData[outletId] = {
+                    baseline: {
+                        revenue: 0,
+                        trano: 0,
+                        month: new Date().getMonth() + 1,
+                        year: new Date().getFullYear()
+                    },
+                    currentMonth: {
+                        revenue: {
+                            term1: 0, // 1-10th
+                            term2: 0, // 11-20th  
+                            term3: 0, // 21-30/31st
+                            total: 0
+                        },
+                        trano: {
+                            term1: 0,
+                            term2: 0,
+                            term3: 0,
+                            total: 0
+                        },
+                        month: new Date().getMonth() + 1,
+                        year: new Date().getFullYear()
+                    },
+                    growth: {
+                        revenue: 0,
+                        trano: 0
+                    }
+                };
+            }
+            return outletPerformanceData[outletId];
+        }
+
+        // Calculate growth percentage
+        function calculateGrowth(current, baseline) {
+            if (baseline === 0) return current > 0 ? 100 : 0;
+            return Math.round(((current - baseline) / baseline) * 100);
+        }
+
+        // Update performance data and recalculate growth
+        function updatePerformanceData(outletId, type, data) {
+            const performanceData = initializePerformanceData(outletId);
+            
+            if (type === 'baseline') {
+                performanceData.baseline = { ...performanceData.baseline, ...data };
+            } else if (type === 'current') {
+                // Update current month data
+                Object.keys(data).forEach(metric => {
+                    if (performanceData.currentMonth[metric]) {
+                        performanceData.currentMonth[metric] = { ...performanceData.currentMonth[metric], ...data[metric] };
+                        // Calculate total
+                        const terms = performanceData.currentMonth[metric];
+                        terms.total = terms.term1 + terms.term2 + terms.term3;
+                    }
+                });
+            }
+            
+            // Recalculate growth
+            performanceData.growth.revenue = calculateGrowth(
+                performanceData.currentMonth.revenue.total, 
+                performanceData.baseline.revenue
+            );
+            performanceData.growth.trano = calculateGrowth(
+                performanceData.currentMonth.trano.total, 
+                performanceData.baseline.trano
+            );
+            
+            // Save to localStorage
+            localStorage.setItem('outletPerformanceData', JSON.stringify(outletPerformanceData));
+        }
+
+        // Load performance data from localStorage
+        function loadPerformanceData() {
+            const saved = localStorage.getItem('outletPerformanceData');
+            if (saved) {
+                outletPerformanceData = JSON.parse(saved);
+            }
+        }
+
+        // Format currency for display
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+
+        // Update current month data
+        function updateCurrentMonthData() {
+            const outletId = selectedOutlet.id;
+            
+            const revenueData = {
+                revenue: {
+                    term1: parseFloat(document.getElementById('revenue-term1').value) || 0,
+                    term2: parseFloat(document.getElementById('revenue-term2').value) || 0,
+                    term3: parseFloat(document.getElementById('revenue-term3').value) || 0
+                },
+                trano: {
+                    term1: parseInt(document.getElementById('trano-term1').value) || 0,
+                    term2: parseInt(document.getElementById('trano-term2').value) || 0,
+                    term3: parseInt(document.getElementById('trano-term3').value) || 0
+                }
+            };
+            
+            updatePerformanceData(outletId, 'current', revenueData);
+            
+            // Show success message
+            showNotification('✅ Current month data updated successfully!', 'success');
+            
+            // Re-render the dashboard
+            renderOutletDashboard();
+        }
+
+        // Update baseline data
+        function updateBaselineData() {
+            const outletId = selectedOutlet.id;
+            
+            const baselineData = {
+                revenue: parseFloat(document.getElementById('baseline-revenue').value) || 0,
+                trano: parseInt(document.getElementById('baseline-trano').value) || 0
+            };
+            
+            updatePerformanceData(outletId, 'baseline', baselineData);
+            
+            // Show success message
+            showNotification('🎯 Baseline data set successfully!', 'success');
+            
+            // Re-render the dashboard
+            renderOutletDashboard();
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#48bb78' : type === 'error' ? '#e53e3e' : '#667eea'};
+                color: white;
+                padding: 15px 25px;
+                border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                z-index: 1000;
+                font-weight: 600;
+                max-width: 300px;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
         let recentActivities = [
             { outlet: 'Tebet Timur', action: 'Created new OKR', time: '2 hours ago', icon: '🎯' },
             { outlet: 'Veteran Raya', action: 'Completed action plan', time: '4 hours ago', icon: '✅' },
@@ -997,6 +1162,42 @@
                                         </div>
                                     `).join('')}
 
+                                    <!-- Performance Data -->
+                                    ${(() => {
+                                        const perfData = initializePerformanceData(outlet.id);
+                                        return `
+                                            <div style="margin-top: 15px; padding: 12px; background: linear-gradient(135deg, #f7fafc, #edf2f7); border-radius: 8px; border-left: 3px solid #38b2ac;">
+                                                <div style="font-size: 0.7rem; font-weight: 600; color: #2d3748; margin-bottom: 8px; text-align: center;">📊 Revenue & Transactions</div>
+                                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                                    <div style="text-align: center;">
+                                                        <div style="font-size: 0.75rem; font-weight: bold; color: #667eea;">
+                                                            ${perfData.currentMonth.revenue.total > 0 ? 
+                                                                (perfData.currentMonth.revenue.total / 1000000).toFixed(1) + 'M' : 
+                                                                '0'}
+                                                        </div>
+                                                        <div style="font-size: 0.6rem; color: #718096;">Revenue</div>
+                                                        <div style="font-size: 0.55rem; ${perfData.growth.revenue >= 0 ? 'color: #48bb78;' : 'color: #e53e3e;'}">
+                                                            ${perfData.growth.revenue >= 0 ? '↗' : '↘'} ${Math.abs(perfData.growth.revenue)}%
+                                                        </div>
+                                                    </div>
+                                                    <div style="text-align: center;">
+                                                        <div style="font-size: 0.75rem; font-weight: bold; color: #48bb78;">
+                                                            ${perfData.currentMonth.trano.total > 0 ? 
+                                                                (perfData.currentMonth.trano.total > 1000 ? 
+                                                                    (perfData.currentMonth.trano.total / 1000).toFixed(1) + 'K' : 
+                                                                    perfData.currentMonth.trano.total) : 
+                                                                '0'}
+                                                        </div>
+                                                        <div style="font-size: 0.6rem; color: #718096;">Transactions</div>
+                                                        <div style="font-size: 0.55rem; ${perfData.growth.trano >= 0 ? 'color: #48bb78;' : 'color: #e53e3e;'}">
+                                                            ${perfData.growth.trano >= 0 ? '↗' : '↘'} ${Math.abs(perfData.growth.trano)}%
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `;
+                                    })()}
+
                                     <!-- Summary Stats -->
                                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding-top: 12px; border-top: 1px solid #e2e8f0;">
                                         <div style="text-align: center;">
@@ -1077,6 +1278,9 @@
             const app = document.getElementById('app');
             const outletOKRs = allOKRS[selectedOutlet.id] || [];
             
+            // Initialize performance data for this outlet
+            const performanceData = initializePerformanceData(selectedOutlet.id);
+            
             let content = '';
             
             if (outletOKRs.length === 0) {
@@ -1139,7 +1343,154 @@
                     🏪 ${selectedOutlet.name} 
                     <span style="color: #718096; font-size: 1rem; font-weight: normal;">(${selectedOutlet.code})</span>
                 </h2>
+                
+                ${renderPerformanceTrackingSection(performanceData)}
+                
                 ${content}
+            `;
+        }
+
+        function renderPerformanceTrackingSection(performanceData) {
+            const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            
+            return `
+                <div style="background: white; padding: 30px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+                    <h3 style="color: #2d3748; margin-bottom: 25px; display: flex; align-items: center;">
+                        📊 Revenue & Transaction Tracking - ${currentMonth}
+                    </h3>
+                    
+                    <!-- Performance Summary Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                        <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 1.8rem; font-weight: bold; margin-bottom: 5px;">
+                                ${formatCurrency(performanceData.currentMonth.revenue.total)}
+                            </div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">Total Revenue</div>
+                            <div style="font-size: 0.8rem; margin-top: 5px; ${performanceData.growth.revenue >= 0 ? 'color: #90EE90;' : 'color: #FFB6C1;'}">
+                                ${performanceData.growth.revenue >= 0 ? '↗' : '↘'} ${Math.abs(performanceData.growth.revenue)}% vs Baseline
+                            </div>
+                        </div>
+                        
+                        <div style="background: linear-gradient(135deg, #48bb78, #38a169); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 1.8rem; font-weight: bold; margin-bottom: 5px;">
+                                ${performanceData.currentMonth.trano.total.toLocaleString()}
+                            </div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">Total Transactions</div>
+                            <div style="font-size: 0.8rem; margin-top: 5px; ${performanceData.growth.trano >= 0 ? 'color: #90EE90;' : 'color: #FFB6C1;'}">
+                                ${performanceData.growth.trano >= 0 ? '↗' : '↘'} ${Math.abs(performanceData.growth.trano)}% vs Baseline
+                            </div>
+                        </div>
+                        
+                        <div style="background: linear-gradient(135deg, #ed8936, #dd6b20); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 1.8rem; font-weight: bold; margin-bottom: 5px;">
+                                ${formatCurrency(performanceData.baseline.revenue)}
+                            </div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">Baseline Revenue</div>
+                        </div>
+                        
+                        <div style="background: linear-gradient(135deg, #9f7aea, #805ad5); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 1.8rem; font-weight: bold; margin-bottom: 5px;">
+                                ${performanceData.baseline.trano.toLocaleString()}
+                            </div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">Baseline Transactions</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Data Entry Forms -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px;">
+                        <!-- Current Month Data Entry -->
+                        <div>
+                            <h4 style="color: #2d3748; margin-bottom: 20px; padding: 15px; background: #f7fafc; border-radius: 8px; border-left: 4px solid #667eea;">
+                                📅 Current Month Entry
+                            </h4>
+                            
+                            <!-- Revenue Entry -->
+                            <div style="margin-bottom: 25px; padding: 20px; border: 2px solid #e2e8f0; border-radius: 10px;">
+                                <h5 style="color: #4a5568; margin-bottom: 15px;">💰 Revenue Entry</h5>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                                    <div>
+                                        <label style="display: block; font-size: 0.8rem; color: #718096; margin-bottom: 5px;">Term 1 (1-10th)</label>
+                                        <input type="number" id="revenue-term1" value="${performanceData.currentMonth.revenue.term1}" 
+                                               style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem;">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-size: 0.8rem; color: #718096; margin-bottom: 5px;">Term 2 (11-20th)</label>
+                                        <input type="number" id="revenue-term2" value="${performanceData.currentMonth.revenue.term2}" 
+                                               style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem;">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-size: 0.8rem; color: #718096; margin-bottom: 5px;">Term 3 (21-30/31st)</label>
+                                        <input type="number" id="revenue-term3" value="${performanceData.currentMonth.revenue.term3}" 
+                                               style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem;">
+                                    </div>
+                                </div>
+                                <div style="text-align: center; font-weight: bold; color: #667eea; background: #f7fafc; padding: 10px; border-radius: 6px;">
+                                    Total: ${formatCurrency(performanceData.currentMonth.revenue.total)}
+                                </div>
+                            </div>
+                            
+                            <!-- Transaction Entry -->
+                            <div style="margin-bottom: 25px; padding: 20px; border: 2px solid #e2e8f0; border-radius: 10px;">
+                                <h5 style="color: #4a5568; margin-bottom: 15px;">🛒 Transaction Entry</h5>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                                    <div>
+                                        <label style="display: block; font-size: 0.8rem; color: #718096; margin-bottom: 5px;">Term 1 (1-10th)</label>
+                                        <input type="number" id="trano-term1" value="${performanceData.currentMonth.trano.term1}" 
+                                               style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem;">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-size: 0.8rem; color: #718096; margin-bottom: 5px;">Term 2 (11-20th)</label>
+                                        <input type="number" id="trano-term2" value="${performanceData.currentMonth.trano.term2}" 
+                                               style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem;">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-size: 0.8rem; color: #718096; margin-bottom: 5px;">Term 3 (21-30/31st)</label>
+                                        <input type="number" id="trano-term3" value="${performanceData.currentMonth.trano.term3}" 
+                                               style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem;">
+                                    </div>
+                                </div>
+                                <div style="text-align: center; font-weight: bold; color: #48bb78; background: #f7fafc; padding: 10px; border-radius: 6px;">
+                                    Total: ${performanceData.currentMonth.trano.total.toLocaleString()}
+                                </div>
+                            </div>
+                            
+                            <button onclick="updateCurrentMonthData()" 
+                                    style="width: 100%; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                                💾 Update Current Month
+                            </button>
+                        </div>
+                        
+                        <!-- Baseline Data Entry -->
+                        <div>
+                            <h4 style="color: #2d3748; margin-bottom: 20px; padding: 15px; background: #f7fafc; border-radius: 8px; border-left: 4px solid #ed8936;">
+                                📊 Baseline Configuration
+                            </h4>
+                            
+                            <div style="padding: 20px; border: 2px solid #fed7d7; border-radius: 10px; background: #fffaf0;">
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; font-size: 0.9rem; color: #4a5568; margin-bottom: 8px; font-weight: 600;">💰 Baseline Revenue</label>
+                                    <input type="number" id="baseline-revenue" value="${performanceData.baseline.revenue}" 
+                                           style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem;">
+                                </div>
+                                
+                                <div style="margin-bottom: 25px;">
+                                    <label style="display: block; font-size: 0.9rem; color: #4a5568; margin-bottom: 8px; font-weight: 600;">🛒 Baseline Transactions</label>
+                                    <input type="number" id="baseline-trano" value="${performanceData.baseline.trano}" 
+                                           style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem;">
+                                </div>
+                                
+                                <button onclick="updateBaselineData()" 
+                                        style="width: 100%; background: linear-gradient(135deg, #ed8936, #dd6b20); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                                    🎯 Set Baseline
+                                </button>
+                                
+                                <div style="margin-top: 15px; padding: 10px; background: #e6fffa; border-left: 4px solid #38b2ac; border-radius: 4px; font-size: 0.85rem; color: #234e52;">
+                                    <strong>💡 Tip:</strong> Set your baseline once per month to track growth accurately.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             `;
         }
 
@@ -1476,8 +1827,28 @@
             renderDashboard();
         }
 
+        // Initialize performance data for demo outlets with sample data
+        function initializeDemoData() {
+            // Add some sample performance data for demonstration
+            updatePerformanceData(1, 'baseline', { revenue: 50000000, trano: 1200 });
+            updatePerformanceData(1, 'current', { 
+                revenue: { term1: 18000000, term2: 19000000, term3: 15000000 },
+                trano: { term1: 420, term2: 450, term3: 380 }
+            });
+            
+            updatePerformanceData(2, 'baseline', { revenue: 45000000, trano: 1000 });
+            updatePerformanceData(2, 'current', { 
+                revenue: { term1: 16000000, term2: 18000000, term3: 17000000 },
+                trano: { term1: 380, term2: 400, term3: 370 }
+            });
+        }
+
         // Initialize the app
         // Dashboard will be rendered after authentication check
+        // Initialize demo data on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            initializeDemoData();
+        });
     </script>
 </body>
 </html>
