@@ -4,7 +4,7 @@ const CONFIG = {
     GOOGLE_SHEETS: {
         // Main login credentials sheet
         OUTLET_LOGIN_SHEET_ID: '1wCvZ1WAlHAn-B8UPP5AUEPzQ5Auf84BJFeG48Hlo9wE',
-        OUTLET_LOGIN_RANGE: 'Sheet1!A:D', // Column A: outlet codes, Column D: passwords (fetches all rows)
+        OUTLET_LOGIN_RANGE: 'Sheet1!A1:D300', // Column A: outlet codes, Column D: passwords (fetches up to row 300 to ensure all data)
         
         // HQ login sheet (if separate sheet exists)
         HQ_LOGIN_SHEET_ID: '1wCvZ1WAlHAn-B8UPP5AUEPzQ5Auf84BJFeG48Hlo9wE',
