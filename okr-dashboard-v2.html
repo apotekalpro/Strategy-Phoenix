@@ -832,10 +832,62 @@
             return outletPerformanceData[outletId];
         }
 
-        // Calculate growth percentage
-        function calculateGrowth(current, baseline) {
+        // Calculate growth percentage with fair comparison
+        function calculateGrowth(current, baseline, comparisonType = 'forecast') {
             if (baseline === 0) return current > 0 ? 100 : 0;
-            return Math.round(((current - baseline) / baseline) * 100);
+            
+            let adjustedBaseline = baseline;
+            let adjustedCurrent = current;
+            
+            if (comparisonType === 'forecast') {
+                // Forecast current terms to full month for comparison
+                // If we have data for terms, estimate full month performance
+                adjustedCurrent = current; // Current is already the total
+            } else if (comparisonType === 'proportional') {
+                // Divide baseline proportionally based on active terms
+                // This would require knowing which terms have data
+                adjustedBaseline = baseline; // Keep baseline as is for now
+            }
+            
+            return Math.round(((adjustedCurrent - adjustedBaseline) / adjustedBaseline) * 100);
+        }
+
+        // Calculate fair growth comparison
+        function calculateFairGrowth(currentTerms, baseline) {
+            // Count how many terms have data (non-zero)
+            const activeTerms = Object.values(currentTerms).filter(term => term > 0).length;
+            const totalTerms = 3;
+            
+            if (activeTerms === 0) return 0;
+            if (baseline === 0) return currentTerms.total > 0 ? 100 : 0;
+            
+            // Method 1: Forecast to full month
+            let forecastedTotal = currentTerms.total;
+            if (activeTerms < totalTerms && activeTerms > 0) {
+                // Forecast based on average of active terms
+                const averagePerTerm = currentTerms.total / activeTerms;
+                forecastedTotal = averagePerTerm * totalTerms;
+            }
+            
+            // Method 2: Compare proportionally (divide baseline)
+            const proportionalBaseline = (baseline * activeTerms) / totalTerms;
+            const proportionalGrowth = Math.round(((currentTerms.total - proportionalBaseline) / proportionalBaseline) * 100);
+            
+            // Method 3: Full month forecast comparison
+            const forecastGrowth = Math.round(((forecastedTotal - baseline) / baseline) * 100);
+            
+            // Return object with different comparison methods
+            return {
+                current: currentTerms.total,
+                forecast: forecastedTotal,
+                proportionalBaseline: proportionalBaseline,
+                proportionalGrowth: proportionalGrowth,
+                forecastGrowth: forecastGrowth,
+                activeTerms: activeTerms,
+                // Use forecast method as default
+                growth: forecastGrowth,
+                method: activeTerms === totalTerms ? 'actual' : 'forecast'
+            };
         }
 
         // Update performance data and recalculate growth
@@ -856,15 +908,23 @@
                 });
             }
             
-            // Recalculate growth
-            performanceData.growth.revenue = calculateGrowth(
-                performanceData.currentMonth.revenue.total, 
+            // Recalculate growth using fair comparison
+            const revenueGrowth = calculateFairGrowth(
+                performanceData.currentMonth.revenue, 
                 performanceData.baseline.revenue
             );
-            performanceData.growth.trano = calculateGrowth(
-                performanceData.currentMonth.trano.total, 
+            const tranoGrowth = calculateFairGrowth(
+                performanceData.currentMonth.trano, 
                 performanceData.baseline.trano
             );
+            
+            // Store detailed growth data
+            performanceData.growth = {
+                revenue: revenueGrowth.growth,
+                trano: tranoGrowth.growth,
+                revenueDetails: revenueGrowth,
+                tranoDetails: tranoGrowth
+            };
             
             // Save to localStorage
             localStorage.setItem('outletPerformanceData', JSON.stringify(outletPerformanceData));
@@ -1178,6 +1238,7 @@
                                                         <div style="font-size: 0.6rem; color: #718096;">Revenue</div>
                                                         <div style="font-size: 0.55rem; ${perfData.growth.revenue >= 0 ? 'color: #48bb78;' : 'color: #e53e3e;'}">
                                                             ${perfData.growth.revenue >= 0 ? '↗' : '↘'} ${Math.abs(perfData.growth.revenue)}%
+                                                            ${perfData.growth.revenueDetails && perfData.growth.revenueDetails.method === 'forecast' ? '*' : ''}
                                                         </div>
                                                     </div>
                                                     <div style="text-align: center;">
@@ -1191,9 +1252,19 @@
                                                         <div style="font-size: 0.6rem; color: #718096;">Transactions</div>
                                                         <div style="font-size: 0.55rem; ${perfData.growth.trano >= 0 ? 'color: #48bb78;' : 'color: #e53e3e;'}">
                                                             ${perfData.growth.trano >= 0 ? '↗' : '↘'} ${Math.abs(perfData.growth.trano)}%
+                                                            ${perfData.growth.tranoDetails && perfData.growth.tranoDetails.method === 'forecast' ? '*' : ''}
                                                         </div>
                                                     </div>
                                                 </div>
+                                                ${(() => {
+                                                    const hasForecasted = (perfData.growth.revenueDetails && perfData.growth.revenueDetails.method === 'forecast') ||
+                                                                         (perfData.growth.tranoDetails && perfData.growth.tranoDetails.method === 'forecast');
+                                                    return hasForecasted ? `
+                                                        <div style="margin-top: 8px; font-size: 0.5rem; color: #718096; text-align: center; font-style: italic;">
+                                                            * Forecasted based on partial month data
+                                                        </div>
+                                                    ` : '';
+                                                })()}
                                             </div>
                                         `;
                                     })()}
@@ -1365,20 +1436,50 @@
                             <div style="font-size: 1.8rem; font-weight: bold; margin-bottom: 5px;">
                                 ${formatCurrency(performanceData.currentMonth.revenue.total)}
                             </div>
-                            <div style="font-size: 0.9rem; opacity: 0.9;">Total Revenue</div>
-                            <div style="font-size: 0.8rem; margin-top: 5px; ${performanceData.growth.revenue >= 0 ? 'color: #90EE90;' : 'color: #FFB6C1;'}">
-                                ${performanceData.growth.revenue >= 0 ? '↗' : '↘'} ${Math.abs(performanceData.growth.revenue)}% vs Baseline
-                            </div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">Current Revenue</div>
+                            ${(() => {
+                                const details = performanceData.growth.revenueDetails || {};
+                                const method = details.method || 'actual';
+                                const growth = performanceData.growth.revenue || 0;
+                                return `
+                                    <div style="font-size: 0.8rem; margin-top: 5px; ${growth >= 0 ? 'color: #90EE90;' : 'color: #FFB6C1;'}">
+                                        ${growth >= 0 ? '↗' : '↘'} ${Math.abs(growth)}% vs Baseline
+                                    </div>
+                                    <div style="font-size: 0.7rem; margin-top: 3px; opacity: 0.8;">
+                                        ${method === 'forecast' ? '(Forecasted to full month)' : '(Full month actual)'}
+                                    </div>
+                                    ${details.forecast && details.forecast !== details.current ? `
+                                        <div style="font-size: 0.65rem; margin-top: 2px; opacity: 0.7;">
+                                            Forecast: ${formatCurrency(details.forecast)}
+                                        </div>
+                                    ` : ''}
+                                `;
+                            })()}
                         </div>
                         
                         <div style="background: linear-gradient(135deg, #48bb78, #38a169); color: white; padding: 20px; border-radius: 12px; text-align: center;">
                             <div style="font-size: 1.8rem; font-weight: bold; margin-bottom: 5px;">
                                 ${performanceData.currentMonth.trano.total.toLocaleString()}
                             </div>
-                            <div style="font-size: 0.9rem; opacity: 0.9;">Total Transactions</div>
-                            <div style="font-size: 0.8rem; margin-top: 5px; ${performanceData.growth.trano >= 0 ? 'color: #90EE90;' : 'color: #FFB6C1;'}">
-                                ${performanceData.growth.trano >= 0 ? '↗' : '↘'} ${Math.abs(performanceData.growth.trano)}% vs Baseline
-                            </div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">Current Transactions</div>
+                            ${(() => {
+                                const details = performanceData.growth.tranoDetails || {};
+                                const method = details.method || 'actual';
+                                const growth = performanceData.growth.trano || 0;
+                                return `
+                                    <div style="font-size: 0.8rem; margin-top: 5px; ${growth >= 0 ? 'color: #90EE90;' : 'color: #FFB6C1;'}">
+                                        ${growth >= 0 ? '↗' : '↘'} ${Math.abs(growth)}% vs Baseline
+                                    </div>
+                                    <div style="font-size: 0.7rem; margin-top: 3px; opacity: 0.8;">
+                                        ${method === 'forecast' ? '(Forecasted to full month)' : '(Full month actual)'}
+                                    </div>
+                                    ${details.forecast && details.forecast !== details.current ? `
+                                        <div style="font-size: 0.65rem; margin-top: 2px; opacity: 0.7;">
+                                            Forecast: ${details.forecast.toLocaleString()}
+                                        </div>
+                                    ` : ''}
+                                `;
+                            })()}
                         </div>
                         
                         <div style="background: linear-gradient(135deg, #ed8936, #dd6b20); color: white; padding: 20px; border-radius: 12px; text-align: center;">
@@ -1486,6 +1587,10 @@
                                 
                                 <div style="margin-top: 15px; padding: 10px; background: #e6fffa; border-left: 4px solid #38b2ac; border-radius: 4px; font-size: 0.85rem; color: #234e52;">
                                     <strong>💡 Tip:</strong> Set your baseline once per month to track growth accurately.
+                                </div>
+                                
+                                <div style="margin-top: 10px; padding: 10px; background: #fef5e7; border-left: 4px solid #f6ad55; border-radius: 4px; font-size: 0.8rem; color: #744210;">
+                                    <strong>📊 Fair Comparison:</strong> When you have partial month data (1-2 terms), we forecast your full month performance for fair comparison with baseline.
                                 </div>
                             </div>
                         </div>
@@ -1829,18 +1934,28 @@
 
         // Initialize performance data for demo outlets with sample data
         function initializeDemoData() {
-            // Add some sample performance data for demonstration
+            // Outlet 1: Full month data (all 3 terms completed)
             updatePerformanceData(1, 'baseline', { revenue: 50000000, trano: 1200 });
             updatePerformanceData(1, 'current', { 
-                revenue: { term1: 18000000, term2: 19000000, term3: 15000000 },
-                trano: { term1: 420, term2: 450, term3: 380 }
+                revenue: { term1: 18000000, term2: 19000000, term3: 15000000 }, // Total: 52M
+                trano: { term1: 420, term2: 450, term3: 380 } // Total: 1250
             });
             
+            // Outlet 2: Partial month data (only 2 terms, showing forecasting)
             updatePerformanceData(2, 'baseline', { revenue: 45000000, trano: 1000 });
             updatePerformanceData(2, 'current', { 
-                revenue: { term1: 16000000, term2: 18000000, term3: 17000000 },
-                trano: { term1: 380, term2: 400, term3: 370 }
+                revenue: { term1: 16000000, term2: 18000000, term3: 0 }, // Total: 34M, Forecast: 51M
+                trano: { term1: 380, term2: 400, term3: 0 } // Total: 780, Forecast: 1170
             });
+            
+            // Outlet 3: Only 1 term data (showing extreme forecasting)
+            if (outlets.length > 2) {
+                updatePerformanceData(3, 'baseline', { revenue: 40000000, trano: 900 });
+                updatePerformanceData(3, 'current', { 
+                    revenue: { term1: 15000000, term2: 0, term3: 0 }, // Total: 15M, Forecast: 45M
+                    trano: { term1: 320, term2: 0, term3: 0 } // Total: 320, Forecast: 960
+                });
+            }
         }
 
         // Initialize the app
