@@ -53,7 +53,7 @@ A comprehensive OKR (Objectives and Key Results) tracking system for Apotek Alpr
 JKJSTT1, JKJSVR1, JKJBTM1, JKJSBZ1, BTTSGV1, BTTSSU1, JKJUSK1, 
 BTTSB91, BTTSVS1, BTTGBI1, BTTSGR1, JKJSTB1, JKJSKC1, JKJBGV1, 
 JKJPMB1, BTTGBW1, BTTSB21, JKJSRR1, JKJSGH1, JBBSOC1...
-(Total: 97 outlets)
+(Total: 148+ outlets - loaded dynamically from Google Sheets)
 ```
 
 ## 🔐 Login Credentials

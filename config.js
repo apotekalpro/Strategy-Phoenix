@@ -4,14 +4,17 @@ const CONFIG = {
     GOOGLE_SHEETS: {
         // Main login credentials sheet
         OUTLET_LOGIN_SHEET_ID: '1wCvZ1WAlHAn-B8UPP5AUEPzQ5Auf84BJFeG48Hlo9wE',
-        OUTLET_LOGIN_RANGE: 'Sheet1!A:D', // Column A: outlet codes, Column D: passwords
+        OUTLET_LOGIN_RANGE: 'Sheet1!A:D', // Column A: outlet codes, Column D: passwords (fetches all rows)
         
         // HQ login sheet (if separate sheet exists)
         HQ_LOGIN_SHEET_ID: '1wCvZ1WAlHAn-B8UPP5AUEPzQ5Auf84BJFeG48Hlo9wE',
         HQ_LOGIN_RANGE: 'HQLogin!B:H', // Column B: emails, Column H: passwords
         
         // API key for Google Sheets API (public read-only)
-        API_KEY: 'AIzaSyBqGrQgDw6uPJLrDGG6a5gKcN0aBc1dEfG', // Replace with actual API key
+        API_KEY: 'YOUR_GOOGLE_SHEETS_API_KEY_HERE', // Replace with actual API key
+        
+        // Alternative CSV export URLs for fallback
+        OUTLET_CSV_URL: 'https://docs.google.com/spreadsheets/d/1wCvZ1WAlHAn-B8UPP5AUEPzQ5Auf84BJFeG48Hlo9wE/export?format=csv'
         
         // Base URL for Google Sheets API
         BASE_URL: 'https://sheets.googleapis.com/v4/spreadsheets'

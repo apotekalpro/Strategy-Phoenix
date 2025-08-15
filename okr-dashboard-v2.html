@@ -2017,6 +2017,13 @@
             }
         }
 
+        // Function to update total outlets display
+        function updateTotalOutletsDisplay(count, isFallback = false) {
+            // This will be called after outlets are loaded to update the UI
+            const statusText = isFallback ? `${count} total outlets (offline mode)` : `${count} total outlets (live data)`;
+            console.log(`📊 Total outlets loaded: ${statusText}`);
+        }
+        
         // Initialize the app
         // Dashboard will be rendered after authentication check
         // Initialize demo data on page load
