@@ -854,12 +854,32 @@
 
         // Calculate fair growth comparison
         function calculateFairGrowth(currentTerms, baseline) {
-            // Count how many terms have data (non-zero)
-            const activeTerms = Object.values(currentTerms).filter(term => term > 0).length;
+            // Count only the individual terms (exclude 'total' property)
+            const termValues = [currentTerms.term1 || 0, currentTerms.term2 || 0, currentTerms.term3 || 0];
+            const activeTerms = termValues.filter(term => term > 0).length;
             const totalTerms = 3;
             
-            if (activeTerms === 0) return 0;
-            if (baseline === 0) return currentTerms.total > 0 ? 100 : 0;
+            if (activeTerms === 0) return {
+                current: 0,
+                forecast: 0,
+                proportionalBaseline: 0,
+                proportionalGrowth: 0,
+                forecastGrowth: 0,
+                activeTerms: 0,
+                growth: 0,
+                method: 'none'
+            };
+            
+            if (baseline === 0) return {
+                current: currentTerms.total,
+                forecast: currentTerms.total,
+                proportionalBaseline: 0,
+                proportionalGrowth: 100,
+                forecastGrowth: 100,
+                activeTerms: activeTerms,
+                growth: 100,
+                method: activeTerms === totalTerms ? 'actual' : 'forecast'
+            };
             
             // Method 1: Forecast to full month
             let forecastedTotal = currentTerms.total;
@@ -875,6 +895,17 @@
             
             // Method 3: Full month forecast comparison
             const forecastGrowth = Math.round(((forecastedTotal - baseline) / baseline) * 100);
+            
+            // Debug logging
+            console.log('Growth Calculation Debug:', {
+                termValues,
+                activeTerms,
+                currentTotal: currentTerms.total,
+                averagePerTerm: currentTerms.total / activeTerms,
+                forecastedTotal,
+                baseline,
+                forecastGrowth
+            });
             
             // Return object with different comparison methods
             return {
@@ -1950,10 +1981,10 @@
             
             // Outlet 3: Only 1 term data (showing extreme forecasting)
             if (outlets.length > 2) {
-                updatePerformanceData(3, 'baseline', { revenue: 40000000, trano: 900 });
+                updatePerformanceData(3, 'baseline', { revenue: 50000000, trano: 1200 });
                 updatePerformanceData(3, 'current', { 
-                    revenue: { term1: 15000000, term2: 0, term3: 0 }, // Total: 15M, Forecast: 45M
-                    trano: { term1: 320, term2: 0, term3: 0 } // Total: 320, Forecast: 960
+                    revenue: { term1: 18000000, term2: 0, term3: 0 }, // Total: 18M, Forecast: 54M
+                    trano: { term1: 420, term2: 0, term3: 0 } // Total: 420, Forecast: 1260
                 });
             }
         }
