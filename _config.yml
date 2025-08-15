@@ -1,0 +1,40 @@
+# GitHub Pages configuration for OKR Phoenix Project
+title: "OKR Phoenix Project - Apotek Alpro"
+description: "Transaction Improvement Dashboard for Apotek Alpro Pharmacy Network"
+baseurl: "/Strategy-Phoenix"
+url: "https://apotekalpro.github.io"
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+theme: minima
+
+# Exclude files from processing
+exclude:
+  - README.md
+  - deploy.sh
+  - generate-outlets.js
+  - server.log
+  - .git/
+  - .github/
+  - node_modules/
+  - vendor/
+
+# Include files that start with underscores
+include:
+  - _config.yml
+
+# Collections and defaults
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+
+# Site settings
+lang: en
+encoding: utf-8
+
+# Navigation
+header_pages:
+  - index.html
+  - login.html
+  - okr-dashboard-v2.html
