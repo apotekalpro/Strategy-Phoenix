@@ -13,7 +13,7 @@ const CONFIG = {
         // API key for Google Sheets API (public read-only)
         // IMPORTANT: Replace 'YOUR_GOOGLE_SHEETS_API_KEY_HERE' with your actual Google Sheets API key
         // to enable live data integration. Get it from: https://console.cloud.google.com/
-        API_KEY: 'YOUR_GOOGLE_SHEETS_API_KEY_HERE', // Replace with actual API key
+        API_KEY: 'AIzaSyCzDDSYZPknm2MOZIp5nLvfkmKBHCj8xEY', // Replace with actual API key
         
         // Alternative CSV export URLs for fallback
         OUTLET_CSV_URL: 'https://docs.google.com/spreadsheets/d/1wCvZ1WAlHAn-B8UPP5AUEPzQ5Auf84BJFeG48Hlo9wE/export?format=csv'
