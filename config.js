@@ -11,6 +11,8 @@ const CONFIG = {
         HQ_LOGIN_RANGE: 'HQLogin!B:H', // Column B: emails, Column H: passwords
         
         // API key for Google Sheets API (public read-only)
+        // IMPORTANT: Replace 'YOUR_GOOGLE_SHEETS_API_KEY_HERE' with your actual Google Sheets API key
+        // to enable live data integration. Get it from: https://console.cloud.google.com/
         API_KEY: 'YOUR_GOOGLE_SHEETS_API_KEY_HERE', // Replace with actual API key
         
         // Alternative CSV export URLs for fallback
@@ -184,4 +186,10 @@ const CONFIG = {
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = CONFIG;
+}
+
+// Make CONFIG globally available for browser environments
+if (typeof window !== 'undefined') {
+    window.CONFIG = CONFIG;
+    window.APP_CONFIG = CONFIG; // Alternative name for compatibility
 }
