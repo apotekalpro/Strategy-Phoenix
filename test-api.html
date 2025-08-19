@@ -140,7 +140,7 @@ This might be due to CORS restrictions or network issues.`, 'error');
             addResult('🔄 Testing outlet data loading...', 'info');
             
             try {
-                const dataUrl = `https://sheets.googleapis.com/v4/spreadsheets/1wCvZ1WAlHAn-B8UPP5AUEPzQ5Auf84BJFeG48Hlo9wE/values/Sheet1!A1:D300?key=${apiKey}`;
+                const dataUrl = `https://sheets.googleapis.com/v4/spreadsheets/1wCvZ1WAlHAn-B8UPP5AUEPzQ5Auf84BJFeG48Hlo9wE/values/Outlet%20Login!A1:D300?key=${apiKey}`;
                 
                 const response = await fetch(dataUrl);
                 const data = await response.json();
