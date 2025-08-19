@@ -16,7 +16,7 @@ const CONFIG = {
         API_KEY: 'AIzaSyCzDDSYZPknm2MOZIp5nLvfkmKBHCj8xEY', // Replace with actual API key
         
         // Alternative CSV export URLs for fallback
-        OUTLET_CSV_URL: 'https://docs.google.com/spreadsheets/d/1wCvZ1WAlHAn-B8UPP5AUEPzQ5Auf84BJFeG48Hlo9wE/export?format=csv&gid=0'
+        OUTLET_CSV_URL: 'https://docs.google.com/spreadsheets/d/1wCvZ1WAlHAn-B8UPP5AUEPzQ5Auf84BJFeG48Hlo9wE/export?format=csv&gid=0',
         
         // Base URL for Google Sheets API
         BASE_URL: 'https://sheets.googleapis.com/v4/spreadsheets'
