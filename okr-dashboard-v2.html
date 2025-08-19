@@ -546,12 +546,15 @@
             try {
                 // Initialize services
                 googleSheetsAPI = new GoogleSheetsAPI();
-                authService = new AuthService(googleSheetsAPI);
+                authService = new AuthService();
+                
+                // Initialize authentication service
+                await authService.initialize();
                 
                 const userAuth = sessionStorage.getItem('userAuth');
                 if (!userAuth) {
                     // No authentication found, redirect to login
-                    window.location.href = 'login.html';
+                    window.location.href = 'okr-login.html';
                     return;
                 }
                 
@@ -564,7 +567,7 @@
             } catch (error) {
                 console.error('Authentication error:', error);
                 sessionStorage.removeItem('userAuth');
-                window.location.href = 'login.html';
+                window.location.href = 'okr-login.html';
             }
         });
 
@@ -634,7 +637,7 @@
         function logout() {
             sessionStorage.clear();
             localStorage.clear();
-            window.location.href = 'login.html';
+            window.location.href = 'okr-login.html';
         }
 
         function logout() {
@@ -666,14 +669,14 @@
         async function loadOutletsData() {
             try {
                 console.log('Loading outlets data from Google Sheets...');
-                const credentials = await authService.loadOutletCredentials();
+                const credentials = await googleSheetsAPI.loadOutletCredentials();
                 
-                // Convert credentials to outlets format
-                outlets = credentials.map((cred, index) => ({
+                // Convert credentials object to outlets array format
+                outlets = Object.keys(credentials).map((outletCode, index) => ({
                     id: index + 1,
-                    code: cred.outlet_code,
-                    name: cred.outlet_name || `APOTEK ALPRO ${cred.outlet_code}`,
-                    am: 'SYSTEM AM'
+                    code: outletCode,
+                    name: credentials[outletCode].outletName || `APOTEK ALPRO ${outletCode}`,
+                    am: credentials[outletCode].am || 'SYSTEM AM'
                 }));
                 
                 console.log(`Loaded ${outlets.length} outlets from Google Sheets`);
@@ -692,6 +695,47 @@
                 }));
                 console.log('Using fallback outlet data');
             }
+            
+            // Initialize demo OKR data for the loaded outlets
+            initializeDemoOKRData();
+        }
+
+        // Initialize demo OKR data for outlets
+        function initializeDemoOKRData() {
+            // Clear existing data
+            allOKRS = {};
+            
+            // Add demo data for first few outlets to show functionality
+            const maxDemoOutlets = Math.min(5, outlets.length);
+            for (let i = 0; i < maxDemoOutlets; i++) {
+                const outlet = outlets[i];
+                if (outlet) {
+                    allOKRS[outlet.id] = [
+                        {
+                            id: 1000 + outlet.id,
+                            outlet_id: outlet.id,
+                            title: 'Peningkatan Transaksi - Trafik Baru',
+                            description: 'Meningkatkan jumlah transaksi melalui penambahan trafik pelanggan baru',
+                            keyResults: [
+                                {
+                                    id: 1,
+                                    title: 'KR1: Peningkatan Jumlah Pelanggan Baru',
+                                    description: 'Meningkatkan jumlah pelanggan baru sebesar 20%',
+                                    actionPlans: [
+                                        { text: 'Implementasi program welcome offer untuk pelanggan baru', completed: true, comments: [], editing: false, showComments: false },
+                                        { text: 'Kampanye digital marketing di media sosial lokal', completed: false, comments: [], editing: false, showComments: false },
+                                        { text: 'Partnership dengan komunitas sekitar (RT/RW, klinik)', completed: false, comments: [], editing: false, showComments: false },
+                                        { text: 'Program referral dengan reward untuk pelanggan existing', completed: false, comments: [], editing: false, showComments: false }
+                                    ]
+                                }
+                            ],
+                            progress: Math.floor(Math.random() * 80) + 20, // Random progress between 20-100
+                            status: 'active'
+                        }
+                    ];
+                }
+            }
+            console.log(`Initialized demo OKR data for ${maxDemoOutlets} outlets`);
         }
 
         // Use templates from config
