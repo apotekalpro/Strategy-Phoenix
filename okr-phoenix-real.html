@@ -1054,7 +1054,15 @@
 
         function loadPhoenixOutlets() {
             if (userPermissions.canViewAllOutlets) {
-                phoenixOutlets = allOutlets.filter(outlet => phoenixData.outlets[outlet.code]);
+                phoenixOutlets = allOutlets
+                    .filter(outlet => phoenixData.outlets[outlet.code])
+                    .map(outlet => {
+                        const phoenixOutletData = phoenixData.outlets[outlet.code];
+                        return {
+                            ...outlet,
+                            ...phoenixOutletData
+                        };
+                    });
             } else {
                 phoenixOutlets = allOutlets
                     .filter(outlet => 
@@ -1071,6 +1079,7 @@
             }
             
             console.log(`✅ Loaded ${phoenixOutlets.length} Phoenix outlets for user`);
+            console.log('✅ Phoenix outlets data:', phoenixOutlets);
         }
 
         function renderPhoenixDashboard() {
@@ -1333,9 +1342,14 @@
             }
             
             const outlet = phoenixOutlets.find(o => o.code === outletCode);
-            if (!outlet) return;
+            if (!outlet) {
+                console.error('❌ Outlet not found:', outletCode);
+                showNotification('❌ Outlet not found', 'error');
+                return;
+            }
             
             currentOKROutlet = outlet;
+            console.log('✅ Assigning OKR to outlet:', currentOKROutlet);
             
             const modal = document.getElementById('okr-modal');
             const modalTitle = document.getElementById('okr-modal-title');
@@ -1446,11 +1460,30 @@
             // Save to localStorage
             localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
             
+            // Update the phoenixOutlets array to reflect the change
+            const outletIndex = phoenixOutlets.findIndex(o => o.code === currentOKROutlet.code);
+            if (outletIndex >= 0) {
+                phoenixOutlets[outletIndex].okr = okr;
+                console.log('✅ Updated phoenixOutlets array at index:', outletIndex);
+            } else {
+                console.error('❌ Could not find outlet in phoenixOutlets array:', currentOKROutlet.code);
+            }
+            
             // Close modal and refresh
             closeOKRModal();
+            
+            // Refresh both dashboard and detail view if we're in detail view
             renderPhoenixDashboard();
             
+            // If we're in detail view, also update the OKR section
+            if (document.getElementById('detail-view').style.display === 'block') {
+                renderOutletOKRSection(currentOKROutlet);
+            }
+            
             showNotification(`✅ OKR "${objective}" assigned to ${currentOKROutlet.name}!`, 'success');
+            
+            console.log('✅ OKR saved successfully:', okr);
+            console.log('✅ Updated outlet data:', currentOKROutlet);
         }
 
         function closeOKRModal() {
