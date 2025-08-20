@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Test</title>
+</head>
+<body>
+    <h1>Simple JavaScript Test</h1>
+    <div id="result"></div>
+    
+    <script>
+        document.getElementById('result').innerHTML = 'JavaScript is working!';
+        
+        // Test if CONFIG is available
+        setTimeout(() => {
+            try {
+                if (typeof CONFIG !== 'undefined') {
+                    document.getElementById('result').innerHTML += '<br>✅ CONFIG loaded';
+                } else {
+                    document.getElementById('result').innerHTML += '<br>❌ CONFIG not found';
+                }
+            } catch (e) {
+                document.getElementById('result').innerHTML += '<br>❌ Error: ' + e.message;
+            }
+        }, 1000);
+    </script>
+    
+    <script src="config.js"></script>
+</body>
+</html>
