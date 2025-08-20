@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Google Sheets API</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background: #d4edda; }
+        .error { background: #f8d7da; }
+        .info { background: #d1ecf1; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Google Sheets API Test</h1>
+    <button onclick="testAPI()">Test API Access</button>
+    <div id="results"></div>
+
+    <script>
+        const SHEET_ID = '1wCvZ1WAlHAn-B8UPP5AUEPzQ5Auf84BJFeG48Hlo9wE';
+        const API_KEY = 'AIzaSyCzDDSYZPknm2MOZIp5nLvfkmKBHCj8xEY';
+        const RANGE = 'HQ Login!A:H';
+
+        function addResult(content, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = content;
+            document.getElementById('results').appendChild(div);
+        }
+
+        async function testAPI() {
+            document.getElementById('results').innerHTML = '';
+            
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${API_KEY}`;
+            
+            addResult(`<h3>🌐 Testing API URL</h3><pre>${url}</pre>`, 'info');
+            
+            try {
+                const response = await fetch(url);
+                
+                addResult(`<h3>📡 Response Status</h3><pre>Status: ${response.status} ${response.statusText}</pre>`, response.ok ? 'success' : 'error');
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    addResult(`<h3>❌ Error Details</h3><pre>${errorText}</pre>`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                const rows = data.values || [];
+                
+                addResult(`<h3>✅ Success - Retrieved ${rows.length} rows</h3><pre>${JSON.stringify(rows.slice(0, 3), null, 2)}</pre>`, 'success');
+                
+                // Look for devi.purba specifically
+                let found = false;
+                rows.forEach((row, index) => {
+                    if (row[1] && row[1].toString().toLowerCase().includes('devi.purba')) {
+                        addResult(`<h3>🎯 Found devi.purba at row ${index}</h3><pre>${JSON.stringify(row, null, 2)}</pre>`, 'success');
+                        found = true;
+                    }
+                });
+                
+                if (!found) {
+                    addResult(`<h3>❌ devi.purba@apotekalpro.id not found in sheet data</h3><p>Check if the email exists in column B of the HQ Login sheet</p>`, 'error');
+                }
+                
+            } catch (error) {
+                addResult(`<h3>❌ API Test Failed</h3><pre>${error.message}</pre>`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

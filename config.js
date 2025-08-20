@@ -174,6 +174,12 @@ const CONFIG = {
             role: 'ADMIN',
             outlets: [] // empty means access to all outlets
         },
+        'devi.purba@apotekalpro.id': {
+            password: 'Alpro@123',
+            name: 'DEVI PURBA',
+            role: 'AM',
+            outlets: []
+        },
         'admin@alpro.com': { 
             password: 'AdminPass123', 
             name: 'SYSTEM ADMIN', 

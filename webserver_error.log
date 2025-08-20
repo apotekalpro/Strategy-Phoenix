@@ -11,3 +11,20 @@
 10.12.5.138 - - [20/Aug/2025 17:52:40] "GET /google-sheets-api.js HTTP/1.1" 304 -
 10.12.5.138 - - [20/Aug/2025 17:52:40] "GET /config.js HTTP/1.1" 304 -
 10.12.5.138 - - [20/Aug/2025 17:52:40] "GET /auth-service.js HTTP/1.1" 304 -
+10.12.5.138 - - [20/Aug/2025 17:57:14] "GET /okr-phoenix-real.html HTTP/1.1" 304 -
+10.12.5.138 - - [20/Aug/2025 17:57:14] "GET /google-sheets-api.js HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 17:57:14] "GET /auth-service.js HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 17:57:14] "GET /config.js HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 17:57:14] "GET /okr-login.html HTTP/1.1" 304 -
+10.12.5.138 - - [20/Aug/2025 18:00:14] "GET /test-hq-credentials.html HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 18:00:14] "GET /config.js HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 18:00:14] "GET /auth-service.js HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 18:00:14] "GET /google-sheets-api.js HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 18:00:14] code 404, message File not found
+10.12.5.138 - - [20/Aug/2025 18:00:14] "GET /favicon.ico HTTP/1.1" 404 -
+10.12.5.138 - - [20/Aug/2025 18:00:36] "GET /config.js HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 18:00:36] code 404, message File not found
+10.12.5.138 - - [20/Aug/2025 18:00:36] "GET /robots.txt HTTP/1.1" 404 -
+10.12.5.138 - - [20/Aug/2025 18:01:31] "GET /debug-hq-login.html HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 18:01:31] code 404, message File not found
+10.12.5.138 - - [20/Aug/2025 18:01:31] "GET /robots.txt HTTP/1.1" 404 -
