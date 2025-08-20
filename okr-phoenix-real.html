@@ -803,6 +803,81 @@
                     </div>
                 </div>
                 
+                <!-- Monthly Sales Target Section -->
+                <div id="monthly-target-section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 20px; margin-bottom: 20px; color: white;">
+                    <h4 style="color: white; margin: 0 0 15px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 10px;">
+                        🎯 Monthly Sales Target & Rewards
+                        <span id="detail-tier-medal" style="font-size: 1.5rem;">⚪</span>
+                    </h4>
+                    
+                    <!-- Target Input -->
+                    <div style="background: rgba(255,255,255,0.15); border-radius: 10px; padding: 15px; margin-bottom: 15px;">
+                        <label style="display: block; font-size: 0.9rem; margin-bottom: 8px; color: rgba(255,255,255,0.9); font-weight: 600;">
+                            Set Monthly Sales Target (100% - Tier 3 Gold):
+                        </label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="number" 
+                                   id="detail-monthly-target" 
+                                   placeholder="Enter target amount" 
+                                   style="flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; text-align: center;"
+                                   onchange="updateDetailMonthlyTarget()"
+                                   oninput="calculateDetailTierProgress()">
+                            <button onclick="updateDetailMonthlyTarget()" 
+                                    style="background: #48bb78; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem;">
+                                💾 Save Target
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Tier Progress Display -->
+                    <div id="detail-tier-display" style="display: none;">
+                        <!-- Current Achievement -->
+                        <div style="background: rgba(255,255,255,0.1); border-radius: 10px; padding: 15px; margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <span id="detail-tier-name" style="font-size: 1rem; font-weight: 700;">Not Qualified</span>
+                                <span id="detail-achievement-percentage" style="font-size: 1rem; font-weight: 700;">0%</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.2); border-radius: 12px; height: 12px; overflow: hidden;">
+                                <div id="detail-progress-bar" style="background: #48bb78; height: 100%; width: 0%; transition: width 0.3s ease; border-radius: 12px;"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tier Breakdown -->
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 15px;">
+                            <div id="detail-tier1" style="background: rgba(205,127,50,0.3); border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 12px; text-align: center;">
+                                <div style="font-size: 1.2rem; margin-bottom: 6px;">🥉</div>
+                                <div style="font-size: 0.8rem; opacity: 0.9; margin-bottom: 4px;">Tier 1 - Bronze</div>
+                                <div id="detail-tier1-amount" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 4px;">Rp 0</div>
+                                <div style="font-size: 0.75rem; opacity: 0.8;">1.35% reward</div>
+                            </div>
+                            <div id="detail-tier2" style="background: rgba(192,192,192,0.3); border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 12px; text-align: center;">
+                                <div style="font-size: 1.2rem; margin-bottom: 6px;">🥈</div>
+                                <div style="font-size: 0.8rem; opacity: 0.9; margin-bottom: 4px;">Tier 2 - Silver</div>
+                                <div id="detail-tier2-amount" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 4px;">Rp 0</div>
+                                <div style="font-size: 0.75rem; opacity: 0.8;">2.0% reward</div>
+                            </div>
+                            <div id="detail-tier3" style="background: rgba(255,215,0,0.3); border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 12px; text-align: center;">
+                                <div style="font-size: 1.2rem; margin-bottom: 6px;">🥇</div>
+                                <div style="font-size: 0.8rem; opacity: 0.9; margin-bottom: 4px;">Tier 3 - Gold</div>
+                                <div id="detail-tier3-amount" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 4px;">Rp 0</div>
+                                <div style="font-size: 0.75rem; opacity: 0.8;">2.7% reward</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Reward Display -->
+                        <div id="detail-reward-display" style="background: rgba(72,187,120,0.3); border: 1px solid rgba(72,187,120,0.5); border-radius: 10px; padding: 15px; text-align: center; display: none;">
+                            <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 8px;">🎉 Congratulations! Your Current Reward:</div>
+                            <div id="detail-reward-amount" style="font-size: 1.3rem; font-weight: 700; color: #48bb78; margin-bottom: 4px;">Rp 0</div>
+                            <div id="detail-reward-percentage" style="font-size: 0.8rem; opacity: 0.8;">(0% of revenue)</div>
+                        </div>
+                        
+                        <!-- Motivation Display -->
+                        <div id="detail-motivation-display" style="background: rgba(255,255,255,0.1); border-radius: 10px; padding: 15px; text-align: center;">
+                            <div id="detail-motivation-text" style="font-size: 0.85rem; opacity: 0.9;">Set your monthly target to see tier progress and rewards</div>
+                        </div>
+                    </div>
+                </div>
+                
                 <button class="save-all-btn" onclick="saveOutletDetailData()">
                     💾 Save All Data
                 </button>
@@ -2338,6 +2413,7 @@
         let currentCommentAction = null;
         let currentEditOutlet = null;
         let currentEditKR = null;
+        let currentDetailOutlet = null; // Track current outlet in detail view
         
         function openCommentModal(outletCode, krKey, actionIndex) {
             const outlet = phoenixOutlets.find(o => o.code === outletCode);
@@ -2557,6 +2633,230 @@
             localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
             
             console.log(`✅ Updated priority to ${priority} for action ${actionIndex} in ${krKey} for outlet ${outletCode}`);
+        }
+        
+        // Monthly Sales Target Functions for Detail View
+        function updateDetailMonthlyTarget() {
+            const targetInput = document.getElementById('detail-monthly-target');
+            const targetValue = parseFloat(targetInput.value) || 0;
+            
+            if (targetValue <= 0) {
+                showNotification('❌ Please enter a valid target amount', 'error');
+                return;
+            }
+            
+            if (!currentDetailOutlet) {
+                showNotification('❌ No outlet selected', 'error');
+                return;
+            }
+            
+            // Save target to localStorage
+            const detailTargetKey = `detail_monthly_target_${currentDetailOutlet}`;
+            localStorage.setItem(detailTargetKey, targetValue.toString());
+            
+            // Also save to main data structure if it exists
+            if (phoenixData && phoenixData.outlets && phoenixData.outlets[currentDetailOutlet]) {
+                if (!phoenixData.outlets[currentDetailOutlet].salesTargets) {
+                    phoenixData.outlets[currentDetailOutlet].salesTargets = {};
+                }
+                phoenixData.outlets[currentDetailOutlet].salesTargets.monthlyTarget = targetValue;
+                localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+            }
+            
+            // Show tier display and calculate progress
+            document.getElementById('detail-tier-display').style.display = 'block';
+            calculateDetailTierProgress();
+            
+            showNotification('💾 Monthly target saved successfully!', 'success');
+            console.log(`✅ Saved monthly target: Rp ${targetValue.toLocaleString()} for outlet ${currentDetailOutlet}`);
+        }
+        
+        function calculateDetailTierProgress() {
+            const targetInput = document.getElementById('detail-monthly-target');
+            const targetValue = parseFloat(targetInput.value) || 0;
+            
+            if (targetValue <= 0) {
+                // Hide tier display if no valid target
+                document.getElementById('detail-tier-display').style.display = 'none';
+                return;
+            }
+            
+            // Calculate tier amounts (80%, 90%, 100%)
+            const tier1Amount = Math.round(targetValue * 0.8); // Bronze - 80%
+            const tier2Amount = Math.round(targetValue * 0.9); // Silver - 90% 
+            const tier3Amount = Math.round(targetValue); // Gold - 100%
+            
+            // Update tier amount displays
+            document.getElementById('detail-tier1-amount').textContent = `Rp ${tier1Amount.toLocaleString()}`;
+            document.getElementById('detail-tier2-amount').textContent = `Rp ${tier2Amount.toLocaleString()}`;
+            document.getElementById('detail-tier3-amount').textContent = `Rp ${tier3Amount.toLocaleString()}`;
+            
+            // Get current sales (mock data for now - in real implementation would come from API)
+            const currentSales = getCurrentSalesForDetailOutlet();
+            
+            // Calculate achievement percentage
+            const achievementPercentage = targetValue > 0 ? Math.min((currentSales / targetValue) * 100, 100) : 0;
+            
+            // Determine current tier and medal
+            let currentTier = 'Not Qualified';
+            let currentMedal = '⚪';
+            let rewardPercentage = 0;
+            let tierClass = '';
+            
+            if (currentSales >= tier3Amount) {
+                currentTier = 'Tier 3 - Gold';
+                currentMedal = '🥇';
+                rewardPercentage = 2.7;
+                tierClass = 'gold';
+            } else if (currentSales >= tier2Amount) {
+                currentTier = 'Tier 2 - Silver';
+                currentMedal = '🥈';
+                rewardPercentage = 2.0;
+                tierClass = 'silver';
+            } else if (currentSales >= tier1Amount) {
+                currentTier = 'Tier 1 - Bronze';
+                currentMedal = '🥉';
+                rewardPercentage = 1.35;
+                tierClass = 'bronze';
+            }
+            
+            // Update UI elements
+            document.getElementById('detail-tier-name').textContent = currentTier;
+            document.getElementById('detail-achievement-percentage').textContent = `${achievementPercentage.toFixed(1)}%`;
+            document.getElementById('detail-progress-bar').style.width = `${achievementPercentage}%`;
+            document.getElementById('detail-tier-medal').textContent = currentMedal;
+            
+            // Update tier highlighting
+            document.getElementById('detail-tier1').style.borderColor = currentSales >= tier1Amount ? '#CD7F32' : 'rgba(255,255,255,0.3)';
+            document.getElementById('detail-tier2').style.borderColor = currentSales >= tier2Amount ? '#C0C0C0' : 'rgba(255,255,255,0.3)';
+            document.getElementById('detail-tier3').style.borderColor = currentSales >= tier3Amount ? '#FFD700' : 'rgba(255,255,255,0.3)';
+            
+            // Calculate and display reward
+            const rewardAmount = Math.round(currentSales * (rewardPercentage / 100));
+            document.getElementById('detail-reward-amount').textContent = `Rp ${rewardAmount.toLocaleString()}`;
+            document.getElementById('detail-reward-percentage').textContent = `(${rewardPercentage}% of revenue)`;
+            
+            // Show/hide reward display
+            if (rewardPercentage > 0) {
+                document.getElementById('detail-reward-display').style.display = 'block';
+            } else {
+                document.getElementById('detail-reward-display').style.display = 'none';
+            }
+            
+            // Update motivation text
+            let motivationText = '';
+            if (currentSales >= tier3Amount) {
+                motivationText = '🎉 Excellent! You\'ve achieved Gold tier! Keep up the outstanding performance!';
+            } else if (currentSales >= tier2Amount) {
+                const needed = tier3Amount - currentSales;
+                motivationText = `🥈 Great job on Silver tier! Only Rp ${needed.toLocaleString()} more to reach Gold!`;
+            } else if (currentSales >= tier1Amount) {
+                const needed = tier2Amount - currentSales;
+                motivationText = `🥉 Good work on Bronze tier! Rp ${needed.toLocaleString()} more to reach Silver!`;
+            } else {
+                const needed = tier1Amount - currentSales;
+                motivationText = `📈 You need Rp ${needed.toLocaleString()} more to reach Bronze tier. Keep pushing!`;
+            }
+            
+            document.getElementById('detail-motivation-text').textContent = motivationText;
+            
+            // Save medal achievement
+            saveMedalAchievement(currentDetailOutlet, currentMedal, rewardAmount);
+            
+            console.log(`📊 Detail tier calculation: ${achievementPercentage.toFixed(1)}% achievement, ${currentTier}, reward: Rp ${rewardAmount.toLocaleString()}`);
+        }
+        
+        function getCurrentSalesForDetailOutlet() {
+            if (!currentDetailOutlet) return 0;
+            
+            // Try to get from current sales data input
+            const currentSalesInput = document.querySelector('.data-input[data-field="current_sales"]');
+            if (currentSalesInput && currentSalesInput.value) {
+                return parseFloat(currentSalesInput.value) || 0;
+            }
+            
+            // Fallback to mock data for demo purposes
+            // In real implementation, this would fetch from API or outlet data
+            const mockSalesData = {
+                'BTTGPR1': 85000000, // Example: Rp 85M for APOTEK ALPRO EXPRESS PAWON RAYA
+                'BTTSUB1': 72000000,
+                'BTTMDN1': 95000000,
+                'default': 60000000
+            };
+            
+            return mockSalesData[currentDetailOutlet] || mockSalesData['default'];
+        }
+        
+        function saveMedalAchievement(outletCode, medal, rewardAmount) {
+            if (!outletCode || medal === '⚪') return;
+            
+            // Get existing medals
+            const medalsKey = 'phoenixMedals';
+            let medals = {};
+            try {
+                medals = JSON.parse(localStorage.getItem(medalsKey) || '{}');
+            } catch (e) {
+                medals = {};
+            }
+            
+            // Initialize outlet medals if not exists
+            if (!medals[outletCode]) {
+                medals[outletCode] = {
+                    achievements: [],
+                    totalRewards: 0,
+                    currentMedal: '⚪'
+                };
+            }
+            
+            // Update current medal and total rewards
+            medals[outletCode].currentMedal = medal;
+            medals[outletCode].totalRewards = (medals[outletCode].totalRewards || 0) + rewardAmount;
+            
+            // Add achievement if medal changed
+            const lastAchievement = medals[outletCode].achievements[medals[outletCode].achievements.length - 1];
+            if (!lastAchievement || lastAchievement.medal !== medal) {
+                medals[outletCode].achievements.push({
+                    medal: medal,
+                    reward: rewardAmount,
+                    timestamp: new Date().toISOString(),
+                    month: new Date().toISOString().substring(0, 7) // YYYY-MM format
+                });
+            }
+            
+            // Save back to localStorage
+            localStorage.setItem(medalsKey, JSON.stringify(medals));
+            
+            console.log(`🏆 Medal achievement saved: ${outletCode} earned ${medal} with reward Rp ${rewardAmount.toLocaleString()}`);
+        }
+        
+        function initializeDetailMonthlyTarget(outletCode) {
+            // Load existing target from localStorage
+            const detailTargetKey = `detail_monthly_target_${outletCode}`;
+            const existingTarget = localStorage.getItem(detailTargetKey);
+            
+            // Also check main data structure
+            let savedTarget = 0;
+            if (existingTarget) {
+                savedTarget = parseFloat(existingTarget);
+            } else if (phoenixData && phoenixData.outlets && phoenixData.outlets[outletCode] && phoenixData.outlets[outletCode].salesTargets) {
+                savedTarget = phoenixData.outlets[outletCode].salesTargets.monthlyTarget || 0;
+            }
+            
+            // Set the input field
+            const targetInput = document.getElementById('detail-monthly-target');
+            if (targetInput) {
+                targetInput.value = savedTarget > 0 ? savedTarget : '';
+                
+                // If there's a saved target, show the tier display and calculate progress
+                if (savedTarget > 0) {
+                    document.getElementById('detail-tier-display').style.display = 'block';
+                    calculateDetailTierProgress();
+                } else {
+                    document.getElementById('detail-tier-display').style.display = 'none';
+                }
+            }
+            
+            console.log(`🎯 Initialized detail monthly target for ${outletCode}: Rp ${savedTarget.toLocaleString()}`);
         }
         
         function editKRActionPlans(outletCode, krKey) {
@@ -2946,7 +3246,7 @@
             const outlet = phoenixOutlets.find(o => o.code === outletCode);
             if (!outlet) return;
             
-            currentDetailOutlet = outlet;
+            currentDetailOutlet = outletCode; // Store outlet code for detail view functions
             
             // Hide card view, show detail view
             document.getElementById('dashboard-view').style.display = 'none';
@@ -2979,6 +3279,9 @@
             
             // Calculate initial progress
             calculateProportionalProgress(performanceData);
+            
+            // Initialize monthly target section
+            initializeDetailMonthlyTarget(outletCode);
             
             // Render OKR section
             renderOutletOKRSection(outlet);
