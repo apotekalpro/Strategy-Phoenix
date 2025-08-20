@@ -296,6 +296,12 @@
                 role: 'AM',
                 outlets: ['JKJGED1'] // outlets they manage
             },
+            'devi.purba@apotekalpro.id': {
+                password: 'Alpro@123',
+                name: 'DEVI PURBA',
+                role: 'ADMIN',
+                outlets: []
+            },
             'admin@alpro.com': { 
                 password: 'AdminPass123', 
                 name: 'SYSTEM ADMIN', 
@@ -448,6 +454,39 @@
                 window.location.href = returnUrl;
             }
         });
+        
+        // Enhanced login with Google Sheets integration
+        async function loadDynamicHQCredentials() {
+            try {
+                // Load configuration and Google Sheets API
+                if (typeof CONFIG !== 'undefined' && typeof GoogleSheetsAPI !== 'undefined') {
+                    console.log('🔐 Loading dynamic HQ credentials from Google Sheets...');
+                    
+                    const googleSheetsAPI = new GoogleSheetsAPI();
+                    const dynamicCredentials = await googleSheetsAPI.loadHQCredentials();
+                    
+                    // Merge with existing hardcoded credentials
+                    Object.assign(hqCredentials, dynamicCredentials);
+                    
+                    console.log(`✅ Loaded ${Object.keys(dynamicCredentials).length} HQ users from Google Sheets`);
+                    console.log('📋 Available HQ users:', Object.keys(hqCredentials));
+                } else {
+                    console.log('⚠️ Google Sheets API not available, using hardcoded credentials only');
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not load dynamic credentials:', error.message);
+                console.log('📋 Using hardcoded credentials only');
+            }
+        }
+        
+        // Load dynamic credentials on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadDynamicHQCredentials();
+        });
     </script>
+    
+    <!-- Include required scripts for Google Sheets integration -->
+    <script src="config.js"></script>
+    <script src="google-sheets-api.js"></script>
 </body>
 </html>

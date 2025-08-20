@@ -33,3 +33,14 @@
 10.12.5.138 - - [20/Aug/2025 18:02:44] "GET /auth-service.js HTTP/1.1" 304 -
 10.12.5.138 - - [20/Aug/2025 18:02:44] "GET /google-sheets-api.js HTTP/1.1" 304 -
 10.12.5.138 - - [20/Aug/2025 18:02:45] "GET /okr-login.html HTTP/1.1" 304 -
+10.12.5.138 - - [20/Aug/2025 18:06:57] "GET /okr-phoenix-real.html HTTP/1.1" 304 -
+10.12.5.138 - - [20/Aug/2025 18:06:57] "GET /google-sheets-api.js HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 18:06:57] "GET /config.js HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 18:06:57] "GET /auth-service.js HTTP/1.1" 304 -
+10.12.5.138 - - [20/Aug/2025 18:06:58] "GET /okr-login.html HTTP/1.1" 304 -
+10.12.5.138 - - [20/Aug/2025 18:07:14] "GET /test-sheets-api.html HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 18:07:27] "GET /debug-hq-login.html HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 18:09:25] "GET /okr-phoenix-real.html HTTP/1.1" 304 -
+10.12.5.138 - - [20/Aug/2025 18:09:25] "GET /config.js HTTP/1.1" 304 -
+10.12.5.138 - - [20/Aug/2025 18:09:25] "GET /auth-service.js HTTP/1.1" 304 -
+10.12.5.138 - - [20/Aug/2025 18:09:25] "GET /google-sheets-api.js HTTP/1.1" 304 -
