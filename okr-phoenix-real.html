@@ -634,6 +634,9 @@
                         <div class="stat-label">Avg Progress</div>
                     </div>
                 </div>
+                
+                <!-- Medal Showcase -->
+                <div id="medal-showcase" style="margin-top: 20px;"></div>
             </div>
 
             <div class="dashboard-content">
@@ -1104,7 +1107,9 @@
             }
             
             // Update UI based on permissions
-            document.getElementById('user-name').textContent = `👋 ${currentUser.name || currentUser.username}`;
+            const userMedals = getUserMedals();
+            const medalDisplay = userMedals.length > 0 ? `${userMedals.slice(0, 3).map(m => m.tierEmoji).join('')} ` : '';
+            document.getElementById('user-name').textContent = `👋 ${medalDisplay}${currentUser.name || currentUser.username}`;
         }
 
         function loadPhoenixOutlets() {
@@ -1152,8 +1157,9 @@
             document.getElementById('total-revenue').textContent = formatCurrency(totalRevenue);
             document.getElementById('avg-progress').textContent = avgProgress + '%';
             
-            // Render cards
+            // Render cards and medal showcase
             renderOutletCards();
+            renderMedalShowcase();
         }
 
         function calculateOutletProgress(outlet) {
@@ -1254,6 +1260,8 @@
                             </div>
                         </div>
 
+                        ${renderSalesTargetSystem(outlet, totalRevenue)}
+
                         <div class="progress-section">
                             <div class="progress-title">🎯 OKR Key Results Progress</div>
                             <div class="progress-bars">
@@ -1312,6 +1320,277 @@
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0
             }).format(amount);
+        }
+
+        function renderSalesTargetSystem(outlet, currentRevenue) {
+            // Get sales target data from outlet or initialize if not exists
+            const salesTargetData = outlet.salesTarget || {};
+            const monthlyTarget = salesTargetData.monthlyTarget || 0;
+            
+            // Calculate tier targets
+            const tier1Target = Math.round(monthlyTarget * 0.8); // 80%
+            const tier2Target = Math.round(monthlyTarget * 0.9); // 90%
+            const tier3Target = monthlyTarget; // 100%
+            
+            // Calculate achievement percentage
+            const achievementPercentage = monthlyTarget > 0 ? Math.round((currentRevenue / monthlyTarget) * 100) : 0;
+            
+            // Determine current tier and rewards
+            let currentTier = 0;
+            let rewardPercentage = 0;
+            let tierName = "Not Qualified";
+            let medalEmoji = "⚪";
+            
+            if (currentRevenue >= tier3Target) {
+                currentTier = 3;
+                rewardPercentage = 2.7;
+                tierName = "🥇 Tier 3 - Gold";
+                medalEmoji = "🥇";
+            } else if (currentRevenue >= tier2Target) {
+                currentTier = 2;
+                rewardPercentage = 2.0;
+                tierName = "🥈 Tier 2 - Silver";
+                medalEmoji = "🥈";
+            } else if (currentRevenue >= tier1Target) {
+                currentTier = 1;
+                rewardPercentage = 1.35;
+                tierName = "🥉 Tier 1 - Bronze";
+                medalEmoji = "🥉";
+            }
+            
+            // Calculate reward amount
+            const rewardAmount = Math.round(currentRevenue * (rewardPercentage / 100));
+            
+            // Save medal achievement to user profile
+            if (currentTier > 0) {
+                saveMedalAchievement(outlet.code, currentTier, rewardAmount);
+            }
+            
+            return `
+                <div class="sales-target-system" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 16px; margin: 15px 0; color: white;">
+                    <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 12px;">
+                        <h4 style="color: white; margin: 0; font-size: 0.95rem;">🎯 Monthly Sales Target System</h4>
+                        <div style="font-size: 1.5rem;">${medalEmoji}</div>
+                    </div>
+                    
+                    <!-- Target Input Section -->
+                    <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                        <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: rgba(255,255,255,0.9);">
+                            100% Monthly Target (Tier 3):
+                        </label>
+                        <input type="number" 
+                               id="monthly-target-${outlet.code}" 
+                               value="${monthlyTarget}" 
+                               onchange="updateMonthlyTarget('${outlet.code}', this.value)"
+                               style="width: 100%; padding: 6px; border: none; border-radius: 4px; font-size: 0.85rem;"
+                               placeholder="Enter monthly sales target">
+                    </div>
+                    
+                    ${monthlyTarget > 0 ? `
+                        <!-- Tier Progress Display -->
+                        <div style="margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="font-size: 0.9rem; font-weight: 600;">${tierName}</span>
+                                <span style="font-size: 0.9rem; font-weight: 600;">${achievementPercentage}%</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.2); border-radius: 10px; height: 8px; overflow: hidden;">
+                                <div style="background: ${currentTier >= 3 ? '#ffd700' : currentTier >= 2 ? '#c0c0c0' : currentTier >= 1 ? '#cd7f32' : '#48bb78'}; height: 100%; width: ${Math.min(achievementPercentage, 100)}%; transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tier Targets -->
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px;">
+                            <div style="background: rgba(205,127,50,0.3); border: 2px solid ${currentTier >= 1 ? '#cd7f32' : 'rgba(255,255,255,0.3)'}; border-radius: 6px; padding: 6px; text-align: center;">
+                                <div style="font-size: 0.7rem; opacity: 0.9;">🥉 Tier 1 (80%)</div>
+                                <div style="font-size: 0.8rem; font-weight: 600;">${formatCurrency(tier1Target)}</div>
+                                <div style="font-size: 0.7rem; opacity: 0.8;">1.35% reward</div>
+                            </div>
+                            <div style="background: rgba(192,192,192,0.3); border: 2px solid ${currentTier >= 2 ? '#c0c0c0' : 'rgba(255,255,255,0.3)'}; border-radius: 6px; padding: 6px; text-align: center;">
+                                <div style="font-size: 0.7rem; opacity: 0.9;">🥈 Tier 2 (90%)</div>
+                                <div style="font-size: 0.8rem; font-weight: 600;">${formatCurrency(tier2Target)}</div>
+                                <div style="font-size: 0.7rem; opacity: 0.8;">2.0% reward</div>
+                            </div>
+                            <div style="background: rgba(255,215,0,0.3); border: 2px solid ${currentTier >= 3 ? '#ffd700' : 'rgba(255,255,255,0.3)'}; border-radius: 6px; padding: 6px; text-align: center;">
+                                <div style="font-size: 0.7rem; opacity: 0.9;">🥇 Tier 3 (100%)</div>
+                                <div style="font-size: 0.8rem; font-weight: 600;">${formatCurrency(tier3Target)}</div>
+                                <div style="font-size: 0.7rem; opacity: 0.8;">2.7% reward</div>
+                            </div>
+                        </div>
+                        
+                        ${currentTier > 0 ? `
+                            <!-- Reward Display -->
+                            <div style="background: rgba(72,187,120,0.3); border: 1px solid #48bb78; border-radius: 8px; padding: 10px; text-align: center;">
+                                <div style="font-size: 0.8rem; opacity: 0.9; margin-bottom: 4px;">🎉 Congratulations! Your Reward:</div>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: #48bb78;">${formatCurrency(rewardAmount)}</div>
+                                <div style="font-size: 0.7rem; opacity: 0.8;">(${rewardPercentage}% of revenue)</div>
+                            </div>
+                        ` : `
+                            <!-- Motivation Display -->
+                            <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; text-align: center;">
+                                <div style="font-size: 0.8rem; opacity: 0.9;">Keep pushing! You need ${formatCurrency(tier1Target - currentRevenue)} more to reach Tier 1 🥉</div>
+                            </div>
+                        `}
+                    ` : `
+                        <!-- No Target Set -->
+                        <div style="text-align: center; opacity: 0.8; font-size: 0.85rem;">
+                            Set your monthly target to see tier progress and rewards
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        function updateMonthlyTarget(outletCode, targetValue) {
+            const target = parseFloat(targetValue) || 0;
+            
+            // Initialize outlet data if it doesn't exist
+            if (!phoenixData.outlets[outletCode]) {
+                phoenixData.outlets[outletCode] = {};
+            }
+            
+            // Update sales target
+            phoenixData.outlets[outletCode].salesTarget = {
+                monthlyTarget: target,
+                lastUpdated: new Date().toISOString()
+            };
+            
+            // Update local outlet data
+            const outlet = phoenixOutlets.find(o => o.code === outletCode);
+            if (outlet) {
+                outlet.salesTarget = phoenixData.outlets[outletCode].salesTarget;
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+            
+            // Refresh the outlet cards to show updated targets
+            renderOutletCards();
+            renderPhoenixDashboard();
+            
+            showNotification(`🎯 Monthly target updated to ${formatCurrency(target)}`, 'success');
+            console.log(`✅ Updated monthly target for ${outletCode} to ${target}`);
+        }
+
+        function saveMedalAchievement(outletCode, tier, rewardAmount) {
+            // Get current user medals
+            const currentUser = JSON.parse(sessionStorage.getItem('userAuth'));
+            const userMedals = JSON.parse(localStorage.getItem('userMedals')) || {};
+            
+            if (!userMedals[currentUser.username]) {
+                userMedals[currentUser.username] = {
+                    medals: [],
+                    totalRewards: 0
+                };
+            }
+            
+            // Check if this tier medal already exists for this month
+            const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
+            const existingMedal = userMedals[currentUser.username].medals.find(
+                medal => medal.outletCode === outletCode && 
+                medal.month === currentMonth && 
+                medal.tier >= tier
+            );
+            
+            if (!existingMedal || existingMedal.tier < tier) {
+                // Add or upgrade medal
+                const medalData = {
+                    outletCode: outletCode,
+                    tier: tier,
+                    month: currentMonth,
+                    rewardAmount: rewardAmount,
+                    achievedDate: new Date().toISOString(),
+                    tierName: tier === 3 ? "Gold" : tier === 2 ? "Silver" : "Bronze"
+                };
+                
+                if (existingMedal) {
+                    // Upgrade existing medal
+                    const medalIndex = userMedals[currentUser.username].medals.indexOf(existingMedal);
+                    userMedals[currentUser.username].medals[medalIndex] = medalData;
+                } else {
+                    // Add new medal
+                    userMedals[currentUser.username].medals.push(medalData);
+                }
+                
+                // Update total rewards
+                userMedals[currentUser.username].totalRewards = userMedals[currentUser.username].medals.reduce(
+                    (sum, medal) => sum + medal.rewardAmount, 0
+                );
+                
+                // Save to localStorage
+                localStorage.setItem('userMedals', JSON.stringify(userMedals));
+                
+                console.log(`🏆 Medal achieved: ${medalData.tierName} for outlet ${outletCode}`);
+            }
+        }
+
+        function getUserMedals() {
+            const currentUser = JSON.parse(sessionStorage.getItem('userAuth') || '{}');
+            const userMedals = JSON.parse(localStorage.getItem('userMedals') || '{}');
+            
+            if (!userMedals[currentUser.username]) {
+                return [];
+            }
+            
+            return userMedals[currentUser.username].medals.map(medal => ({
+                ...medal,
+                tierEmoji: medal.tier === 3 ? '🥇' : medal.tier === 2 ? '🥈' : '🥉'
+            })).sort((a, b) => b.tier - a.tier || new Date(b.achievedDate) - new Date(a.achievedDate));
+        }
+
+        function renderMedalShowcase() {
+            const userMedals = getUserMedals();
+            const currentUser = JSON.parse(sessionStorage.getItem('userAuth') || '{}');
+            const userMedalData = JSON.parse(localStorage.getItem('userMedals') || '{}')[currentUser.username];
+            const totalRewards = userMedalData?.totalRewards || 0;
+            
+            const showcaseElement = document.getElementById('medal-showcase');
+            
+            if (userMedals.length === 0) {
+                showcaseElement.innerHTML = `
+                    <div style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 20px; text-align: center;">
+                        <div style="font-size: 2rem; margin-bottom: 10px;">🏆</div>
+                        <h3 style="color: #4a5568; margin-bottom: 10px;">Medal Collection</h3>
+                        <p style="color: #718096; margin-bottom: 15px;">Complete sales targets to earn medals and rewards!</p>
+                        <div style="background: #f7fafc; border-radius: 8px; padding: 12px;">
+                            <div style="font-size: 0.9rem; color: #4a5568;">🥉 Tier 1 (80%): 1.35% reward | 🥈 Tier 2 (90%): 2.0% reward | 🥇 Tier 3 (100%): 2.7% reward</div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            showcaseElement.innerHTML = `
+                <div style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="color: #4a5568; margin: 0;">🏆 Your Medal Collection</h3>
+                        <div style="text-align: right;">
+                            <div style="color: #48bb78; font-weight: 700; font-size: 1.1rem;">${formatCurrency(totalRewards)}</div>
+                            <div style="color: #718096; font-size: 0.8rem;">Total Rewards Earned</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        ${userMedals.slice(0, 6).map(medal => `
+                            <div style="background: linear-gradient(135deg, ${medal.tier === 3 ? '#ffd700, #ffed4a' : medal.tier === 2 ? '#c0c0c0, #e2e8f0' : '#cd7f32, #d69e2e'}); border-radius: 10px; padding: 12px; text-align: center; color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                                <div style="font-size: 2rem; margin-bottom: 8px;">${medal.tierEmoji}</div>
+                                <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 4px;">${medal.tierName} Medal</div>
+                                <div style="font-size: 0.75rem; opacity: 0.9; margin-bottom: 6px;">Outlet: ${medal.outletCode}</div>
+                                <div style="font-size: 0.8rem; font-weight: 600;">${formatCurrency(medal.rewardAmount)}</div>
+                                <div style="font-size: 0.7rem; opacity: 0.8;">${new Date(medal.achievedDate).toLocaleDateString()}</div>
+                            </div>
+                        `).join('')}
+                        
+                        ${userMedals.length > 6 ? `
+                            <div style="background: #f7fafc; border: 2px dashed #cbd5e0; border-radius: 10px; padding: 12px; text-align: center; display: flex; align-items: center; justify-content: center;">
+                                <div style="color: #4a5568; font-size: 0.9rem;">
+                                    <div style="font-weight: 600;">+${userMedals.length - 6} more medals</div>
+                                    <div style="font-size: 0.8rem; opacity: 0.7;">Keep achieving!</div>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
         }
 
         function showNotification(message, type = 'success') {
@@ -1867,20 +2146,32 @@
         }
         
         function toggleActionLike(outletCode, krKey, actionIndex) {
-            console.log(`🔄 Toggling like for action ${actionIndex} in ${krKey} for outlet ${outletCode}`);
+            console.log(`🔄 [LIKE DEBUG] Starting toggle for action ${actionIndex} in ${krKey} for outlet ${outletCode}`);
             
             const outlet = phoenixOutlets.find(o => o.code === outletCode);
             if (!outlet || !outlet.okr) {
-                console.error('❌ Outlet or OKR not found');
+                console.error('❌ [LIKE DEBUG] Outlet or OKR not found');
                 return;
             }
+            
+            console.log(`🔍 [LIKE DEBUG] Found outlet:`, outlet.code);
+            console.log(`🔍 [LIKE DEBUG] Current OKR progress:`, outlet.okr.krProgress);
+            console.log(`🔍 [LIKE DEBUG] Parameters - krKey: ${krKey}, actionIndex: ${actionIndex}`);
             
             // Initialize KR progress data if it doesn't exist
             if (!outlet.okr.krProgress) {
                 outlet.okr.krProgress = {};
+                console.log(`🔧 [LIKE DEBUG] Initialized krProgress`);
             }
             if (!outlet.okr.krProgress[krKey]) {
                 outlet.okr.krProgress[krKey] = { completedActions: [], comments: {}, likes: {}, priorities: {}, chatMessages: {} };
+                console.log(`🔧 [LIKE DEBUG] Initialized ${krKey} progress`);
+            }
+            
+            // Ensure the likes object exists
+            if (!outlet.okr.krProgress[krKey].likes) {
+                outlet.okr.krProgress[krKey].likes = {};
+                console.log(`🔧 [LIKE DEBUG] Initialized likes object for ${krKey}`);
             }
             
             // Toggle like status
@@ -1889,7 +2180,10 @@
             const newLikeStatus = !currentLike;
             outlet.okr.krProgress[krKey].likes[likeKey] = newLikeStatus;
             
-            console.log(`💝 Like status changed from ${currentLike} to ${newLikeStatus}`);
+            console.log(`💝 [LIKE DEBUG] Like key: ${likeKey}`);
+            console.log(`💝 [LIKE DEBUG] Previous status: ${currentLike}`);
+            console.log(`💝 [LIKE DEBUG] New status: ${newLikeStatus}`);
+            console.log(`💝 [LIKE DEBUG] Updated likes object:`, outlet.okr.krProgress[krKey].likes);
             
             // Update phoenixData (localStorage sync)
             if (!phoenixData.outlets[outletCode]) {
@@ -1900,13 +2194,24 @@
             }
             phoenixData.outlets[outletCode].okr.krProgress = outlet.okr.krProgress;
             localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+            console.log(`💾 [LIKE DEBUG] Data saved to localStorage`);
             
             // Immediate UI update - find and update the specific button
             const buttonId = `like-btn-${outletCode}-${krKey}-${actionIndex}`;
             const likeButton = document.getElementById(buttonId);
             
+            console.log(`🎯 [LIKE DEBUG] Looking for button ID: ${buttonId}`);
+            console.log(`🎯 [LIKE DEBUG] Button found:`, likeButton ? 'YES' : 'NO');
+            
             if (likeButton) {
-                likeButton.innerHTML = newLikeStatus ? '❤️' : '🤍';
+                const newEmoji = newLikeStatus ? '❤️' : '🤍';
+                console.log(`🎨 [LIKE DEBUG] Setting button content to: ${newEmoji}`);
+                console.log(`🎨 [LIKE DEBUG] Button current content: ${likeButton.innerHTML}`);
+                
+                likeButton.innerHTML = newEmoji;
+                
+                console.log(`🎨 [LIKE DEBUG] Button content after update: ${likeButton.innerHTML}`);
+                
                 // Add visual feedback with animation
                 likeButton.style.transform = 'scale(1.4)';
                 likeButton.style.transition = 'all 0.3s ease';
@@ -1914,22 +2219,22 @@
                 // Reset animation after delay
                 setTimeout(() => {
                     likeButton.style.transform = 'scale(1)';
+                    console.log(`✨ [LIKE DEBUG] Animation completed`);
                 }, 300);
                 
-                console.log(`🎯 Updated button ${buttonId} to show ${newLikeStatus ? '❤️' : '🤍'}`);
             } else {
-                console.error(`❌ Could not find like button with ID: ${buttonId}`);
+                console.error(`❌ [LIKE DEBUG] Could not find like button with ID: ${buttonId}`);
+                // Let's try to find all like buttons to see what IDs exist
+                const allButtons = document.querySelectorAll('button[id*="like-btn"]');
+                console.log(`🔍 [LIKE DEBUG] Found ${allButtons.length} like buttons with these IDs:`, 
+                    Array.from(allButtons).map(btn => btn.id));
             }
-            
-            // Update the progress display to reflect any changes in overall completion
-            updateOverallOKRProgress(outletCode);
-            renderPhoenixDashboard();
             
             // Show user feedback
             const feedbackMsg = newLikeStatus ? '❤️ Liked!' : '🤍 Unliked!';
             showNotification(feedbackMsg, 'success', 1000);
             
-            console.log(`✅ Successfully toggled like for action ${actionIndex} in ${krKey} for outlet ${outletCode}`);
+            console.log(`✅ [LIKE DEBUG] Toggle completed successfully`);
         }
         
         function updateActionPriority(outletCode, krKey, actionIndex, priority) {
