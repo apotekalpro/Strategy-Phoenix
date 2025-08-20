@@ -597,6 +597,9 @@
             // Load performance data and initialize outlets
             loadPerformanceData();
             
+            // Initialize demo performance data
+            initializeDemoData();
+            
             // Update header with user info and render dashboard
             updateUserInterface();
             renderDashboard();
@@ -2070,10 +2073,7 @@
         
         // Initialize the app
         // Dashboard will be rendered after authentication check
-        // Initialize demo data on page load
-        window.addEventListener('DOMContentLoaded', () => {
-            initializeDemoData();
-        });
+        // Demo data will be initialized after outlets are loaded
     </script>
 </body>
 </html>

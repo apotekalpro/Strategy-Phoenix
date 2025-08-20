@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OKR Phoenix Project - Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .header h1 { font-size: 2.5rem; margin-bottom: 10px; font-weight: 700; }
+        .header p { font-size: 1.1rem; opacity: 0.9; margin: 5px 0; }
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            text-align: right;
+            font-size: 0.9rem;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-top: 4px solid #667eea;
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-number { font-size: 3rem; font-weight: 700; color: #667eea; margin-bottom: 10px; }
+        .stat-label { color: #718096; font-weight: 600; text-transform: uppercase; font-size: 0.9rem; }
+        .outlets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .outlet-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-left: 4px solid #48bb78;
+        }
+        .outlet-name { font-size: 1.2rem; font-weight: 700; color: #2d3748; margin-bottom: 10px; }
+        .outlet-code { color: #718096; font-size: 0.9rem; margin-bottom: 15px; }
+        .progress-bar {
+            background: #f0f0f0;
+            height: 12px;
+            border-radius: 6px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+        .okr-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+        .logout-btn {
+            margin-top: 8px;
+            padding: 4px 12px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        .logout-btn:hover { background: rgba(255,255,255,0.3); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 OKR Phoenix Project Dashboard</h1>
+            <p><strong>Peningkatan Transaksi - Trafik Baru & Return Rate</strong></p>
+            <p>Apotek Alpro Pharmacy Network Management</p>
+        </div>
+
+        <div id="dashboard-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-outlets">-</div>
+                    <div class="stat-label">Total Outlets</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="outlets-with-okrs">-</div>
+                    <div class="stat-label">Outlets with OKRs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="active-okrs">-</div>
+                    <div class="stat-label">Active OKRs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="avg-progress">-</div>
+                    <div class="stat-label">Average Progress</div>
+                </div>
+            </div>
+
+            <div id="outlets-container" class="outlets-grid">
+                <!-- Outlet cards will be rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="google-sheets-api.js"></script>
+    <script src="auth-service.js"></script>
+
+    <script>
+        let currentUser = null;
+        let userPermissions = null;
+        let outlets = [];
+        let allOKRS = {};
+
+        // Check authentication and initialize
+        window.addEventListener('load', async () => {
+            try {
+                // Check session
+                const userAuth = sessionStorage.getItem('userAuth');
+                if (!userAuth) {
+                    window.location.href = 'okr-login.html';
+                    return;
+                }
+                
+                currentUser = JSON.parse(userAuth);
+                console.log('✅ User session found:', currentUser.username);
+                
+                // Initialize services
+                const googleSheetsAPI = new GoogleSheetsAPI();
+                const authService = new AuthService();
+                await authService.initialize();
+                console.log('✅ Services initialized');
+                
+                // Load outlets data
+                const credentials = await googleSheetsAPI.loadOutletCredentials();
+                outlets = Object.keys(credentials).map((outletCode, index) => ({
+                    id: index + 1,
+                    code: outletCode,
+                    name: credentials[outletCode].outletName || `APOTEK ALPRO ${outletCode}`,
+                    am: credentials[outletCode].am || 'SYSTEM AM'
+                }));
+                console.log(`✅ Loaded ${outlets.length} outlets`);
+                
+                // Create demo OKRs
+                initializeDemoOKRs();
+                
+                // Setup user permissions
+                setupUserPermissions();
+                
+                // Render dashboard
+                renderDashboard();
+                
+            } catch (error) {
+                console.error('❌ Dashboard initialization failed:', error);
+                sessionStorage.removeItem('userAuth');
+                window.location.href = 'okr-login.html';
+            }
+        });
+
+        function setupUserPermissions() {
+            if (currentUser.type === 'outlet') {
+                userPermissions = {
+                    canViewAllOutlets: false,
+                    accessibleOutlets: currentUser.accessibleOutlets || [currentUser.username],
+                    canManageOKRs: true,
+                    userType: 'outlet',
+                    displayName: currentUser.outletName,
+                    identifier: currentUser.username
+                };
+            } else if (currentUser.type === 'hq') {
+                userPermissions = {
+                    canViewAllOutlets: currentUser.accessibleOutlets === 'ALL',
+                    accessibleOutlets: currentUser.accessibleOutlets === 'ALL' ? [] : currentUser.accessibleOutlets,
+                    canManageOKRs: true,
+                    userType: 'hq',
+                    displayName: currentUser.name,
+                    identifier: currentUser.email,
+                    role: currentUser.role
+                };
+            }
+            
+            // Add user info to header
+            const header = document.querySelector('.header');
+            const userInfo = document.createElement('div');
+            userInfo.className = 'user-info';
+            
+            const roleIcon = currentUser.type === 'outlet' ? '🏪' : '🏢';
+            const roleText = currentUser.type === 'outlet' ? 'Outlet User' : 
+                           (currentUser.role === 'ADMIN' ? 'System Admin' : 'Area Manager');
+            
+            userInfo.innerHTML = `
+                <div style="margin-bottom: 5px;">
+                    <strong>${roleIcon} ${userPermissions.displayName}</strong>
+                </div>
+                <div style="opacity: 0.8; font-size: 0.8rem;">
+                    ${roleText} | <span style="color: #48bb78;">🟢 Connected</span>
+                </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            `;
+            
+            header.appendChild(userInfo);
+        }
+
+        function initializeDemoOKRs() {
+            allOKRS = {};
+            const maxDemoOutlets = Math.min(5, outlets.length);
+            
+            for (let i = 0; i < maxDemoOutlets; i++) {
+                const outlet = outlets[i];
+                if (outlet) {
+                    allOKRS[outlet.id] = [{
+                        id: 1000 + outlet.id,
+                        outlet_id: outlet.id,
+                        title: 'Peningkatan Transaksi - Trafik Baru',
+                        description: 'Meningkatkan jumlah transaksi melalui penambahan trafik pelanggan baru',
+                        keyResults: [{
+                            id: 1,
+                            title: 'KR1: Peningkatan Jumlah Pelanggan Baru',
+                            description: 'Meningkatkan jumlah pelanggan baru sebesar 20%',
+                            actionPlans: [
+                                { text: 'Implementasi program welcome offer', completed: Math.random() > 0.5 },
+                                { text: 'Kampanye digital marketing', completed: Math.random() > 0.5 },
+                                { text: 'Partnership dengan komunitas sekitar', completed: Math.random() > 0.5 },
+                                { text: 'Program referral dengan reward', completed: Math.random() > 0.5 }
+                            ]
+                        }],
+                        progress: Math.floor(Math.random() * 80) + 20,
+                        status: 'active'
+                    }];
+                }
+            }
+            console.log(`✅ Created demo OKRs for ${maxDemoOutlets} outlets`);
+        }
+
+        function renderDashboard() {
+            // Filter outlets based on permissions
+            const allowedOutlets = userPermissions.canViewAllOutlets ? outlets : 
+                outlets.filter(outlet => userPermissions.accessibleOutlets.includes(outlet.code));
+            
+            // Calculate stats
+            const outletsWithOKRs = Object.keys(allOKRS).length;
+            const totalOKRs = Object.values(allOKRS).reduce((sum, okrs) => sum + okrs.length, 0);
+            const avgProgress = totalOKRs > 0 ? 
+                Math.round(Object.values(allOKRS).flat().reduce((sum, okr) => sum + okr.progress, 0) / totalOKRs) : 0;
+            
+            // Update stats cards
+            document.getElementById('total-outlets').textContent = outlets.length;
+            document.getElementById('outlets-with-okrs').textContent = outletsWithOKRs;
+            document.getElementById('active-okrs').textContent = totalOKRs;
+            document.getElementById('avg-progress').textContent = avgProgress + '%';
+            
+            // Render outlet cards
+            const container = document.getElementById('outlets-container');
+            container.innerHTML = '';
+            
+            const displayOutlets = allowedOutlets.slice(0, 6); // Show first 6 outlets
+            
+            displayOutlets.forEach(outlet => {
+                const outletOKRs = allOKRS[outlet.id] || [];
+                const progress = outletOKRs.length > 0 ? outletOKRs[0].progress : 0;
+                const completedActions = outletOKRs.length > 0 ? 
+                    outletOKRs[0].keyResults[0].actionPlans.filter(ap => ap.completed).length : 0;
+                const totalActions = outletOKRs.length > 0 ? 
+                    outletOKRs[0].keyResults[0].actionPlans.length : 0;
+                
+                const card = document.createElement('div');
+                card.className = 'outlet-card';
+                card.innerHTML = `
+                    <div class="outlet-name">${outlet.name}</div>
+                    <div class="outlet-code">Code: ${outlet.code} | AM: ${outlet.am}</div>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${progress}%"></div>
+                    </div>
+                    
+                    <div class="okr-stats">
+                        <span>Progress: ${progress}%</span>
+                        <span>Actions: ${completedActions}/${totalActions}</span>
+                        <span>OKRs: ${outletOKRs.length}</span>
+                    </div>
+                    
+                    ${outletOKRs.length > 0 ? `
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                            <div style="font-weight: 600; color: #4a5568; margin-bottom: 5px;">
+                                ${outletOKRs[0].title}
+                            </div>
+                            <div style="font-size: 0.85rem; color: #718096;">
+                                ${outletOKRs[0].keyResults[0].title}
+                            </div>
+                        </div>
+                    ` : `
+                        <div style="margin-top: 15px; padding: 10px; background: #faf5ff; border-radius: 8px; text-align: center;">
+                            <div style="color: #9f7aea; font-size: 0.9rem;">No OKRs assigned yet</div>
+                        </div>
+                    `}
+                `;
+                
+                container.appendChild(card);
+            });
+            
+            console.log('✅ Dashboard rendered successfully');
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            localStorage.clear();
+            window.location.href = 'okr-login.html';
+        }
+    </script>
+</body>
+</html>
