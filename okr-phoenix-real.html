@@ -811,6 +811,27 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Comment Modal -->
+        <div id="comment-modal" class="modal">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header" id="comment-modal-title">💬 Action Plan Comments</div>
+                <div id="comment-modal-body">
+                    <div id="comment-action-text" style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9rem; color: #4a5568;"></div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; font-weight: 600; color: #4a5568; margin-bottom: 8px;">Comments & Notes:</label>
+                        <textarea id="comment-textarea" 
+                                  placeholder="Add your comments, notes, or updates here..."
+                                  style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; min-height: 120px; resize: vertical; font-family: inherit;">
+                        </textarea>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" onclick="closeCommentModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveComment()">Save Comment</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Include required scripts -->
@@ -1547,7 +1568,7 @@
                                 ${outlet.okr.keyResults.map((kr, krIndex) => {
                                     const krKey = `kr${krIndex + 1}`;
                                     const actionPlans = outlet.okr.actionPlans?.[krKey] || [];
-                                    const krProgressData = outlet.okr.krProgress?.[krKey] || { completedActions: [], comments: {} };
+                                    const krProgressData = outlet.okr.krProgress?.[krKey] || { completedActions: [], comments: {}, likes: {}, priorities: {} };
                                     const completedActions = krProgressData.completedActions || [];
                                     const comments = krProgressData.comments || {};
                                     const krProgress = actionPlans.length > 0 ? Math.round((completedActions.length / actionPlans.length) * 100) : 0;
@@ -1575,21 +1596,43 @@
                                                             
                                                             return `
                                                                 <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; border-left: 3px solid ${isCompleted ? '#48bb78' : '#e2e8f0'};">
-                                                                    <div style="display: flex; align-items: start; gap: 10px; margin-bottom: 8px;">
+                                                                    <div style="display: flex; align-items: center; gap: 10px;">
                                                                         <input type="checkbox" id="action_${outlet.code}_${krKey}_${actionIndex}" 
                                                                                ${isCompleted ? 'checked' : ''}
                                                                                onchange="toggleActionPlan('${outlet.code}', '${krKey}', ${actionIndex})"
-                                                                               style="margin-top: 2px; cursor: pointer;">
+                                                                               style="cursor: pointer;">
                                                                         <label for="action_${outlet.code}_${krKey}_${actionIndex}" 
                                                                                style="flex: 1; font-size: 0.85rem; color: #4a5568; cursor: pointer; ${isCompleted ? 'text-decoration: line-through; opacity: 0.7;' : ''}">
                                                                             ${action}
                                                                         </label>
-                                                                    </div>
-                                                                    <div style="margin-left: 30px;">
-                                                                        <textarea id="comment_${outlet.code}_${krKey}_${actionIndex}" 
-                                                                                  placeholder="Add comments or notes..."
-                                                                                  onchange="updateActionComment('${outlet.code}', '${krKey}', ${actionIndex}, this.value)"
-                                                                                  style="width: 100%; padding: 6px 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 0.8rem; min-height: 60px; resize: vertical;">${comment}</textarea>
+                                                                        
+                                                                        <!-- Action Icons -->
+                                                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                                                            <!-- Priority Selector -->
+                                                                            <select id="priority_${outlet.code}_${krKey}_${actionIndex}" 
+                                                                                    onchange="updateActionPriority('${outlet.code}', '${krKey}', ${actionIndex}, this.value)"
+                                                                                    style="padding: 2px 4px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">
+                                                                                <option value="" ${!krProgressData.priorities?.[`action_${actionIndex}`] ? 'selected' : ''}>Priority</option>
+                                                                                <option value="high" ${krProgressData.priorities?.[`action_${actionIndex}`] === 'high' ? 'selected' : ''}>🔴 High</option>
+                                                                                <option value="medium" ${krProgressData.priorities?.[`action_${actionIndex}`] === 'medium' ? 'selected' : ''}>🟡 Medium</option>
+                                                                                <option value="low" ${krProgressData.priorities?.[`action_${actionIndex}`] === 'low' ? 'selected' : ''}>🟢 Low</option>
+                                                                            </select>
+                                                                            
+                                                                            <!-- Like Button -->
+                                                                            <button onclick="toggleActionLike('${outlet.code}', '${krKey}', ${actionIndex})" 
+                                                                                    style="background: none; border: none; cursor: pointer; font-size: 1rem; padding: 2px;" 
+                                                                                    title="Like this action">
+                                                                                ${krProgressData.likes?.[`action_${actionIndex}`] ? '❤️' : '🤍'}
+                                                                            </button>
+                                                                            
+                                                                            <!-- Comment Button -->
+                                                                            <button onclick="openCommentModal('${outlet.code}', '${krKey}', ${actionIndex})" 
+                                                                                    style="background: none; border: none; cursor: pointer; font-size: 1rem; padding: 2px; position: relative;" 
+                                                                                    title="Add/view comments">
+                                                                                💬
+                                                                                ${comment ? '<span style="position: absolute; top: -2px; right: -2px; background: #48bb78; color: white; border-radius: 50%; width: 8px; height: 8px; font-size: 0;">.</span>' : ''}
+                                                                            </button>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             `;
@@ -1636,7 +1679,7 @@
                 outlet.okr.krProgress = {};
             }
             if (!outlet.okr.krProgress[krKey]) {
-                outlet.okr.krProgress[krKey] = { completedActions: [], comments: {} };
+                outlet.okr.krProgress[krKey] = { completedActions: [], comments: {}, likes: {}, priorities: {} };
             }
             
             const completedActions = outlet.okr.krProgress[krKey].completedActions;
@@ -1665,7 +1708,71 @@
             console.log(`✅ Toggled action plan ${actionIndex} for ${krKey} in outlet ${outletCode}`);
         }
         
-        function updateActionComment(outletCode, krKey, actionIndex, comment) {
+        // Global variables for comment modal
+        let currentCommentOutlet = null;
+        let currentCommentKR = null;
+        let currentCommentAction = null;
+        
+        function openCommentModal(outletCode, krKey, actionIndex) {
+            const outlet = phoenixOutlets.find(o => o.code === outletCode);
+            if (!outlet || !outlet.okr) return;
+            
+            currentCommentOutlet = outletCode;
+            currentCommentKR = krKey;
+            currentCommentAction = actionIndex;
+            
+            const actionPlans = outlet.okr.actionPlans[krKey] || [];
+            const actionText = actionPlans[actionIndex] || '';
+            const commentKey = `action_${actionIndex}`;
+            const existingComment = outlet.okr.krProgress?.[krKey]?.comments?.[commentKey] || '';
+            
+            // Update modal content
+            document.getElementById('comment-action-text').textContent = actionText;
+            document.getElementById('comment-textarea').value = existingComment;
+            
+            // Show modal
+            document.getElementById('comment-modal').style.display = 'flex';
+        }
+        
+        function closeCommentModal() {
+            document.getElementById('comment-modal').style.display = 'none';
+            currentCommentOutlet = null;
+            currentCommentKR = null;
+            currentCommentAction = null;
+        }
+        
+        function saveComment() {
+            if (!currentCommentOutlet || !currentCommentKR || currentCommentAction === null) return;
+            
+            const comment = document.getElementById('comment-textarea').value.trim();
+            const outlet = phoenixOutlets.find(o => o.code === currentCommentOutlet);
+            if (!outlet || !outlet.okr) return;
+            
+            // Initialize KR progress data if it doesn't exist
+            if (!outlet.okr.krProgress) {
+                outlet.okr.krProgress = {};
+            }
+            if (!outlet.okr.krProgress[currentCommentKR]) {
+                outlet.okr.krProgress[currentCommentKR] = { completedActions: [], comments: {}, likes: {}, priorities: {} };
+            }
+            
+            // Update comment
+            const commentKey = `action_${currentCommentAction}`;
+            outlet.okr.krProgress[currentCommentKR].comments[commentKey] = comment;
+            
+            // Update localStorage
+            phoenixData.outlets[currentCommentOutlet].okr.krProgress = outlet.okr.krProgress;
+            localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+            
+            // Close modal and refresh view
+            closeCommentModal();
+            renderOutletOKRSection(outlet);
+            
+            showNotification('✅ Comment saved successfully!', 'success');
+            console.log(`✅ Updated comment for action ${currentCommentAction} in ${currentCommentKR} for outlet ${currentCommentOutlet}`);
+        }
+        
+        function toggleActionLike(outletCode, krKey, actionIndex) {
             const outlet = phoenixOutlets.find(o => o.code === outletCode);
             if (!outlet || !outlet.okr) return;
             
@@ -1674,18 +1781,45 @@
                 outlet.okr.krProgress = {};
             }
             if (!outlet.okr.krProgress[krKey]) {
-                outlet.okr.krProgress[krKey] = { completedActions: [], comments: {} };
+                outlet.okr.krProgress[krKey] = { completedActions: [], comments: {}, likes: {}, priorities: {} };
             }
             
-            // Update comment
-            const commentKey = `action_${actionIndex}`;
-            outlet.okr.krProgress[krKey].comments[commentKey] = comment;
+            // Toggle like status
+            const likeKey = `action_${actionIndex}`;
+            const currentLike = outlet.okr.krProgress[krKey].likes[likeKey] || false;
+            outlet.okr.krProgress[krKey].likes[likeKey] = !currentLike;
             
             // Update localStorage
             phoenixData.outlets[outletCode].okr.krProgress = outlet.okr.krProgress;
             localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
             
-            console.log(`✅ Updated comment for action ${actionIndex} in ${krKey} for outlet ${outletCode}`);
+            // Refresh view
+            renderOutletOKRSection(outlet);
+            
+            console.log(`✅ Toggled like for action ${actionIndex} in ${krKey} for outlet ${outletCode}`);
+        }
+        
+        function updateActionPriority(outletCode, krKey, actionIndex, priority) {
+            const outlet = phoenixOutlets.find(o => o.code === outletCode);
+            if (!outlet || !outlet.okr) return;
+            
+            // Initialize KR progress data if it doesn't exist
+            if (!outlet.okr.krProgress) {
+                outlet.okr.krProgress = {};
+            }
+            if (!outlet.okr.krProgress[krKey]) {
+                outlet.okr.krProgress[krKey] = { completedActions: [], comments: {}, likes: {}, priorities: {} };
+            }
+            
+            // Update priority
+            const priorityKey = `action_${actionIndex}`;
+            outlet.okr.krProgress[krKey].priorities[priorityKey] = priority;
+            
+            // Update localStorage
+            phoenixData.outlets[outletCode].okr.krProgress = outlet.okr.krProgress;
+            localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+            
+            console.log(`✅ Updated priority to ${priority} for action ${actionIndex} in ${krKey} for outlet ${outletCode}`);
         }
         
         function updateOverallOKRProgress(outletCode) {
@@ -1749,12 +1883,16 @@
         document.addEventListener('click', (e) => {
             const addModal = document.getElementById('add-outlet-modal');
             const okrModal = document.getElementById('okr-modal');
+            const commentModal = document.getElementById('comment-modal');
             
             if (e.target === addModal) {
                 closeAddOutletModal();
             }
             if (e.target === okrModal) {
                 closeOKRModal();
+            }
+            if (e.target === commentModal) {
+                closeCommentModal();
             }
         });
 
