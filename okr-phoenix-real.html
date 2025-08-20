@@ -1449,7 +1449,7 @@
                             </div>
                         </div>
 
-                        ${renderSalesTargetSystem(outlet, totalRevenue)}
+                        ${renderTierUnlockBar(outlet, totalRevenue)}
 
                         <div class="progress-section">
                             <div class="progress-title">🎯 OKR Key Results Progress</div>
@@ -1745,6 +1745,133 @@
             
             showNotification(`🎯 Monthly target updated to ${formatCurrency(target)}`, 'success');
             console.log(`✅ Updated monthly target for ${outletCode} to ${target}`);
+        }
+        
+        function renderTierUnlockBar(outlet, currentRevenue) {
+            try {
+                // Get monthly target from detail view or localStorage
+                const detailTargetKey = `detail_monthly_target_${outlet.code}`;
+                let monthlyTarget = 0;
+                
+                // Check localStorage for detail view target
+                const savedTarget = localStorage.getItem(detailTargetKey);
+                if (savedTarget) {
+                    monthlyTarget = parseFloat(savedTarget);
+                } else if (phoenixData && phoenixData.outlets && phoenixData.outlets[outlet.code] && phoenixData.outlets[outlet.code].salesTargets) {
+                    monthlyTarget = phoenixData.outlets[outlet.code].salesTargets.monthlyTarget || 0;
+                }
+                
+                // Use actual revenue from outlet performance data instead of passed parameter
+                // Get the actual Term data for this outlet to calculate real revenue
+                const performanceData = outlet.performanceData || {
+                    term1: { revenue: 0, trano: 0 },
+                    term2: { revenue: 0, trano: 0 },
+                    term3: { revenue: 0, trano: 0 }
+                };
+                
+                // Calculate actual revenue based on available term data
+                let actualRevenue = 0;
+                const term1Rev = performanceData.term1.revenue || 0;
+                const term2Rev = performanceData.term2.revenue || 0;
+                const term3Rev = performanceData.term3.revenue || 0;
+                
+                if (term3Rev > 0) {
+                    // If Term 3 has data, use all three terms
+                    actualRevenue = term1Rev + term2Rev + term3Rev;
+                } else if (term2Rev > 0) {
+                    // If Term 2 has data but Term 3 doesn't, use Term 1 + Term 2
+                    actualRevenue = term1Rev + term2Rev;
+                } else if (term1Rev > 0) {
+                    // If only Term 1 has data, use Term 1 only
+                    actualRevenue = term1Rev;
+                } else {
+                    // No term data available, use 0
+                    actualRevenue = 0;
+                }
+                
+                // Use actualRevenue instead of currentRevenue for calculations
+                currentRevenue = actualRevenue;
+                
+                // Calculate tier targets (only if target is set)
+                if (monthlyTarget <= 0) {
+                    // No target set - show locked tiers
+                    return `
+                        <div class="tier-unlock-bar" style="background: linear-gradient(135deg, #718096 0%, #4a5568 100%); border-radius: 8px; padding: 12px; margin: 10px 0; color: white;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="font-size: 0.85rem; opacity: 0.9;">🏆 Achievement Tiers</span>
+                                <span style="font-size: 0.75rem; opacity: 0.7;">Set target in detail view</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="text-align: center; flex: 1;">
+                                    <div style="font-size: 1.2rem; opacity: 0.5;">🔒</div>
+                                    <div style="font-size: 0.7rem; opacity: 0.7;">Tier 1</div>
+                                </div>
+                                <div style="text-align: center; flex: 1;">
+                                    <div style="font-size: 1.2rem; opacity: 0.5;">🔒</div>
+                                    <div style="font-size: 0.7rem; opacity: 0.7;">Tier 2</div>
+                                </div>
+                                <div style="text-align: center; flex: 1;">
+                                    <div style="font-size: 1.2rem; opacity: 0.5;">🔒</div>
+                                    <div style="font-size: 0.7rem; opacity: 0.7;">Tier 3</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Calculate tier targets
+                const tier1Target = Math.round(monthlyTarget * 0.8); // 80%
+                const tier2Target = Math.round(monthlyTarget * 0.9); // 90%
+                const tier3Target = monthlyTarget; // 100%
+                
+                // Determine unlocked tiers
+                const tier1Unlocked = currentRevenue >= tier1Target;
+                const tier2Unlocked = currentRevenue >= tier2Target;
+                const tier3Unlocked = currentRevenue >= tier3Target;
+                
+                // Calculate overall progress percentage
+                const progressPercentage = Math.min((currentRevenue / monthlyTarget) * 100, 100);
+                
+                return `
+                    <div class="tier-unlock-bar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; padding: 12px; margin: 10px 0; color: white;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 0.85rem; font-weight: 600;">🏆 Achievement Progress</span>
+                            <span style="font-size: 0.8rem; font-weight: 600;">${progressPercentage.toFixed(1)}%</span>
+                        </div>
+                        
+                        <!-- Progress Bar -->
+                        <div style="background: rgba(255,255,255,0.2); border-radius: 10px; height: 6px; margin-bottom: 10px; overflow: hidden;">
+                            <div style="background: linear-gradient(90deg, #48bb78 0%, #38a169 100%); height: 100%; width: ${progressPercentage}%; transition: width 0.3s ease; border-radius: 10px;"></div>
+                        </div>
+                        
+                        <!-- Tier Status -->
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="text-align: center; flex: 1;">
+                                <div style="font-size: 1.2rem;">${tier1Unlocked ? '🥉' : '🔒'}</div>
+                                <div style="font-size: 0.7rem; opacity: ${tier1Unlocked ? '1' : '0.6'};">Tier 1</div>
+                                <div style="font-size: 0.65rem; opacity: 0.8;">Bronze</div>
+                            </div>
+                            <div style="text-align: center; flex: 1;">
+                                <div style="font-size: 1.2rem;">${tier2Unlocked ? '🥈' : '🔒'}</div>
+                                <div style="font-size: 0.7rem; opacity: ${tier2Unlocked ? '1' : '0.6'};">Tier 2</div>
+                                <div style="font-size: 0.65rem; opacity: 0.8;">Silver</div>
+                            </div>
+                            <div style="text-align: center; flex: 1;">
+                                <div style="font-size: 1.2rem;">${tier3Unlocked ? '🥇' : '🔒'}</div>
+                                <div style="font-size: 0.7rem; opacity: ${tier3Unlocked ? '1' : '0.6'};">Tier 3</div>
+                                <div style="font-size: 0.65rem; opacity: 0.8;">Gold</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('❌ Error in renderTierUnlockBar:', error);
+                return `
+                    <div class="tier-unlock-bar" style="background: #fed7d7; border: 1px solid #e53e3e; border-radius: 8px; padding: 12px; margin: 10px 0; color: #e53e3e; text-align: center;">
+                        <div style="font-size: 0.8rem;">⚠️ Tier system temporarily unavailable</div>
+                    </div>
+                `;
+            }
         }
 
         function saveMedalAchievement(outletCode, tier, rewardAmount) {
@@ -2769,22 +2896,33 @@
         function getCurrentSalesForDetailOutlet() {
             if (!currentDetailOutlet) return 0;
             
-            // Try to get from current sales data input
-            const currentSalesInput = document.querySelector('.data-input[data-field="current_sales"]');
-            if (currentSalesInput && currentSalesInput.value) {
-                return parseFloat(currentSalesInput.value) || 0;
+            // Get actual Term data from the input fields in detail view
+            const term1Revenue = parseFloat(document.getElementById('input-term1-revenue')?.value) || 0;
+            const term2Revenue = parseFloat(document.getElementById('input-term2-revenue')?.value) || 0;
+            const term3Revenue = parseFloat(document.getElementById('input-term3-revenue')?.value) || 0;
+            
+            // Calculate total based on which terms have data
+            let totalRevenue = 0;
+            
+            if (term3Revenue > 0) {
+                // If Term 3 has data, use all three terms
+                totalRevenue = term1Revenue + term2Revenue + term3Revenue;
+                console.log(`📊 Using all 3 terms: Term1(${term1Revenue.toLocaleString()}) + Term2(${term2Revenue.toLocaleString()}) + Term3(${term3Revenue.toLocaleString()}) = ${totalRevenue.toLocaleString()}`);
+            } else if (term2Revenue > 0) {
+                // If Term 2 has data but Term 3 doesn't, use Term 1 + Term 2
+                totalRevenue = term1Revenue + term2Revenue;
+                console.log(`📊 Using 2 terms: Term1(${term1Revenue.toLocaleString()}) + Term2(${term2Revenue.toLocaleString()}) = ${totalRevenue.toLocaleString()}`);
+            } else if (term1Revenue > 0) {
+                // If only Term 1 has data, use Term 1 only
+                totalRevenue = term1Revenue;
+                console.log(`📊 Using 1 term: Term1(${term1Revenue.toLocaleString()}) = ${totalRevenue.toLocaleString()}`);
+            } else {
+                // No term data available
+                totalRevenue = 0;
+                console.log(`📊 No term data available for outlet ${currentDetailOutlet}`);
             }
             
-            // Fallback to mock data for demo purposes
-            // In real implementation, this would fetch from API or outlet data
-            const mockSalesData = {
-                'BTTGPR1': 85000000, // Example: Rp 85M for APOTEK ALPRO EXPRESS PAWON RAYA
-                'BTTSUB1': 72000000,
-                'BTTMDN1': 95000000,
-                'default': 60000000
-            };
-            
-            return mockSalesData[currentDetailOutlet] || mockSalesData['default'];
+            return totalRevenue;
         }
         
         function saveMedalAchievement(outletCode, medal, rewardAmount) {
@@ -3335,6 +3473,11 @@
                         
                         // Update progress in real-time
                         calculateProportionalProgress(data);
+                        
+                        // Also update tier progress if monthly target is set and we're in detail view
+                        if (currentDetailOutlet && document.getElementById('detail-tier-display').style.display !== 'none') {
+                            calculateDetailTierProgress();
+                        }
                     });
                 }
             });
