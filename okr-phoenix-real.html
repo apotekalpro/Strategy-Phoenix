@@ -1,0 +1,1744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phoenix Project Dashboard - Real Working Version</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .dashboard-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .dashboard-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #4a5568;
+        }
+
+        .logout-btn {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: #c53030;
+            transform: translateY(-1px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .dashboard-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .add-outlet-btn {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-outlet-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
+        }
+
+        .outlets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .phoenix-outlet-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid #ff6b6b;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .phoenix-outlet-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .outlet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .outlet-info h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .outlet-code {
+            font-size: 0.85rem;
+            color: #718096;
+        }
+
+        .phoenix-badge {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .performance-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .metric-item {
+            text-align: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .metric-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: #718096;
+        }
+
+        .progress-section {
+            margin-top: 15px;
+        }
+
+        .progress-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+
+        .progress-bars {
+            display: grid;
+            gap: 8px;
+        }
+
+        .progress-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .progress-label {
+            font-size: 0.8rem;
+            color: #718096;
+            flex: 1;
+        }
+
+        .progress-value {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #4a5568;
+            margin-right: 10px;
+        }
+
+        .progress-bar {
+            flex: 2;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78 0%, #38a169 100%);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #4a5568;
+        }
+
+        .empty-state-desc {
+            font-size: 1rem;
+            margin-bottom: 25px;
+        }
+
+        /* Detail View Styles */
+        .detail-view {
+            display: none;
+        }
+
+        .back-button {
+            background: #4a5568;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.2s;
+        }
+
+        .back-button:hover {
+            background: #2d3748;
+            transform: translateY(-1px);
+        }
+
+        .detail-header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .detail-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .detail-subtitle {
+            color: #718096;
+            font-size: 1rem;
+        }
+
+        .data-entry-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+
+        .data-input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 6px;
+        }
+
+        .data-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .data-input:focus {
+            outline: none;
+            border-color: #48bb78;
+            box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.1);
+        }
+
+        .input-help {
+            font-size: 0.75rem;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .save-all-btn {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        .save-all-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .outlet-search {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        .outlet-search:focus {
+            outline: none;
+            border-color: #48bb78;
+        }
+
+        .outlet-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+
+        .outlet-item {
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .outlet-item:hover {
+            background: #f8f9fa;
+        }
+
+        .outlet-item.selected {
+            background: #e6fffa;
+            border-color: #48bb78;
+        }
+
+        .outlet-item-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 2px;
+        }
+
+        .outlet-item-code {
+            font-size: 0.85rem;
+            color: #718096;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .btn-primary {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #38a169;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.success {
+            background: #48bb78;
+        }
+
+        .notification.error {
+            background: #e53e3e;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .okr-template-option {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .okr-template-option:hover {
+            border-color: #48bb78;
+            background: #f0fff4;
+        }
+
+        .okr-template-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .okr-template-desc {
+            font-size: 0.9rem;
+            color: #718096;
+            margin-bottom: 10px;
+        }
+
+        .okr-template-category {
+            font-size: 0.8rem;
+            color: #48bb78;
+            font-weight: 600;
+        }
+
+        .progress-indicator {
+            transition: all 0.3s ease;
+        }
+
+        .progress-indicator .progress-value {
+            transition: color 0.3s ease;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .outlets-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .performance-metrics {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Dashboard View -->
+        <div id="dashboard-view">
+            <div class="dashboard-header">
+                <div class="header-top">
+                    <h1 class="dashboard-title">
+                        🔥 Phoenix Project Dashboard
+                    </h1>
+                    <div class="user-info">
+                        <span id="user-name">Loading...</span>
+                        <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+                    </div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-phoenix-outlets">0</div>
+                        <div class="stat-label">Phoenix Outlets</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-revenue">Rp 0</div>
+                        <div class="stat-label">Total Revenue</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="avg-progress">0%</div>
+                        <div class="stat-label">Avg Progress</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-content">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        🏪 Phoenix Project Outlets
+                    </h2>
+                    <button class="add-outlet-btn" onclick="openAddOutletModal()">
+                        ➕ Add Outlet to Phoenix Program
+                    </button>
+                </div>
+                
+                <div id="outlets-grid" class="outlets-grid">
+                    <!-- Outlet cards will be rendered here -->
+                </div>
+                
+                <div id="empty-state" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">🏪</div>
+                    <div class="empty-state-title">No Phoenix Outlets Yet</div>
+                    <div class="empty-state-desc">Start by adding outlets to the Phoenix Program to track their OKR progress</div>
+                    <button class="add-outlet-btn" onclick="openAddOutletModal()">
+                        ➕ Add Your First Outlet
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail View -->
+        <div id="detail-view" class="detail-view">
+            <button class="back-button" onclick="backToCardView()">
+                ← Back to Phoenix Dashboard
+            </button>
+            
+            <div class="detail-header">
+                <div class="detail-title" id="detail-outlet-name">Outlet Name</div>
+                <div class="detail-subtitle" id="detail-outlet-info">Code: • AM:</div>
+                <div class="phoenix-badge" style="display: inline-block; margin-top: 10px;">Phoenix Project Participant</div>
+            </div>
+
+            <div class="data-entry-section">
+                <div class="section-title">
+                    📊 Baseline & Performance Data Entry
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <!-- Baseline Column -->
+                    <div style="background: #fff; border-radius: 8px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-top: 3px solid #667eea;">
+                        <div style="text-align: center; margin-bottom: 12px;">
+                            <h4 style="color: #667eea; font-size: 0.9rem; font-weight: 700; margin-bottom: 4px;">📊 Baseline</h4>
+                            <div style="color: #718096; font-size: 0.75rem;">Revenue & Trano</div>
+                        </div>
+                        <div class="data-input-group" style="margin-bottom: 8px;">
+                            <label class="input-label" style="color: #4a5568; font-weight: 600; font-size: 0.8rem;">Revenue Baseline</label>
+                            <input type="number" id="input-baseline-revenue" class="data-input" placeholder="0" style="font-size: 0.9rem; font-weight: 600; text-align: center; padding: 6px;">
+                            <div class="input-help" style="font-size: 0.7rem;">Monthly revenue</div>
+                        </div>
+                        <div class="data-input-group" style="margin-bottom: 0;">
+                            <label class="input-label" style="color: #4a5568; font-weight: 600; font-size: 0.8rem;">Trano Baseline</label>
+                            <input type="number" id="input-baseline-trano" class="data-input" placeholder="0" style="font-size: 0.9rem; font-weight: 600; text-align: center; padding: 6px;">
+                            <div class="input-help" style="font-size: 0.7rem;">Monthly transactions</div>
+                        </div>
+                    </div>
+
+                    <!-- Term 1 Column -->
+                    <div style="background: #fff; border-radius: 8px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-top: 3px solid #48bb78;">
+                        <div style="text-align: center; margin-bottom: 12px;">
+                            <h4 style="color: #48bb78; font-size: 0.9rem; font-weight: 700; margin-bottom: 4px;">📈 Term 1</h4>
+                            <div style="color: #718096; font-size: 0.75rem;">Day 1 - 10</div>
+                        </div>
+                        <div class="data-input-group" style="margin-bottom: 8px;">
+                            <label class="input-label" style="color: #4a5568; font-weight: 600; font-size: 0.8rem;">Revenue</label>
+                            <input type="number" id="input-term1-revenue" class="data-input" placeholder="0" style="font-size: 0.9rem; font-weight: 600; text-align: center; padding: 6px;">
+                            <div class="input-help" style="font-size: 0.7rem;">Rupiah (Rp)</div>
+                        </div>
+                        <div class="data-input-group" style="margin-bottom: 0;">
+                            <label class="input-label" style="color: #4a5568; font-weight: 600; font-size: 0.8rem;">Trano</label>
+                            <input type="number" id="input-term1-trano" class="data-input" placeholder="0" style="font-size: 0.9rem; font-weight: 600; text-align: center; padding: 6px;">
+                            <div class="input-help" style="font-size: 0.7rem;">Transactions</div>
+                        </div>
+                    </div>
+
+                    <!-- Term 2 Column -->
+                    <div style="background: #fff; border-radius: 8px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-top: 3px solid #feca57;">
+                        <div style="text-align: center; margin-bottom: 12px;">
+                            <h4 style="color: #d69e2e; font-size: 0.9rem; font-weight: 700; margin-bottom: 4px;">📊 Term 2</h4>
+                            <div style="color: #718096; font-size: 0.75rem;">Day 11 - 20</div>
+                        </div>
+                        <div class="data-input-group" style="margin-bottom: 8px;">
+                            <label class="input-label" style="color: #4a5568; font-weight: 600; font-size: 0.8rem;">Revenue</label>
+                            <input type="number" id="input-term2-revenue" class="data-input" placeholder="0" style="font-size: 0.9rem; font-weight: 600; text-align: center; padding: 6px;">
+                            <div class="input-help" style="font-size: 0.7rem;">Rupiah (Rp)</div>
+                        </div>
+                        <div class="data-input-group" style="margin-bottom: 0;">
+                            <label class="input-label" style="color: #4a5568; font-weight: 600; font-size: 0.8rem;">Trano</label>
+                            <input type="number" id="input-term2-trano" class="data-input" placeholder="0" style="font-size: 0.9rem; font-weight: 600; text-align: center; padding: 6px;">
+                            <div class="input-help" style="font-size: 0.7rem;">Transactions</div>
+                        </div>
+                    </div>
+
+                    <!-- Term 3 Column -->
+                    <div style="background: #fff; border-radius: 8px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-top: 3px solid #ff6b6b;">
+                        <div style="text-align: center; margin-bottom: 12px;">
+                            <h4 style="color: #e53e3e; font-size: 0.9rem; font-weight: 700; margin-bottom: 4px;">📈 Term 3</h4>
+                            <div style="color: #718096; font-size: 0.75rem;">Day 21 - 30/31</div>
+                        </div>
+                        <div class="data-input-group" style="margin-bottom: 8px;">
+                            <label class="input-label" style="color: #4a5568; font-weight: 600; font-size: 0.8rem;">Revenue</label>
+                            <input type="number" id="input-term3-revenue" class="data-input" placeholder="0" style="font-size: 0.9rem; font-weight: 600; text-align: center; padding: 6px;">
+                            <div class="input-help" style="font-size: 0.7rem;">Rupiah (Rp)</div>
+                        </div>
+                        <div class="data-input-group" style="margin-bottom: 0;">
+                            <label class="input-label" style="color: #4a5568; font-weight: 600; font-size: 0.8rem;">Trano</label>
+                            <input type="number" id="input-term3-trano" class="data-input" placeholder="0" style="font-size: 0.9rem; font-weight: 600; text-align: center; padding: 6px;">
+                            <div class="input-help" style="font-size: 0.7rem;">Transactions</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Progress Tracking Section -->
+                <div id="progress-tracking" style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin-bottom: 15px; border-left: 4px solid #48bb78;">
+                    <h4 style="color: #2d3748; margin-bottom: 12px; font-size: 0.95rem;">📊 Progress vs Baseline</h4>
+                    <div id="progress-indicators" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                        <div id="term1-progress" class="progress-indicator" style="text-align: center; padding: 8px; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <div style="font-size: 0.8rem; color: #718096; margin-bottom: 4px;">Term 1 vs 10-Day Baseline</div>
+                            <div class="progress-value" style="font-size: 1.1rem; font-weight: 700; color: #48bb78;">-</div>
+                        </div>
+                        <div id="term2-progress" class="progress-indicator" style="text-align: center; padding: 8px; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <div style="font-size: 0.8rem; color: #718096; margin-bottom: 4px;">Term 1+2 vs 20-Day Baseline</div>
+                            <div class="progress-value" style="font-size: 1.1rem; font-weight: 700; color: #d69e2e;">-</div>
+                        </div>
+                        <div id="term3-progress" class="progress-indicator" style="text-align: center; padding: 8px; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <div style="font-size: 0.8rem; color: #718096; margin-bottom: 4px;">Full Month vs Baseline</div>
+                            <div class="progress-value" style="font-size: 1.1rem; font-weight: 700; color: #e53e3e;">-</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="save-all-btn" onclick="saveOutletDetailData()">
+                    💾 Save All Data
+                </button>
+            </div>
+
+            <div class="data-entry-section">
+                <div class="section-title">
+                    🎯 OKR Management
+                </div>
+                
+                <div id="outlet-okr-section">
+                    <!-- OKR content will be rendered here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Outlet Modal -->
+        <div id="add-outlet-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">➕ Add Outlet to Phoenix Program</div>
+                <input type="text" id="outlet-search" class="outlet-search" placeholder="Search outlets..." onkeyup="filterOutlets()">
+                <div id="outlet-list" class="outlet-list">
+                    <!-- Available outlets will be rendered here -->
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" onclick="closeAddOutletModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="addSelectedOutlet()" id="add-outlet-confirm-btn" disabled>Add to Phoenix</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- OKR Assignment Modal -->
+        <div id="okr-modal" class="modal">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header" id="okr-modal-title">🎯 Assign OKR</div>
+                <div id="okr-modal-body">
+                    <!-- OKR content will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include required scripts -->
+    <script src="config.js"></script>
+    <script src="google-sheets-api.js"></script>
+    <script src="auth-service.js"></script>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        let userPermissions = null;
+        let allOutlets = [];
+        let phoenixOutlets = [];
+        let selectedOutletForAdd = null;
+        let currentOKROutlet = null;
+
+        // Phoenix OKR Templates based on the exact reference document
+        const phoenixOKRTemplates = [
+            {
+                id: 1,
+                title: 'OKR Phoenix Project – Peningkatan Transaksi (Trafik Baru & Return Rate)',
+                description: 'Meningkatkan volume transaksi harian sebanyak 10%/mth melalui peningkatan trafik masuk (walk-in), pendaftaran member baru, dan kunjungan ulang pelanggan dengan strategi booth & flyering.',
+                category: 'Phoenix Main',
+                keyResults: [
+                    'KR1 – Melakukan 15 Tes Kesehatan/Hari melalui Booth Campaign (Setiap Selasa, Kamis, Minggu)',
+                    'KR2 – Capai >90% Tingkat Rekrutmen Member VIP dari Pelanggan Non-Member + Picu Kunjungan Ulang melalui Reminder & Voucher',
+                    'KR3 – Flyering di area sekitar outlet: minimum 100 leaflet/hari dengan follow up ke 20% (20 orang)',
+                    'KR4 – Capai Brand Awareness 70% di area sekitar outlet melalui booth & flyering campaign'
+                ],
+                actionPlans: {
+                    kr1: [
+                        'Set up booth kampanye setiap Selasa, Kamis, dan Minggu',
+                        'Sediakan alat tes kesehatan: tensi, gula darah, asam urat',
+                        'Target minimum 15 orang per hari untuk tes kesehatan',
+                        'Follow up dengan konsultasi dan rekomendasi produk'
+                    ],
+                    kr2: [
+                        'Identifikasi pelanggan non-member saat transaksi',
+                        'Tawarkan program member VIP dengan benefit menarik',
+                        'Set up sistem reminder via WhatsApp/SMS',
+                        'Berikan voucher khusus untuk member baru'
+                    ],
+                    kr3: [
+                        'Distribusikan 100 leaflet per hari di area strategis',
+                        'Catat kontak 20% penerima leaflet (20 orang)',
+                        'Follow up via telepon/WhatsApp dalam 3 hari',
+                        'Tawarkan promo khusus untuk first-time customer'
+                    ],
+                    kr4: [
+                        'Survey brand awareness bulanan di sekitar outlet',
+                        'Ukur recall dan recognition brand',
+                        'Target 70% masyarakat mengenal apotek',
+                        'Evaluasi efektivitas kampanye booth & flyering'
+                    ]
+                }
+            },
+            {
+                id: 2,
+                title: 'OKR Phoenix Project – Optimalisasi Penjualan dengan Advanced Strategy',
+                description: 'Mengoptimalkan revenue dan transaksi melalui strategi penjualan lanjutan: PWP (Product With Purchase), konsultasi berbayar, training produk, dan fokus SKU tertentu.',
+                category: 'Phoenix Advanced',
+                keyResults: [
+                    'KR1 – Capai 100% target PWP setiap bulan dengan pelatihan CE dan monitoring harian',
+                    'KR2 – Capai penggunaan MK (Menit Konsult) sebanyak minimum 150x per bulan, dengan tracking harian',
+                    'KR3 – BM melakukan training internal produk kepada CE minimal 1x/hari dengan topik 1 produk fokus dan skrip upsell terkait',
+                    'KR4 – Tambahkan 3 SKU sebagai fokus top-up bulanan, dengan target penjualan minimum 50 pcs/SKU/bulan'
+                ],
+                actionPlans: {
+                    kr1: [
+                        'Lakukan pelatihan oleh BM kepada CE tentang cara mengkomunikasikan PWP secara persuasif',
+                        'Gunakan skrip PWP: "Kak, produk ini lagi promo loh – bisa ditambah RpX saja, hematnya bisa sampai 30%"',
+                        'Update progres PWP setiap malam di grup internal outlet',
+                        'Tempelkan reminder produk PWP aktif di area kasir'
+                    ],
+                    kr2: [
+                        'Tetapkan target harian MK = 5 pasien/hari',
+                        'Tracking MK langsung di Google Sheet harian (tanpa perlu form log)',
+                        'MK dapat dilakukan untuk semua keluhan ringan maupun penguatan penjualan OTC',
+                        'Pantau mingguan: apakah jumlah MK meningkat dan dampaknya terhadap transaksi dan BP'
+                    ],
+                    kr3: [
+                        'BM memilih 1 produk per hari yang akan difokuskan (misalnya: Omega 3, Vit C, Sari Kunyit)',
+                        'BM melakukan briefing ke CE setiap pagi sebelum shift (5–10 menit)',
+                        'Target: produk tersebut disampaikan minimal ke 5 customer per shift',
+                        'Laporkan produk harian yang ditraining & hasilnya dalam tracking mingguan'
+                    ],
+                    kr4: [
+                        'Outlet memilih 3 SKU add-on untuk bulan berjalan (rekomendasi dari Strategy/BPT)',
+                        'Display produk di kasir dengan tag "Favorit Kami!" atau "Bisa Ditambahkan"',
+                        'Tetapkan target: 50 pcs per SKU per bulan',
+                        'Laporkan hasil ke Strategy Team untuk evaluasi dampaknya terhadap BP'
+                    ]
+                }
+            }
+        ];
+
+        // Phoenix data structure - now stored in localStorage for persistence
+        let phoenixData = JSON.parse(localStorage.getItem('phoenixProjectData')) || {
+            outlets: {}
+        };
+
+        // Initialize dashboard
+        window.addEventListener('load', async () => {
+            try {
+                // Check authentication
+                const userAuth = sessionStorage.getItem('userAuth');
+                if (!userAuth) {
+                    sessionStorage.setItem('returnUrl', 'okr-phoenix-real.html');
+                    window.location.href = 'okr-login.html';
+                    return;
+                }
+                
+                currentUser = JSON.parse(userAuth);
+                console.log('✅ Phoenix Real Dashboard - User authenticated:', currentUser.username);
+                
+                // Initialize services
+                const googleSheetsAPI = new GoogleSheetsAPI();
+                const authService = new AuthService();
+                await authService.initialize();
+                
+                // Load all outlets from Google Sheets
+                await loadAllOutlets(googleSheetsAPI);
+                
+                // Setup user permissions
+                setupUserPermissions();
+                
+                // Load Phoenix outlets
+                loadPhoenixOutlets();
+                
+                // Render dashboard
+                renderPhoenixDashboard();
+                
+                console.log('✅ Phoenix Real Dashboard initialized successfully');
+                
+            } catch (error) {
+                console.error('❌ Phoenix Real Dashboard initialization failed:', error);
+                sessionStorage.removeItem('userAuth');
+                sessionStorage.setItem('returnUrl', 'okr-phoenix-real.html');
+                window.location.href = 'okr-login.html';
+            }
+        });
+
+        async function loadAllOutlets(googleSheetsAPI) {
+            try {
+                const credentials = await googleSheetsAPI.loadOutletCredentials();
+                allOutlets = Object.keys(credentials).map((outletCode, index) => ({
+                    id: index + 1,
+                    code: outletCode,
+                    name: credentials[outletCode].outletName || `APOTEK ALPRO ${outletCode}`,
+                    am: credentials[outletCode].am || 'SYSTEM AM'
+                }));
+                console.log(`✅ Loaded ${allOutlets.length} outlets from Google Sheets`);
+            } catch (error) {
+                console.error('❌ Failed to load outlets:', error);
+                allOutlets = [];
+            }
+        }
+
+        function setupUserPermissions() {
+            if (currentUser.type === 'outlet') {
+                userPermissions = {
+                    canViewAllOutlets: false,
+                    canAddOutlets: false,
+                    allowedOutlets: [currentUser.username.toUpperCase()],
+                    canAssignOKR: false,
+                    canEditOKR: true
+                };
+            } else if (currentUser.type === 'am') {
+                userPermissions = {
+                    canViewAllOutlets: false,
+                    canAddOutlets: true,
+                    allowedOutlets: allOutlets.filter(outlet => 
+                        outlet.am === currentUser.name || outlet.am === 'SYSTEM AM'
+                    ).map(outlet => outlet.code),
+                    canAssignOKR: true,
+                    canEditOKR: true
+                };
+            } else {
+                userPermissions = {
+                    canViewAllOutlets: true,
+                    canAddOutlets: true,
+                    allowedOutlets: allOutlets.map(outlet => outlet.code),
+                    canAssignOKR: true,
+                    canEditOKR: true
+                };
+            }
+            
+            // Update UI based on permissions
+            document.getElementById('user-name').textContent = `👋 ${currentUser.name || currentUser.username}`;
+        }
+
+        function loadPhoenixOutlets() {
+            if (userPermissions.canViewAllOutlets) {
+                phoenixOutlets = allOutlets.filter(outlet => phoenixData.outlets[outlet.code]);
+            } else {
+                phoenixOutlets = allOutlets
+                    .filter(outlet => 
+                        userPermissions.allowedOutlets.includes(outlet.code) && 
+                        phoenixData.outlets[outlet.code]
+                    )
+                    .map(outlet => {
+                        const phoenixOutletData = phoenixData.outlets[outlet.code];
+                        return {
+                            ...outlet,
+                            ...phoenixOutletData
+                        };
+                    });
+            }
+            
+            console.log(`✅ Loaded ${phoenixOutlets.length} Phoenix outlets for user`);
+        }
+
+        function renderPhoenixDashboard() {
+            // Update stats
+            const totalRevenue = phoenixOutlets.reduce((sum, outlet) => {
+                const performanceData = outlet.performanceData || {};
+                return sum + (performanceData.term1?.revenue || 0) + (performanceData.term2?.revenue || 0) + (performanceData.term3?.revenue || 0);
+            }, 0);
+            
+            // Calculate average progress based on data completion
+            const avgProgress = phoenixOutlets.length > 0 ? 
+                Math.round(phoenixOutlets.reduce((sum, outlet) => sum + calculateOutletProgress(outlet), 0) / phoenixOutlets.length) : 0;
+            
+            document.getElementById('total-phoenix-outlets').textContent = phoenixOutlets.length;
+            document.getElementById('total-revenue').textContent = formatCurrency(totalRevenue);
+            document.getElementById('avg-progress').textContent = avgProgress + '%';
+            
+            // Render cards
+            renderOutletCards();
+        }
+
+        function calculateOutletProgress(outlet) {
+            // Calculate progress based on how much data is filled
+            const performanceData = outlet.performanceData || {};
+            const fields = [
+                performanceData.baseline?.revenue,
+                performanceData.baseline?.trano,
+                performanceData.term1?.revenue,
+                performanceData.term1?.trano,
+                performanceData.term2?.revenue,
+                performanceData.term2?.trano,
+                performanceData.term3?.revenue,
+                performanceData.term3?.trano
+            ];
+            const filledFields = fields.filter(field => field && field > 0).length;
+            return Math.round((filledFields / fields.length) * 100);
+        }
+
+        function renderOutletCards() {
+            const outletsGrid = document.getElementById('outlets-grid');
+            const emptyState = document.getElementById('empty-state');
+            
+            if (phoenixOutlets.length === 0) {
+                outletsGrid.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            outletsGrid.style.display = 'grid';
+            emptyState.style.display = 'none';
+            
+            outletsGrid.innerHTML = phoenixOutlets.map(outlet => {
+                const progress = calculateOutletProgress(outlet);
+                const performanceData = outlet.performanceData || {};
+                const totalRevenue = (performanceData.term1?.revenue || 0) + (performanceData.term2?.revenue || 0) + (performanceData.term3?.revenue || 0);
+                const totalTrano = (performanceData.term1?.trano || 0) + (performanceData.term2?.trano || 0) + (performanceData.term3?.trano || 0);
+                
+                // Calculate term progress using proportional baseline
+                const dailyBaselineTrano = (performanceData.baseline?.trano || 0) / 30;
+                const term1Progress = dailyBaselineTrano > 0 && performanceData.term1?.trano > 0 ? 
+                    Math.min(Math.round((performanceData.term1.trano / (dailyBaselineTrano * 10)) * 100), 150) : 0;
+                const term2Progress = dailyBaselineTrano > 0 && (performanceData.term1?.trano + performanceData.term2?.trano) > 0 ? 
+                    Math.min(Math.round(((performanceData.term1?.trano || 0) + (performanceData.term2?.trano || 0)) / (dailyBaselineTrano * 20) * 100), 150) : 0;
+                const term3Progress = dailyBaselineTrano > 0 && totalTrano > 0 ? 
+                    Math.min(Math.round(totalTrano / (performanceData.baseline?.trano || 1) * 100), 150) : 0;
+                
+                return `
+                    <div class="phoenix-outlet-card" onclick="showOutletDetail('${outlet.code}')">
+                        <div class="outlet-header">
+                            <div class="outlet-info">
+                                <h3>${outlet.name}</h3>
+                                <div class="outlet-code">Code: ${outlet.code} | AM: ${outlet.am}</div>
+                            </div>
+                            <div class="phoenix-badge">🔥 Phoenix</div>
+                        </div>
+
+                        <div class="performance-metrics">
+                            <div class="metric-item">
+                                <div class="metric-value">${formatCurrency(totalRevenue)}</div>
+                                <div class="metric-label">Total Revenue</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-value">${totalTrano.toLocaleString()}</div>
+                                <div class="metric-label">Total Trano</div>
+                            </div>
+                        </div>
+
+                        <div class="progress-section">
+                            <div class="progress-title">📊 Terms Progress</div>
+                            <div class="progress-bars">
+                                <div class="progress-item">
+                                    <div class="progress-label">Term 1</div>
+                                    <div class="progress-value">${term1Progress}%</div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: ${Math.min(term1Progress, 100)}%"></div>
+                                    </div>
+                                </div>
+                                <div class="progress-item">
+                                    <div class="progress-label">Term 2</div>
+                                    <div class="progress-value">${term2Progress}%</div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: ${Math.min(term2Progress, 100)}%"></div>
+                                    </div>
+                                </div>
+                                <div class="progress-item">
+                                    <div class="progress-label">Term 3</div>
+                                    <div class="progress-value">${term3Progress}%</div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: ${Math.min(term3Progress, 100)}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                ${outlet.okr ? `
+                                    <div style="background: #e6fffa; color: #38a169; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">
+                                        🎯 OKR Assigned
+                                    </div>
+                                ` : `
+                                    <div style="background: #fef5e7; color: #d69e2e; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">
+                                        ⚠️ No OKR
+                                    </div>
+                                `}
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="event.stopPropagation(); assignOKR('${outlet.code}')" 
+                                        style="background: #48bb78; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer;">
+                                    ${outlet.okr ? '✏️ Edit OKR' : '🎯 Assign OKR'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function showNotification(message, type = 'success') {
+            // Remove any existing notifications
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notif => notif.remove());
+            
+            // Create new notification
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Add Outlet Modal Functions
+        function openAddOutletModal() {
+            if (!userPermissions.canAddOutlets) {
+                showNotification('❌ You do not have permission to add outlets', 'error');
+                return;
+            }
+            
+            const modal = document.getElementById('add-outlet-modal');
+            const outletList = document.getElementById('outlet-list');
+            
+            // Get available outlets (not already in Phoenix)
+            const availableOutlets = allOutlets.filter(outlet => 
+                !phoenixData.outlets[outlet.code] && 
+                userPermissions.allowedOutlets.includes(outlet.code)
+            );
+            
+            outletList.innerHTML = availableOutlets.map(outlet => `
+                <div class="outlet-item" onclick="selectOutletForAdd('${outlet.code}')">
+                    <div class="outlet-item-name">${outlet.name}</div>
+                    <div class="outlet-item-code">Code: ${outlet.code} | AM: ${outlet.am}</div>
+                </div>
+            `).join('');
+            
+            if (availableOutlets.length === 0) {
+                outletList.innerHTML = '<div style="padding: 20px; text-align: center; color: #718096;">No available outlets to add</div>';
+            }
+            
+            modal.style.display = 'flex';
+        }
+
+        function selectOutletForAdd(outletCode) {
+            // Remove previous selection
+            document.querySelectorAll('.outlet-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Select current item
+            event.target.closest('.outlet-item').classList.add('selected');
+            selectedOutletForAdd = outletCode;
+            
+            // Enable add button
+            document.getElementById('add-outlet-confirm-btn').disabled = false;
+        }
+
+        function addSelectedOutlet() {
+            if (!selectedOutletForAdd) return;
+            
+            const outlet = allOutlets.find(o => o.code === selectedOutletForAdd);
+            if (!outlet) return;
+            
+            // Add to Phoenix data
+            phoenixData.outlets[selectedOutletForAdd] = {
+                dateAdded: new Date().toISOString(),
+                performanceData: {
+                    baseline: { revenue: 0, trano: 0 },
+                    term1: { revenue: 0, trano: 0 },
+                    term2: { revenue: 0, trano: 0 },
+                    term3: { revenue: 0, trano: 0 }
+                }
+            };
+            
+            // Save to localStorage
+            localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+            
+            // Refresh data
+            loadPhoenixOutlets();
+            renderPhoenixDashboard();
+            
+            // Close modal
+            closeAddOutletModal();
+            
+            showNotification(`✅ ${outlet.name} added to Phoenix Project!`, 'success');
+        }
+
+        function closeAddOutletModal() {
+            document.getElementById('add-outlet-modal').style.display = 'none';
+            selectedOutletForAdd = null;
+            document.getElementById('add-outlet-confirm-btn').disabled = true;
+        }
+
+        function filterOutlets() {
+            const searchTerm = document.getElementById('outlet-search').value.toLowerCase();
+            const outletItems = document.querySelectorAll('.outlet-item');
+            
+            outletItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+        }
+
+        // OKR Assignment Functions
+        function assignOKR(outletCode) {
+            if (!userPermissions.canAssignOKR && !userPermissions.canEditOKR) {
+                showNotification('❌ You do not have permission to assign OKRs', 'error');
+                return;
+            }
+            
+            const outlet = phoenixOutlets.find(o => o.code === outletCode);
+            if (!outlet) return;
+            
+            currentOKROutlet = outlet;
+            
+            const modal = document.getElementById('okr-modal');
+            const modalTitle = document.getElementById('okr-modal-title');
+            const modalBody = document.getElementById('okr-modal-body');
+            
+            modalTitle.textContent = `🎯 ${outlet.okr ? 'Edit' : 'Assign'} OKR for ${outlet.name}`;
+            
+            modalBody.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #2d3748; margin-bottom: 15px;">Choose Phoenix OKR Template:</h4>
+                    ${phoenixOKRTemplates.map(template => `
+                        <div class="okr-template-option" data-template-id="${template.id}" onclick="selectOKRTemplate(${template.id})">
+                            <div class="okr-template-title">${template.title}</div>
+                            <div class="okr-template-desc">${template.description}</div>
+                            <div class="okr-template-category">${template.category}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div id="okr-customization" style="display: none; background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 15px; color: #2d3748;">📝 Customize OKR</h4>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; font-weight: 600; color: #4a5568; margin-bottom: 5px;">Objective:</label>
+                        <input type="text" id="okr-objective-input" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; font-weight: 600; color: #4a5568; margin-bottom: 5px;">Description:</label>
+                        <textarea id="okr-description-input" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem; min-height: 60px; resize: vertical;"></textarea>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; font-weight: 600; color: #4a5568; margin-bottom: 5px;">Key Results (one per line):</label>
+                        <textarea id="okr-keyresults-input" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem; min-height: 100px; resize: vertical;"></textarea>
+                    </div>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" onclick="closeOKRModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveOKRAssignment()" id="save-okr-btn" disabled>Assign OKR</button>
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+        }
+
+        function selectOKRTemplate(templateId) {
+            // Remove previous selection
+            document.querySelectorAll('.okr-template-option').forEach(option => {
+                option.style.borderColor = '#e2e8f0';
+                option.style.background = 'white';
+            });
+            
+            // Select current template
+            const selectedOption = document.querySelector(`[data-template-id="${templateId}"]`);
+            selectedOption.style.borderColor = '#48bb78';
+            selectedOption.style.background = '#f0fff4';
+            
+            // Get template data
+            const template = phoenixOKRTemplates.find(t => t.id === templateId);
+            if (!template) return;
+            
+            // Fill customization form
+            document.getElementById('okr-objective-input').value = template.title;
+            document.getElementById('okr-description-input').value = template.description;
+            document.getElementById('okr-keyresults-input').value = template.keyResults.join('\n');
+            
+            // Show customization section
+            document.getElementById('okr-customization').style.display = 'block';
+            document.getElementById('save-okr-btn').disabled = false;
+        }
+
+        function saveOKRAssignment() {
+            if (!currentOKROutlet) return;
+            
+            const objective = document.getElementById('okr-objective-input').value.trim();
+            const description = document.getElementById('okr-description-input').value.trim();
+            const keyResultsText = document.getElementById('okr-keyresults-input').value.trim();
+            
+            if (!objective || !keyResultsText) {
+                showNotification('❌ Please fill in objective and key results', 'error');
+                return;
+            }
+            
+            const keyResults = keyResultsText.split('\n').filter(kr => kr.trim()).map(kr => kr.trim());
+            
+            // Get the selected template to include action plans
+            const selectedTemplateId = document.querySelector('.okr-template-option[style*="border-color: rgb(72, 187, 120)"]')?.getAttribute('data-template-id');
+            const selectedTemplate = selectedTemplateId ? phoenixOKRTemplates.find(t => t.id == selectedTemplateId) : null;
+            
+            // Create OKR object
+            const okr = {
+                objective: objective,
+                description: description,
+                keyResults: keyResults,
+                actionPlans: selectedTemplate ? selectedTemplate.actionPlans : null,
+                progress: 0,
+                dateAssigned: new Date().toISOString()
+            };
+            
+            // Save to Phoenix data
+            if (!phoenixData.outlets[currentOKROutlet.code]) {
+                phoenixData.outlets[currentOKROutlet.code] = {};
+            }
+            phoenixData.outlets[currentOKROutlet.code].okr = okr;
+            
+            // Update local outlet object
+            currentOKROutlet.okr = okr;
+            
+            // Save to localStorage
+            localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+            
+            // Close modal and refresh
+            closeOKRModal();
+            renderPhoenixDashboard();
+            
+            showNotification(`✅ OKR "${objective}" assigned to ${currentOKROutlet.name}!`, 'success');
+        }
+
+        function closeOKRModal() {
+            document.getElementById('okr-modal').style.display = 'none';
+            currentOKROutlet = null;
+        }
+
+        function renderOutletOKRSection(outlet) {
+            const okrSection = document.getElementById('outlet-okr-section');
+            
+            if (outlet.okr) {
+                okrSection.innerHTML = `
+                    <div style="background: #f0fff4; border: 1px solid #48bb78; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                            <div style="flex: 1;">
+                                <h4 style="color: #2d3748; margin-bottom: 8px;">📋 Current Objective</h4>
+                                <div style="font-weight: 600; color: #4a5568; margin-bottom: 8px;">${outlet.okr.objective}</div>
+                                ${outlet.okr.description ? `<div style="color: #718096; font-size: 0.9rem; margin-bottom: 15px;">${outlet.okr.description}</div>` : ''}
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="color: #48bb78; font-weight: 700; font-size: 1.2rem;">${outlet.okr.progress || 0}%</div>
+                                <div style="color: #718096; font-size: 0.8rem;">Progress</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <h5 style="color: #4a5568; margin-bottom: 10px;">🎯 Key Results (${outlet.okr.keyResults.length})</h5>
+                            <div style="display: grid; gap: 12px;">
+                                ${outlet.okr.keyResults.map((kr, index) => `
+                                    <div style="background: white; padding: 12px; border-radius: 8px; border-left: 3px solid #48bb78;">
+                                        <div style="font-size: 0.9rem; color: #4a5568;">${kr}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="assignOKR('${outlet.code}')" style="background: #48bb78; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">
+                                ✏️ Edit OKR
+                            </button>
+                            <button onclick="updateOKRProgress('${outlet.code}')" style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">
+                                📊 Update Progress
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                okrSection.innerHTML = `
+                    <div style="background: #fef5e7; border: 1px solid #d69e2e; border-radius: 10px; padding: 20px; text-align: center;">
+                        <div style="font-size: 2rem; margin-bottom: 10px;">🎯</div>
+                        <h4 style="color: #d69e2e; margin-bottom: 10px;">No OKR Assigned</h4>
+                        <p style="color: #718096; margin-bottom: 20px;">This outlet doesn't have an OKR assigned yet. Assign one to start tracking objectives and key results.</p>
+                        <button onclick="assignOKR('${outlet.code}')" style="background: #48bb78; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+                            🎯 Assign OKR Now
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function updateOKRProgress(outletCode) {
+            const progress = prompt('Enter OKR progress percentage (0-100):');
+            if (progress === null) return;
+            
+            const progressNum = parseInt(progress);
+            if (isNaN(progressNum) || progressNum < 0 || progressNum > 100) {
+                showNotification('❌ Please enter a valid percentage (0-100)', 'error');
+                return;
+            }
+            
+            // Update progress
+            if (phoenixData.outlets[outletCode] && phoenixData.outlets[outletCode].okr) {
+                phoenixData.outlets[outletCode].okr.progress = progressNum;
+                
+                // Update local data
+                const outlet = phoenixOutlets.find(o => o.code === outletCode);
+                if (outlet && outlet.okr) {
+                    outlet.okr.progress = progressNum;
+                }
+                
+                // Save to localStorage
+                localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+                
+                // Refresh views
+                renderOutletOKRSection(outlet);
+                renderPhoenixDashboard();
+                
+                showNotification(`✅ OKR progress updated to ${progressNum}%`, 'success');
+            }
+        }
+
+        // Close modals when clicking outside
+        document.addEventListener('click', (e) => {
+            const addModal = document.getElementById('add-outlet-modal');
+            const okrModal = document.getElementById('okr-modal');
+            
+            if (e.target === addModal) {
+                closeAddOutletModal();
+            }
+            if (e.target === okrModal) {
+                closeOKRModal();
+            }
+        });
+
+        function saveOutletDetailData() {
+            // Get the current outlet from detail view
+            const outletCode = document.getElementById('detail-outlet-name').getAttribute('data-outlet-code');
+            if (!outletCode) {
+                showNotification('❌ No outlet selected', 'error');
+                return;
+            }
+            
+            // Get all input values
+            const data = {
+                baseline: {
+                    revenue: parseFloat(document.getElementById('input-baseline-revenue').value) || 0,
+                    trano: parseFloat(document.getElementById('input-baseline-trano').value) || 0
+                },
+                term1: {
+                    revenue: parseFloat(document.getElementById('input-term1-revenue').value) || 0,
+                    trano: parseFloat(document.getElementById('input-term1-trano').value) || 0
+                },
+                term2: {
+                    revenue: parseFloat(document.getElementById('input-term2-revenue').value) || 0,
+                    trano: parseFloat(document.getElementById('input-term2-trano').value) || 0
+                },
+                term3: {
+                    revenue: parseFloat(document.getElementById('input-term3-revenue').value) || 0,
+                    trano: parseFloat(document.getElementById('input-term3-trano').value) || 0
+                }
+            };
+            
+            // Initialize outlet data if it doesn't exist
+            if (!phoenixData.outlets[outletCode]) {
+                phoenixData.outlets[outletCode] = {};
+            }
+            
+            // Save performance data
+            phoenixData.outlets[outletCode].performanceData = data;
+            phoenixData.outlets[outletCode].lastUpdated = new Date().toISOString();
+            
+            // Update local outlet object
+            const outlet = phoenixOutlets.find(o => o.code === outletCode);
+            if (outlet) {
+                outlet.performanceData = data;
+                outlet.lastUpdated = new Date().toISOString();
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+            
+            // Calculate and update progress tracking
+            calculateProportionalProgress(data);
+            
+            // Show success notification
+            showNotification('✅ Performance data saved successfully!', 'success');
+            
+            console.log('✅ Saved performance data for outlet:', outletCode, data);
+        }
+        
+        function calculateProportionalProgress(data) {
+            // Calculate proportional baseline values
+            const dailyBaselineRevenue = data.baseline.revenue / 30; // Assuming 30-day month
+            const dailyBaselineTrano = data.baseline.trano / 30;
+            
+            // Calculate expected baseline for each term period
+            const term1BaselineRevenue = dailyBaselineRevenue * 10; // 10 days
+            const term1BaselineTrano = dailyBaselineTrano * 10;
+            
+            const term2BaselineRevenue = dailyBaselineRevenue * 20; // 20 days
+            const term2BaselineTrano = dailyBaselineTrano * 20;
+            
+            const term3BaselineRevenue = data.baseline.revenue; // Full month
+            const term3BaselineTrano = data.baseline.trano;
+            
+            // Calculate progress percentages
+            let term1Progress = '-';
+            let term2Progress = '-';
+            let term3Progress = '-';
+            
+            // Term 1 progress (Term 1 vs 10-day baseline)
+            if (term1BaselineRevenue > 0 && term1BaselineTrano > 0) {
+                const term1RevenueProgress = (data.term1.revenue / term1BaselineRevenue) * 100;
+                const term1TranoProgress = (data.term1.trano / term1BaselineTrano) * 100;
+                term1Progress = `${Math.round((term1RevenueProgress + term1TranoProgress) / 2)}%`;
+            }
+            
+            // Term 2 progress (Term 1+2 vs 20-day baseline)
+            if (term2BaselineRevenue > 0 && term2BaselineTrano > 0) {
+                const combinedTerm12Revenue = data.term1.revenue + data.term2.revenue;
+                const combinedTerm12Trano = data.term1.trano + data.term2.trano;
+                const term2RevenueProgress = (combinedTerm12Revenue / term2BaselineRevenue) * 100;
+                const term2TranoProgress = (combinedTerm12Trano / term2BaselineTrano) * 100;
+                term2Progress = `${Math.round((term2RevenueProgress + term2TranoProgress) / 2)}%`;
+            }
+            
+            // Term 3 progress (Full month vs baseline)
+            if (term3BaselineRevenue > 0 && term3BaselineTrano > 0) {
+                const fullMonthRevenue = data.term1.revenue + data.term2.revenue + data.term3.revenue;
+                const fullMonthTrano = data.term1.trano + data.term2.trano + data.term3.trano;
+                const term3RevenueProgress = (fullMonthRevenue / term3BaselineRevenue) * 100;
+                const term3TranoProgress = (fullMonthTrano / term3BaselineTrano) * 100;
+                term3Progress = `${Math.round((term3RevenueProgress + term3TranoProgress) / 2)}%`;
+            }
+            
+            // Update progress display
+            document.querySelector('#term1-progress .progress-value').textContent = term1Progress;
+            document.querySelector('#term2-progress .progress-value').textContent = term2Progress;
+            document.querySelector('#term3-progress .progress-value').textContent = term3Progress;
+            
+            // Update progress indicator colors based on performance
+            updateProgressIndicatorColors('#term1-progress', term1Progress);
+            updateProgressIndicatorColors('#term2-progress', term2Progress);
+            updateProgressIndicatorColors('#term3-progress', term3Progress);
+        }
+        
+        function updateProgressIndicatorColors(selector, progress) {
+            const element = document.querySelector(selector);
+            const valueElement = element.querySelector('.progress-value');
+            
+            if (progress === '-') {
+                valueElement.style.color = '#718096';
+                return;
+            }
+            
+            const progressNum = parseInt(progress.replace('%', ''));
+            
+            if (progressNum >= 100) {
+                valueElement.style.color = '#48bb78'; // Green for 100%+
+            } else if (progressNum >= 80) {
+                valueElement.style.color = '#38a169'; // Dark green for 80-99%
+            } else if (progressNum >= 60) {
+                valueElement.style.color = '#d69e2e'; // Yellow for 60-79%
+            } else {
+                valueElement.style.color = '#e53e3e'; // Red for <60%
+            }
+        }
+        
+        function showOutletDetail(outletCode) {
+            const outlet = phoenixOutlets.find(o => o.code === outletCode);
+            if (!outlet) return;
+            
+            currentDetailOutlet = outlet;
+            
+            // Hide card view, show detail view
+            document.getElementById('dashboard-view').style.display = 'none';
+            document.getElementById('detail-view').style.display = 'block';
+            
+            // Store outlet code for data saving
+            document.getElementById('detail-outlet-name').setAttribute('data-outlet-code', outletCode);
+            
+            // Update header information
+            document.getElementById('detail-outlet-name').textContent = outlet.name;
+            document.getElementById('detail-outlet-info').textContent = `Code: ${outlet.code} • AM: ${outlet.am}`;
+            
+            // Load existing performance data if available
+            const performanceData = outlet.performanceData || {
+                baseline: { revenue: 0, trano: 0 },
+                term1: { revenue: 0, trano: 0 },
+                term2: { revenue: 0, trano: 0 },
+                term3: { revenue: 0, trano: 0 }
+            };
+            
+            // Populate input fields with existing data
+            document.getElementById('input-baseline-revenue').value = performanceData.baseline.revenue || '';
+            document.getElementById('input-baseline-trano').value = performanceData.baseline.trano || '';
+            document.getElementById('input-term1-revenue').value = performanceData.term1.revenue || '';
+            document.getElementById('input-term1-trano').value = performanceData.term1.trano || '';
+            document.getElementById('input-term2-revenue').value = performanceData.term2.revenue || '';
+            document.getElementById('input-term2-trano').value = performanceData.term2.trano || '';
+            document.getElementById('input-term3-revenue').value = performanceData.term3.revenue || '';
+            document.getElementById('input-term3-trano').value = performanceData.term3.trano || '';
+            
+            // Calculate initial progress
+            calculateProportionalProgress(performanceData);
+            
+            // Render OKR section
+            renderOutletOKRSection(outlet);
+        }
+        
+        function backToCardView() {
+            // Hide detail view and show dashboard view
+            document.getElementById('detail-view').style.display = 'none';
+            document.getElementById('dashboard-view').style.display = 'block';
+            
+            // Clear current detail outlet
+            currentDetailOutlet = null;
+            
+            // Refresh the dashboard to show any updated data
+            renderPhoenixDashboard();
+        }
+        
+        // Add event listeners for real-time progress calculation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add input event listeners for real-time progress updates
+            const inputIds = [
+                'input-baseline-revenue', 'input-baseline-trano',
+                'input-term1-revenue', 'input-term1-trano',
+                'input-term2-revenue', 'input-term2-trano',
+                'input-term3-revenue', 'input-term3-trano'
+            ];
+            
+            inputIds.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('input', function() {
+                        // Get current data from inputs
+                        const data = {
+                            baseline: {
+                                revenue: parseFloat(document.getElementById('input-baseline-revenue').value) || 0,
+                                trano: parseFloat(document.getElementById('input-baseline-trano').value) || 0
+                            },
+                            term1: {
+                                revenue: parseFloat(document.getElementById('input-term1-revenue').value) || 0,
+                                trano: parseFloat(document.getElementById('input-term1-trano').value) || 0
+                            },
+                            term2: {
+                                revenue: parseFloat(document.getElementById('input-term2-revenue').value) || 0,
+                                trano: parseFloat(document.getElementById('input-term2-trano').value) || 0
+                            },
+                            term3: {
+                                revenue: parseFloat(document.getElementById('input-term3-revenue').value) || 0,
+                                trano: parseFloat(document.getElementById('input-term3-trano').value) || 0
+                            }
+                        };
+                        
+                        // Update progress in real-time
+                        calculateProportionalProgress(data);
+                    });
+                }
+            });
+        });
+
+        function logout() {
+            sessionStorage.clear();
+            localStorage.clear();
+            window.location.href = 'okr-login.html';
+        }
+    </script>
+</body>
+</html>
