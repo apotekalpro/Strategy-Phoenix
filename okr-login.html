@@ -359,8 +359,10 @@
                     // Store authentication data
                     sessionStorage.setItem('userAuth', JSON.stringify(loginResult.user));
                     
-                    // Redirect to dashboard
-                    window.location.href = 'okr-dashboard-v2.html';
+                    // Redirect to Phoenix dashboard
+                    const returnUrl = sessionStorage.getItem('returnUrl') || 'okr-phoenix-real.html';
+                    sessionStorage.removeItem('returnUrl');
+                    window.location.href = returnUrl;
                 } else {
                     showError(loginResult.message);
                 }
@@ -440,8 +442,10 @@
         window.addEventListener('load', () => {
             const existingAuth = sessionStorage.getItem('userAuth');
             if (existingAuth) {
-                // User is already logged in, redirect to dashboard
-                window.location.href = 'okr-dashboard-v2.html';
+                // User is already logged in, redirect to Phoenix dashboard
+                const returnUrl = sessionStorage.getItem('returnUrl') || 'okr-phoenix-real.html';
+                sessionStorage.removeItem('returnUrl');
+                window.location.href = returnUrl;
             }
         });
     </script>
