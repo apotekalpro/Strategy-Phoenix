@@ -5,24 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OKR Phoenix Project - Dashboard</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
             padding: 20px;
         }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
+        .container { max-width: 1400px; margin: 0 auto; }
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -31,27 +21,23 @@
             text-align: center;
             margin-bottom: 30px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
         }
-        
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            font-weight: 700;
+        .header h1 { font-size: 2.5rem; margin-bottom: 10px; font-weight: 700; }
+        .header p { font-size: 1.1rem; opacity: 0.9; margin: 5px 0; }
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            text-align: right;
+            font-size: 0.9rem;
         }
-        
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            margin: 5px 0;
-        }
-        
-        .dashboard-stats {
+        .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 25px;
             margin-bottom: 40px;
         }
-        
         .stat-card {
             background: white;
             padding: 30px;
@@ -61,457 +47,53 @@
             border-top: 4px solid #667eea;
             transition: transform 0.3s ease;
         }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-number { font-size: 3rem; font-weight: 700; color: #667eea; margin-bottom: 10px; }
+        .stat-label { color: #718096; font-weight: 600; text-transform: uppercase; font-size: 0.9rem; }
+        .outlets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
         }
-        
-        .stat-number {
-            font-size: 3rem;
-            font-weight: 700;
-            color: #667eea;
-            margin-bottom: 10px;
-        }
-        
-        .stat-label {
-            color: #718096;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-            letter-spacing: 0.5px;
-            margin-bottom: 5px;
-        }
-        
-        .stat-desc {
-            color: #a0aec0;
-            font-size: 0.85rem;
-        }
-        
-        .main-actions {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        
-        .outlet-selector {
+        .outlet-card {
             background: white;
             padding: 25px;
             border-radius: 15px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+            border-left: 4px solid #48bb78;
         }
-        
-        .outlet-dropdown {
-            width: 100%;
-            padding: 15px 20px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 1rem;
-            background: white;
-            cursor: pointer;
-        }
-        
-        .outlet-dropdown:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        
-        .button {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            margin: 10px;
-        }
-        
-        .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        .button-secondary {
-            background: #718096;
-        }
-        
-        .button-secondary:hover {
-            background: #4a5568;
-            box-shadow: 0 5px 15px rgba(113, 128, 150, 0.4);
-        }
-        
-        .button-success {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-        }
-        
-        .button-success:hover {
-            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
-        }
-        
-        .okr-list {
-            display: grid;
-            gap: 25px;
-        }
-        
-        .okr-card {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            border-left: 5px solid #48bb78;
-        }
-        
-        .okr-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-        }
-        
-        .okr-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #2d3748;
-            margin-bottom: 8px;
-        }
-        
-        .okr-desc {
-            color: #4a5568;
-            line-height: 1.6;
-            margin-bottom: 15px;
-        }
-        
-        .progress-section {
-            margin-bottom: 25px;
-        }
-        
-        .progress-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
+        .outlet-name { font-size: 1.2rem; font-weight: 700; color: #2d3748; margin-bottom: 10px; }
+        .outlet-code { color: #718096; font-size: 0.9rem; margin-bottom: 15px; }
         .progress-bar {
+            background: #f0f0f0;
             height: 12px;
-            background: #e2e8f0;
             border-radius: 6px;
+            margin: 15px 0;
             overflow: hidden;
         }
-        
         .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, #48bb78, #38a169);
             border-radius: 6px;
-            transition: width 0.6s ease;
+            transition: width 0.3s ease;
         }
-        
-        .key-result {
-            background: #f7fafc;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 20px;
-            border-left: 4px solid #667eea;
-        }
-        
-        .kr-header {
+        .okr-stats {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .kr-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #2d3748;
-        }
-        
-        .kr-progress {
-            font-weight: 700;
-            color: #667eea;
-        }
-        
-        .kr-description {
+            font-size: 0.9rem;
             color: #4a5568;
-            margin-bottom: 20px;
-            line-height: 1.5;
         }
-        
-        .action-plans {
-            margin-top: 15px;
-        }
-        
-        .action-plan {
-            display: flex;
-            align-items: flex-start;
-            padding: 12px 0;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .action-plan:last-child {
-            border-bottom: none;
-        }
-        
-        .action-checkbox {
-            width: 18px;
-            height: 18px;
-            margin-right: 12px;
-            margin-top: 2px;
-            cursor: pointer;
-            accent-color: #48bb78;
-        }
-        
-        .action-content {
-            flex: 1;
-        }
-        
-        .action-text {
-            font-size: 0.95rem;
-            line-height: 1.4;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .action-text.completed {
-            text-decoration: line-through;
-            opacity: 0.6;
-            color: #718096;
-        }
-        
-        .action-text:hover {
-            color: #667eea;
-        }
-        
-        .action-edit {
-            width: 100%;
-            padding: 8px 12px;
-            border: 2px solid #667eea;
-            border-radius: 6px;
-            font-size: 0.95rem;
-            margin-bottom: 8px;
-            resize: vertical;
-            min-height: 80px;
-        }
-        
-        .action-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .logout-btn {
             margin-top: 8px;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .btn-small {
             padding: 4px 12px;
-            font-size: 0.8rem;
-            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
             border-radius: 4px;
             cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .btn-edit {
-            background: #ed8936;
-            color: white;
-        }
-        
-        .btn-edit:hover {
-            background: #dd6b20;
-        }
-        
-        .btn-comment {
-            background: #4299e1;
-            color: white;
-        }
-        
-        .btn-comment:hover {
-            background: #3182ce;
-        }
-        
-        .btn-save {
-            background: #48bb78;
-            color: white;
-        }
-        
-        .btn-save:hover {
-            background: #38a169;
-        }
-        
-        .btn-cancel {
-            background: #a0aec0;
-            color: white;
-        }
-        
-        .btn-cancel:hover {
-            background: #718096;
-        }
-        
-        .comments-section {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 2px dashed #e2e8f0;
-        }
-        
-        .comment {
-            background: #edf2f7;
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-        
-        .comment-time {
-            color: #a0aec0;
             font-size: 0.75rem;
-            margin-top: 5px;
         }
-        
-        .comment-input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            margin-bottom: 8px;
-            resize: vertical;
-            min-height: 60px;
-        }
-        
-        .comment-input:focus {
-            outline: none;
-            border-color: #4299e1;
-            box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.1);
-        }
-        
-        .status-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .status-active {
-            background: #c6f6d5;
-            color: #276749;
-        }
-        
-        .templates-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
-            margin-top: 25px;
-        }
-        
-        .grid {
-            display: grid;
-        }
-        
-        .outlet-card {
-            max-width: 320px;
-        }
-        
-        .template-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            border-left: 5px solid #ed8936;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .template-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
-        .recent-activity {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-        
-        .activity-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #f1f5f9;
-        }
-        
-        .activity-item:last-child {
-            border-bottom: none;
-        }
-        
-        .activity-icon {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background: #667eea;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            font-size: 0.9rem;
-        }
-        
-        .activity-content {
-            flex: 1;
-        }
-        
-        .activity-text {
-            font-size: 0.95rem;
-            color: #2d3748;
-            margin-bottom: 2px;
-        }
-        
-        .activity-time {
-            font-size: 0.8rem;
-            color: #a0aec0;
-        }
-        
-        @media (max-width: 768px) {
-            .dashboard-stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .templates-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .okr-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .kr-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
+        .logout-btn:hover { background: rgba(255,255,255,0.3); }
     </style>
 </head>
 <body>
@@ -522,61 +104,92 @@
             <p>Apotek Alpro Pharmacy Network Management</p>
         </div>
 
-        <div id="app">
-            <!-- Content will be loaded here -->
+        <div id="dashboard-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-outlets">-</div>
+                    <div class="stat-label">Total Outlets</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="outlets-with-okrs">-</div>
+                    <div class="stat-label">Outlets with OKRs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="active-okrs">-</div>
+                    <div class="stat-label">Active OKRs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="avg-progress">-</div>
+                    <div class="stat-label">Average Progress</div>
+                </div>
+            </div>
+
+            <div id="outlets-container" class="outlets-grid">
+                <!-- Outlet cards will be rendered here -->
+            </div>
         </div>
     </div>
 
-    <!-- Include API Services -->
     <script src="config.js"></script>
     <script src="google-sheets-api.js"></script>
     <script src="auth-service.js"></script>
+
     <script>
-        // Authentication and Authorization System
         let currentUser = null;
         let userPermissions = null;
-
-        // Initialize services
-        let googleSheetsAPI = null;
-        let authService = null;
         let outlets = [];
-        
-        // Check authentication on page load
+        let allOKRS = {};
+
+        // Check authentication and initialize
         window.addEventListener('load', async () => {
             try {
-                // Initialize services
-                googleSheetsAPI = new GoogleSheetsAPI();
-                authService = new AuthService();
-                
-                // Initialize authentication service
-                await authService.initialize();
-                
+                // Check session
                 const userAuth = sessionStorage.getItem('userAuth');
                 if (!userAuth) {
-                    // No authentication found, redirect to login
                     window.location.href = 'okr-login.html';
                     return;
                 }
                 
                 currentUser = JSON.parse(userAuth);
+                console.log('✅ User session found:', currentUser.username);
                 
-                // Load outlets data from Google Sheets
-                await loadOutletsData();
+                // Initialize services
+                const googleSheetsAPI = new GoogleSheetsAPI();
+                const authService = new AuthService();
+                await authService.initialize();
+                console.log('✅ Services initialized');
                 
-                initializeUserSession();
+                // Load outlets data
+                const credentials = await googleSheetsAPI.loadOutletCredentials();
+                outlets = Object.keys(credentials).map((outletCode, index) => ({
+                    id: index + 1,
+                    code: outletCode,
+                    name: credentials[outletCode].outletName || `APOTEK ALPRO ${outletCode}`,
+                    am: credentials[outletCode].am || 'SYSTEM AM'
+                }));
+                console.log(`✅ Loaded ${outlets.length} outlets`);
+                
+                // Create demo OKRs
+                initializeDemoOKRs();
+                
+                // Setup user permissions
+                setupUserPermissions();
+                
+                // Render dashboard
+                renderDashboard();
+                
             } catch (error) {
-                console.error('Authentication error:', error);
+                console.error('❌ Dashboard initialization failed:', error);
                 sessionStorage.removeItem('userAuth');
                 window.location.href = 'okr-login.html';
             }
         });
 
-        function initializeUserSession() {
-            // Setup user permissions based on role
+        function setupUserPermissions() {
             if (currentUser.type === 'outlet') {
                 userPermissions = {
                     canViewAllOutlets: false,
-                    accessibleOutlets: currentUser.accessibleOutlets,
+                    accessibleOutlets: currentUser.accessibleOutlets || [currentUser.username],
                     canManageOKRs: true,
                     userType: 'outlet',
                     displayName: currentUser.outletName,
@@ -594,1486 +207,133 @@
                 };
             }
             
-            // Load performance data and initialize outlets
-            loadPerformanceData();
+            // Add user info to header
+            const header = document.querySelector('.header');
+            const userInfo = document.createElement('div');
+            userInfo.className = 'user-info';
             
-            // Initialize demo performance data
-            initializeDemoData();
+            const roleIcon = currentUser.type === 'outlet' ? '🏪' : '🏢';
+            const roleText = currentUser.type === 'outlet' ? 'Outlet User' : 
+                           (currentUser.role === 'ADMIN' ? 'System Admin' : 'Area Manager');
             
-            // Update header with user info and render dashboard
-            updateUserInterface();
-            renderDashboard();
+            userInfo.innerHTML = `
+                <div style="margin-bottom: 5px;">
+                    <strong>${roleIcon} ${userPermissions.displayName}</strong>
+                </div>
+                <div style="opacity: 0.8; font-size: 0.8rem;">
+                    ${roleText} | <span style="color: #48bb78;">🟢 Connected</span>
+                </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            `;
+            
+            header.appendChild(userInfo);
         }
 
-        function updateUserInterface() {
-            // Add user info to header
-            const headerElement = document.querySelector('.header');
-            if (headerElement && currentUser) {
-                const userInfo = document.createElement('div');
-                userInfo.style.cssText = `
-                    position: absolute;
-                    top: 20px;
-                    right: 40px;
-                    text-align: right;
-                    font-size: 0.9rem;
-                `;
-                
-                const roleIcon = currentUser.type === 'outlet' ? '🏪' : '🏢';
-                const roleText = currentUser.type === 'outlet' ? 'Outlet User' : 
-                               (currentUser.role === 'ADMIN' ? 'System Admin' : 'Area Manager');
-                
-                userInfo.innerHTML = `
-                    <div style="margin-bottom: 5px;">
-                        <strong>${roleIcon} ${userPermissions.displayName}</strong>
-                    </div>
-                    <div style="opacity: 0.8; font-size: 0.8rem;">
-                        ${roleText} | <span style="color: #48bb78;">🟢 Connected</span>
-                    </div>
-                    <button onclick="logout()" style="margin-top: 8px; padding: 4px 12px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Logout</button>
-                `;
-                
-                headerElement.style.position = 'relative';
-                headerElement.appendChild(userInfo);
+        function initializeDemoOKRs() {
+            allOKRS = {};
+            const maxDemoOutlets = Math.min(5, outlets.length);
+            
+            for (let i = 0; i < maxDemoOutlets; i++) {
+                const outlet = outlets[i];
+                if (outlet) {
+                    allOKRS[outlet.id] = [{
+                        id: 1000 + outlet.id,
+                        outlet_id: outlet.id,
+                        title: 'Peningkatan Transaksi - Trafik Baru',
+                        description: 'Meningkatkan jumlah transaksi melalui penambahan trafik pelanggan baru',
+                        keyResults: [{
+                            id: 1,
+                            title: 'KR1: Peningkatan Jumlah Pelanggan Baru',
+                            description: 'Meningkatkan jumlah pelanggan baru sebesar 20%',
+                            actionPlans: [
+                                { text: 'Implementasi program welcome offer', completed: Math.random() > 0.5 },
+                                { text: 'Kampanye digital marketing', completed: Math.random() > 0.5 },
+                                { text: 'Partnership dengan komunitas sekitar', completed: Math.random() > 0.5 },
+                                { text: 'Program referral dengan reward', completed: Math.random() > 0.5 }
+                            ]
+                        }],
+                        progress: Math.floor(Math.random() * 80) + 20,
+                        status: 'active'
+                    }];
+                }
+            }
+            console.log(`✅ Created demo OKRs for ${maxDemoOutlets} outlets`);
         }
-        
-        // Logout function
+
+        function renderDashboard() {
+            // Filter outlets based on permissions
+            const allowedOutlets = userPermissions.canViewAllOutlets ? outlets : 
+                outlets.filter(outlet => userPermissions.accessibleOutlets.includes(outlet.code));
+            
+            // Calculate stats
+            const outletsWithOKRs = Object.keys(allOKRS).length;
+            const totalOKRs = Object.values(allOKRS).reduce((sum, okrs) => sum + okrs.length, 0);
+            const avgProgress = totalOKRs > 0 ? 
+                Math.round(Object.values(allOKRS).flat().reduce((sum, okr) => sum + okr.progress, 0) / totalOKRs) : 0;
+            
+            // Update stats cards
+            document.getElementById('total-outlets').textContent = outlets.length;
+            document.getElementById('outlets-with-okrs').textContent = outletsWithOKRs;
+            document.getElementById('active-okrs').textContent = totalOKRs;
+            document.getElementById('avg-progress').textContent = avgProgress + '%';
+            
+            // Render outlet cards
+            const container = document.getElementById('outlets-container');
+            container.innerHTML = '';
+            
+            const displayOutlets = allowedOutlets.slice(0, 6); // Show first 6 outlets
+            
+            displayOutlets.forEach(outlet => {
+                const outletOKRs = allOKRS[outlet.id] || [];
+                const progress = outletOKRs.length > 0 ? outletOKRs[0].progress : 0;
+                const completedActions = outletOKRs.length > 0 ? 
+                    outletOKRs[0].keyResults[0].actionPlans.filter(ap => ap.completed).length : 0;
+                const totalActions = outletOKRs.length > 0 ? 
+                    outletOKRs[0].keyResults[0].actionPlans.length : 0;
+                
+                const card = document.createElement('div');
+                card.className = 'outlet-card';
+                card.innerHTML = `
+                    <div class="outlet-name">${outlet.name}</div>
+                    <div class="outlet-code">Code: ${outlet.code} | AM: ${outlet.am}</div>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${progress}%"></div>
+                    </div>
+                    
+                    <div class="okr-stats">
+                        <span>Progress: ${progress}%</span>
+                        <span>Actions: ${completedActions}/${totalActions}</span>
+                        <span>OKRs: ${outletOKRs.length}</span>
+                    </div>
+                    
+                    ${outletOKRs.length > 0 ? `
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                            <div style="font-weight: 600; color: #4a5568; margin-bottom: 5px;">
+                                ${outletOKRs[0].title}
+                            </div>
+                            <div style="font-size: 0.85rem; color: #718096;">
+                                ${outletOKRs[0].keyResults[0].title}
+                            </div>
+                        </div>
+                    ` : `
+                        <div style="margin-top: 15px; padding: 10px; background: #faf5ff; border-radius: 8px; text-align: center;">
+                            <div style="color: #9f7aea; font-size: 0.9rem;">No OKRs assigned yet</div>
+                        </div>
+                    `}
+                `;
+                
+                container.appendChild(card);
+            });
+            
+            console.log('✅ Dashboard rendered successfully');
+        }
+
         function logout() {
             sessionStorage.clear();
             localStorage.clear();
             window.location.href = 'okr-login.html';
         }
-
-        function logout() {
-            sessionStorage.removeItem('userAuth');
-            window.location.href = 'okr-login.html';
-        }
-
-        function filterOutletsByPermission(outlets) {
-            if (userPermissions.canViewAllOutlets) {
-                return outlets; // Admin sees all
-            }
-            
-            if (currentUser.type === 'outlet') {
-                // Outlet users only see their own outlet
-                return outlets.filter(outlet => 
-                    userPermissions.accessibleOutlets.includes(outlet.code)
-                );
-            } else if (currentUser.type === 'hq' && currentUser.role === 'AM') {
-                // Area Managers only see their assigned outlets
-                return outlets.filter(outlet => 
-                    userPermissions.accessibleOutlets.includes(outlet.code)
-                );
-            }
-            
-            return outlets;
-        }
-
-        // Load outlets data from Google Sheets
-        async function loadOutletsData() {
-            try {
-                console.log('Loading outlets data from Google Sheets...');
-                const credentials = await googleSheetsAPI.loadOutletCredentials();
-                
-                // Convert credentials object to outlets array format
-                outlets = Object.keys(credentials).map((outletCode, index) => ({
-                    id: index + 1,
-                    code: outletCode,
-                    name: credentials[outletCode].outletName || `APOTEK ALPRO ${outletCode}`,
-                    am: credentials[outletCode].am || 'SYSTEM AM'
-                }));
-                
-                console.log(`Loaded ${outlets.length} outlets from Google Sheets`);
-            } catch (error) {
-                console.error('Failed to load outlets data:', error);
-                // Fallback to demo data
-                const outletCodes = [
-                    'JKJSTT1', 'JKJSVR1', 'JKJBTM1', 'JKJSBZ1', 'BTTSGV1', 'BTTSSU1', 'JKJUSK1', 'BTTSB91', 'BTTSVS1', 'BTTGBI1',
-                    'BTTSGR1', 'JKJSTB1', 'JKJSKC1', 'JKJBGV1', 'JKJPMB1', 'BTTGBW1', 'BTTSB21', 'JKJSRR1', 'JKJSGH1', 'JBBSOC1'
-                ];
-                outlets = outletCodes.map((code, index) => ({
-                    id: index + 1,
-                    code: code,
-                    name: `APOTEK ALPRO ${code}`,
-                    am: 'SYSTEM AM'
-                }));
-                console.log('Using fallback outlet data');
-            }
-            
-            // Initialize demo OKR data for the loaded outlets
-            initializeDemoOKRData();
-        }
-
-        // Initialize demo OKR data for outlets
-        function initializeDemoOKRData() {
-            // Clear existing data
-            allOKRS = {};
-            
-            // Add demo data for first few outlets to show functionality
-            const maxDemoOutlets = Math.min(5, outlets.length);
-            for (let i = 0; i < maxDemoOutlets; i++) {
-                const outlet = outlets[i];
-                if (outlet) {
-                    allOKRS[outlet.id] = [
-                        {
-                            id: 1000 + outlet.id,
-                            outlet_id: outlet.id,
-                            title: 'Peningkatan Transaksi - Trafik Baru',
-                            description: 'Meningkatkan jumlah transaksi melalui penambahan trafik pelanggan baru',
-                            keyResults: [
-                                {
-                                    id: 1,
-                                    title: 'KR1: Peningkatan Jumlah Pelanggan Baru',
-                                    description: 'Meningkatkan jumlah pelanggan baru sebesar 20%',
-                                    actionPlans: [
-                                        { text: 'Implementasi program welcome offer untuk pelanggan baru', completed: true, comments: [], editing: false, showComments: false },
-                                        { text: 'Kampanye digital marketing di media sosial lokal', completed: false, comments: [], editing: false, showComments: false },
-                                        { text: 'Partnership dengan komunitas sekitar (RT/RW, klinik)', completed: false, comments: [], editing: false, showComments: false },
-                                        { text: 'Program referral dengan reward untuk pelanggan existing', completed: false, comments: [], editing: false, showComments: false }
-                                    ]
-                                }
-                            ],
-                            progress: Math.floor(Math.random() * 80) + 20, // Random progress between 20-100
-                            status: 'active'
-                        }
-                    ];
-                }
-            }
-            console.log(`Initialized demo OKR data for ${maxDemoOutlets} outlets`);
-        }
-
-        // Use templates from config
-        const templates = APP_CONFIG.OKR_TEMPLATES || [
-            {
-                id: 1,
-                title: 'Peningkatan Transaksi - Trafik Baru',
-                description: 'Meningkatkan jumlah transaksi melalui penambahan trafik pelanggan baru',
-                keyResults: [
-                    {
-                        id: 1,
-                        title: 'KR1: Peningkatan Jumlah Pelanggan Baru',
-                        description: 'Meningkatkan jumlah pelanggan baru sebesar 20%',
-                        actionPlans: [
-                            'Implementasi program welcome offer untuk pelanggan baru',
-                            'Kampanye digital marketing di media sosial lokal',
-                            'Partnership dengan komunitas sekitar (RT/RW, klinik)',
-                            'Program referral dengan reward untuk pelanggan existing'
-                        ]
-                    },
-                    {
-                        id: 2,
-                        title: 'KR2: Program Referral',
-                        description: 'Implementasi program referral yang efektif',
-                        actionPlans: [
-                            'Desain sistem poin reward untuk referral',
-                            'Training staff untuk menjelaskan program referral',
-                            'Buat material promosi program referral',
-                            'Tracking dan monitoring efektivitas program'
-                        ]
-                    },
-                    {
-                        id: 3,
-                        title: 'KR3: Digital Marketing',
-                        description: 'Kampanye marketing digital yang efektif',
-                        actionPlans: [
-                            'Setup dan optimasi Google My Business',
-                            'Konten marketing di Instagram dan Facebook',
-                            'Program WhatsApp Business untuk customer service',
-                            'Review dan testimoni management'
-                        ]
-                    }
-                ]
-            },
-            {
-                id: 2,
-                title: 'Peningkatan Transaksi - Return Rate',
-                description: 'Meningkatkan tingkat kembali pelanggan (customer retention)',
-                keyResults: [
-                    {
-                        id: 1,
-                        title: 'KR1: Customer Retention Rate',
-                        description: 'Meningkatkan return rate sebesar 15%',
-                        actionPlans: [
-                            'Implementasi customer loyalty card program',
-                            'Database pelanggan dan purchase history tracking',
-                            'Personalized follow-up untuk repeat customers',
-                            'Special discount untuk loyal customers'
-                        ]
-                    },
-                    {
-                        id: 2,
-                        title: 'KR2: Loyalty Program',
-                        description: 'Program loyalty customer yang efektif',
-                        actionPlans: [
-                            'Desain struktur poin dan reward system',
-                            'Setup POS system untuk loyalty tracking',
-                            'Training staff untuk loyalty program explanation',
-                            'Monthly loyalty member special promotion'
-                        ]
-                    },
-                    {
-                        id: 3,
-                        title: 'KR3: Follow-up Service',
-                        description: 'Follow-up service yang konsisten',
-                        actionPlans: [
-                            'WhatsApp reminder untuk medication schedule',
-                            'Follow-up call untuk chronic medication patients',
-                            'Feedback collection via survey digital',
-                            'Complaint handling SOP improvement'
-                        ]
-                    }
-                ]
-            },
-            {
-                id: 3,
-                title: 'Optimalisasi Operasional',
-                description: 'Meningkatkan efisiensi operasional dan kualitas layanan',
-                keyResults: [
-                    {
-                        id: 1,
-                        title: 'KR1: Reduce Waiting Time',
-                        description: 'Mengurangi waktu tunggu pelayanan sebesar 25%',
-                        actionPlans: [
-                            'Implementasi queue management system',
-                            'Optimasi layout counter dan waiting area',
-                            'Staff scheduling optimization pada peak hours',
-                            'Express lane untuk resep sederhana'
-                        ]
-                    },
-                    {
-                        id: 2,
-                        title: 'KR2: Inventory Management',
-                        description: 'Implementasi sistem manajemen inventory yang lebih baik',
-                        actionPlans: [
-                            'Upgrade POS system dengan inventory tracking',
-                            'Implementasi reorder point system',
-                            'Weekly inventory audit dan stock rotation',
-                            'Supplier relationship management improvement'
-                        ]
-                    },
-                    {
-                        id: 3,
-                        title: 'KR3: Service Quality Training',
-                        description: 'Pelatihan staff untuk meningkatkan service quality',
-                        actionPlans: [
-                            'Monthly customer service training program',
-                            'Product knowledge training untuk staff',
-                            'SOP documentation dan implementation',
-                            'Customer satisfaction survey dan improvement'
-                        ]
-                    }
-                ]
-            }
-        ];
-
-        let currentView = 'dashboard';
-        let selectedOutlet = null;
-        let allOKRS = {}; // Store OKRs by outlet ID
-
-        // Revenue and Transaction Tracking Data Structure
-        let outletPerformanceData = {};
-
-        // Initialize performance data for outlets
-        function initializePerformanceData(outletId) {
-            if (!outletPerformanceData[outletId]) {
-                outletPerformanceData[outletId] = {
-                    baseline: {
-                        revenue: 0,
-                        trano: 0,
-                        month: new Date().getMonth() + 1,
-                        year: new Date().getFullYear()
-                    },
-                    currentMonth: {
-                        revenue: {
-                            term1: 0, // 1-10th
-                            term2: 0, // 11-20th  
-                            term3: 0, // 21-30/31st
-                            total: 0
-                        },
-                        trano: {
-                            term1: 0,
-                            term2: 0,
-                            term3: 0,
-                            total: 0
-                        },
-                        month: new Date().getMonth() + 1,
-                        year: new Date().getFullYear()
-                    },
-                    growth: {
-                        revenue: 0,
-                        trano: 0
-                    }
-                };
-            }
-            return outletPerformanceData[outletId];
-        }
-
-        // Calculate growth percentage with fair comparison
-        function calculateGrowth(current, baseline, comparisonType = 'forecast') {
-            if (baseline === 0) return current > 0 ? 100 : 0;
-            
-            let adjustedBaseline = baseline;
-            let adjustedCurrent = current;
-            
-            if (comparisonType === 'forecast') {
-                // Forecast current terms to full month for comparison
-                // If we have data for terms, estimate full month performance
-                adjustedCurrent = current; // Current is already the total
-            } else if (comparisonType === 'proportional') {
-                // Divide baseline proportionally based on active terms
-                // This would require knowing which terms have data
-                adjustedBaseline = baseline; // Keep baseline as is for now
-            }
-            
-            return Math.round(((adjustedCurrent - adjustedBaseline) / adjustedBaseline) * 100);
-        }
-
-        // Calculate fair growth comparison
-        function calculateFairGrowth(currentTerms, baseline) {
-            // Count only the individual terms (exclude 'total' property)
-            const termValues = [currentTerms.term1 || 0, currentTerms.term2 || 0, currentTerms.term3 || 0];
-            const activeTerms = termValues.filter(term => term > 0).length;
-            const totalTerms = 3;
-            
-            if (activeTerms === 0) return {
-                current: 0,
-                forecast: 0,
-                proportionalBaseline: 0,
-                proportionalGrowth: 0,
-                forecastGrowth: 0,
-                activeTerms: 0,
-                growth: 0,
-                method: 'none'
-            };
-            
-            if (baseline === 0) return {
-                current: currentTerms.total,
-                forecast: currentTerms.total,
-                proportionalBaseline: 0,
-                proportionalGrowth: 100,
-                forecastGrowth: 100,
-                activeTerms: activeTerms,
-                growth: 100,
-                method: activeTerms === totalTerms ? 'actual' : 'forecast'
-            };
-            
-            // Method 1: Forecast to full month
-            let forecastedTotal = currentTerms.total;
-            if (activeTerms < totalTerms && activeTerms > 0) {
-                // Forecast based on average of active terms
-                const averagePerTerm = currentTerms.total / activeTerms;
-                forecastedTotal = averagePerTerm * totalTerms;
-            }
-            
-            // Method 2: Compare proportionally (divide baseline)
-            const proportionalBaseline = (baseline * activeTerms) / totalTerms;
-            const proportionalGrowth = Math.round(((currentTerms.total - proportionalBaseline) / proportionalBaseline) * 100);
-            
-            // Method 3: Full month forecast comparison
-            const forecastGrowth = Math.round(((forecastedTotal - baseline) / baseline) * 100);
-            
-            // Debug logging
-            console.log('Growth Calculation Debug:', {
-                termValues,
-                activeTerms,
-                currentTotal: currentTerms.total,
-                averagePerTerm: currentTerms.total / activeTerms,
-                forecastedTotal,
-                baseline,
-                forecastGrowth
-            });
-            
-            // Return object with different comparison methods
-            return {
-                current: currentTerms.total,
-                forecast: forecastedTotal,
-                proportionalBaseline: proportionalBaseline,
-                proportionalGrowth: proportionalGrowth,
-                forecastGrowth: forecastGrowth,
-                activeTerms: activeTerms,
-                // Use forecast method as default
-                growth: forecastGrowth,
-                method: activeTerms === totalTerms ? 'actual' : 'forecast'
-            };
-        }
-
-        // Update performance data and recalculate growth
-        function updatePerformanceData(outletId, type, data) {
-            const performanceData = initializePerformanceData(outletId);
-            
-            if (type === 'baseline') {
-                performanceData.baseline = { ...performanceData.baseline, ...data };
-            } else if (type === 'current') {
-                // Update current month data
-                Object.keys(data).forEach(metric => {
-                    if (performanceData.currentMonth[metric]) {
-                        performanceData.currentMonth[metric] = { ...performanceData.currentMonth[metric], ...data[metric] };
-                        // Calculate total
-                        const terms = performanceData.currentMonth[metric];
-                        terms.total = terms.term1 + terms.term2 + terms.term3;
-                    }
-                });
-            }
-            
-            // Recalculate growth using fair comparison
-            const revenueGrowth = calculateFairGrowth(
-                performanceData.currentMonth.revenue, 
-                performanceData.baseline.revenue
-            );
-            const tranoGrowth = calculateFairGrowth(
-                performanceData.currentMonth.trano, 
-                performanceData.baseline.trano
-            );
-            
-            // Store detailed growth data
-            performanceData.growth = {
-                revenue: revenueGrowth.growth,
-                trano: tranoGrowth.growth,
-                revenueDetails: revenueGrowth,
-                tranoDetails: tranoGrowth
-            };
-            
-            // Save to localStorage
-            localStorage.setItem('outletPerformanceData', JSON.stringify(outletPerformanceData));
-        }
-
-        // Load performance data from localStorage
-        function loadPerformanceData() {
-            const saved = localStorage.getItem('outletPerformanceData');
-            if (saved) {
-                outletPerformanceData = JSON.parse(saved);
-            }
-        }
-
-        // Format currency for display
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0
-            }).format(amount);
-        }
-
-        // Update current month data
-        function updateCurrentMonthData() {
-            const outletId = selectedOutlet.id;
-            
-            const revenueData = {
-                revenue: {
-                    term1: parseFloat(document.getElementById('revenue-term1').value) || 0,
-                    term2: parseFloat(document.getElementById('revenue-term2').value) || 0,
-                    term3: parseFloat(document.getElementById('revenue-term3').value) || 0
-                },
-                trano: {
-                    term1: parseInt(document.getElementById('trano-term1').value) || 0,
-                    term2: parseInt(document.getElementById('trano-term2').value) || 0,
-                    term3: parseInt(document.getElementById('trano-term3').value) || 0
-                }
-            };
-            
-            updatePerformanceData(outletId, 'current', revenueData);
-            
-            // Show success message
-            showNotification('✅ Current month data updated successfully!', 'success');
-            
-            // Re-render the dashboard
-            renderOutletDashboard();
-        }
-
-        // Update baseline data
-        function updateBaselineData() {
-            const outletId = selectedOutlet.id;
-            
-            const baselineData = {
-                revenue: parseFloat(document.getElementById('baseline-revenue').value) || 0,
-                trano: parseInt(document.getElementById('baseline-trano').value) || 0
-            };
-            
-            updatePerformanceData(outletId, 'baseline', baselineData);
-            
-            // Show success message
-            showNotification('🎯 Baseline data set successfully!', 'success');
-            
-            // Re-render the dashboard
-            renderOutletDashboard();
-        }
-
-        // Show notification
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${type === 'success' ? '#48bb78' : type === 'error' ? '#e53e3e' : '#667eea'};
-                color: white;
-                padding: 15px 25px;
-                border-radius: 8px;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-                z-index: 1000;
-                font-weight: 600;
-                max-width: 300px;
-            `;
-            notification.textContent = message;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-        let recentActivities = [
-            { outlet: 'Tebet Timur', action: 'Created new OKR', time: '2 hours ago', icon: '🎯' },
-            { outlet: 'Veteran Raya', action: 'Completed action plan', time: '4 hours ago', icon: '✅' },
-            { outlet: 'Tomang', action: 'Added comment', time: '6 hours ago', icon: '💬' },
-            { outlet: 'Belleza', action: 'Updated progress', time: '1 day ago', icon: '📊' }
-        ];
-
-        // Initialize with some sample data for demo
-        allOKRS[1] = [
-            {
-                id: 1001,
-                outlet_id: 1,
-                title: 'Peningkatan Transaksi - Trafik Baru',
-                description: 'Meningkatkan jumlah transaksi melalui penambahan trafik pelanggan baru',
-                keyResults: [
-                    {
-                        id: 1,
-                        title: 'KR1: Peningkatan Jumlah Pelanggan Baru',
-                        description: 'Meningkatkan jumlah pelanggan baru sebesar 20%',
-                        actionPlans: [
-                            { text: 'Implementasi program welcome offer untuk pelanggan baru', completed: true, comments: [{ text: 'Program sudah dimulai minggu lalu', time: '2 days ago' }], editing: false, showComments: false },
-                            { text: 'Kampanye digital marketing di media sosial lokal', completed: true, comments: [], editing: false, showComments: false },
-                            { text: 'Partnership dengan komunitas sekitar (RT/RW, klinik)', completed: false, comments: [], editing: false, showComments: false },
-                            { text: 'Program referral dengan reward untuk pelanggan existing', completed: false, comments: [], editing: false, showComments: false }
-                        ]
-                    }
-                ],
-                progress: 50,
-                status: 'active'
-            }
-        ];
-        
-        allOKRS[2] = [
-            {
-                id: 1002,
-                outlet_id: 2,
-                title: 'Optimalisasi Operasional',
-                description: 'Meningkatkan efisiensi operasional dan kualitas layanan',
-                keyResults: [
-                    {
-                        id: 1,
-                        title: 'KR1: Reduce Waiting Time',
-                        description: 'Mengurangi waktu tunggu pelayanan sebesar 25%',
-                        actionPlans: [
-                            { text: 'Implementasi queue management system', completed: true, comments: [], editing: false, showComments: false },
-                            { text: 'Optimasi layout counter dan waiting area', completed: true, comments: [], editing: false, showComments: false },
-                            { text: 'Staff scheduling optimization pada peak hours', completed: true, comments: [], editing: false, showComments: false },
-                            { text: 'Express lane untuk resep sederhana', completed: false, comments: [], editing: false, showComments: false }
-                        ]
-                    }
-                ],
-                progress: 75,
-                status: 'active'
-            }
-        ];
-
-        function calculateStats() {
-            // Filter stats based on user permissions
-            const allowedOutlets = filterOutletsByPermission(outlets);
-            const allowedOutletIds = allowedOutlets.map(outlet => outlet.id.toString());
-            
-            const outletsWithOKRs = Object.keys(allOKRS)
-                .filter(outletId => allOKRS[outletId].length > 0 && allowedOutletIds.includes(outletId))
-                .length;
-                
-            const allowedOKRs = Object.keys(allOKRS)
-                .filter(outletId => allowedOutletIds.includes(outletId))
-                .map(outletId => allOKRS[outletId])
-                .flat();
-                
-            const totalOKRs = allowedOKRs.length;
-            const completedOKRs = allowedOKRs.filter(okr => okr.progress === 100).length;
-            const avgProgress = totalOKRs > 0 ? 
-                Math.round(allowedOKRs.reduce((sum, okr) => sum + okr.progress, 0) / totalOKRs) : 0;
-
-            return { outletsWithOKRs, totalOKRs, completedOKRs, avgProgress };
-        }
-
-        function renderDashboard() {
-            const stats = calculateStats();
-            const app = document.getElementById('app');
-            
-            // Filter outlets based on user permissions
-            const allowedOutlets = filterOutletsByPermission(outlets);
-            
-            // Get outlets with OKRs for display (filtered by permissions)
-            const outletsWithOKRs = Object.keys(allOKRS)
-                .filter(outletId => {
-                    const hasOKRs = allOKRS[outletId].length > 0;
-                    const outlet = outlets.find(o => o.id === parseInt(outletId));
-                    const isAllowed = allowedOutlets.some(allowedOutlet => allowedOutlet.id === outlet?.id);
-                    return hasOKRs && isAllowed;
-                })
-                .map(outletId => {
-                    const outlet = outlets.find(o => o.id === parseInt(outletId));
-                    const okrs = allOKRS[outletId];
-                    const totalProgress = Math.round(okrs.reduce((sum, okr) => sum + okr.progress, 0) / okrs.length);
-                    const completedOKRs = okrs.filter(okr => okr.progress === 100).length;
-                    const criticalOKRs = okrs.filter(okr => okr.progress < 30).length;
-                    const onTrackOKRs = okrs.filter(okr => okr.progress >= 30 && okr.progress < 100).length;
-                    
-                    return {
-                        ...outlet,
-                        okrs: okrs,
-                        totalProgress: totalProgress,
-                        completedOKRs: completedOKRs,
-                        criticalOKRs: criticalOKRs,
-                        onTrackOKRs: onTrackOKRs,
-                        statusColor: totalProgress >= 70 ? '#48bb78' : totalProgress >= 40 ? '#ed8936' : '#e53e3e'
-                    };
-                });
-            
-            app.innerHTML = `
-                <div class="dashboard-stats">
-                    <div class="stat-card">
-                        <div class="stat-number">${stats.outletsWithOKRs}</div>
-                        <div class="stat-label">Active Outlets</div>
-                        <div class="stat-desc">out of ${outlets.length} total outlets</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">${stats.totalOKRs}</div>
-                        <div class="stat-label">Total OKRs</div>
-                        <div class="stat-desc">across all outlets</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">${stats.completedOKRs}</div>
-                        <div class="stat-label">Completed</div>
-                        <div class="stat-desc">fully achieved OKRs</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">${stats.avgProgress}%</div>
-                        <div class="stat-label">Avg Progress</div>
-                        <div class="stat-desc">overall achievement</div>
-                    </div>
-                </div>
-
-                ${outletsWithOKRs.length > 0 ? `
-                    <div style="margin-bottom: 40px;">
-                        <h2 style="margin-bottom: 25px; color: #2d3748;">🏪 Active Outlets - Quick Access</h2>
-                        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 320px)); gap: 20px;">
-                            ${outletsWithOKRs.map(outlet => `
-                                <div class="card outlet-card" onclick="selectOutlet(${outlet.id})" 
-                                     style="border-left: 4px solid ${outlet.statusColor}; cursor: pointer; padding: 18px;">
-                                    
-                                    <!-- Outlet Header -->
-                                    <div style="margin-bottom: 15px;">
-                                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                                            <div class="outlet-code" style="font-size: 0.85rem;">${outlet.code}</div>
-                                            <div style="background: ${outlet.statusColor}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: bold;">
-                                                ${outlet.totalProgress}%
-                                            </div>
-                                        </div>
-                                        <div style="font-size: 0.95rem; font-weight: 600; color: #2d3748; line-height: 1.2; margin-bottom: 8px;">
-                                            ${outlet.name}
-                                        </div>
-                                        <div style="color: #667eea; font-size: 0.75rem; font-weight: 500;">
-                                            Click to manage →
-                                        </div>
-                                    </div>
-
-                                    <!-- OKRs Breakdown -->
-                                    ${outlet.okrs.map(okr => `
-                                        <div style="margin-bottom: 15px; padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 3px solid #667eea;">
-                                            
-                                            <!-- Main Objective -->
-                                            <div style="margin-bottom: 10px;">
-                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                                    <div style="font-weight: 600; color: #2d3748; font-size: 0.8rem; line-height: 1.2;">
-                                                        📊 ${okr.title.length > 25 ? okr.title.substring(0, 25) + '...' : okr.title}
-                                                    </div>
-                                                    <div style="font-weight: bold; color: ${okr.progress >= 70 ? '#48bb78' : okr.progress >= 40 ? '#ed8936' : '#e53e3e'}; font-size: 0.8rem;">
-                                                        ${okr.progress}%
-                                                    </div>
-                                                </div>
-                                                <div class="progress-bar" style="height: 5px; margin-bottom: 10px;">
-                                                    <div class="progress-fill" style="width: ${okr.progress}%; background: ${okr.progress >= 70 ? '#48bb78' : okr.progress >= 40 ? '#ed8936' : '#e53e3e'};"></div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Key Results -->
-                                            ${okr.keyResults.map(kr => {
-                                                const completedActions = kr.actionPlans.filter(ap => ap.completed).length;
-                                                const krProgress = Math.round((completedActions / kr.actionPlans.length) * 100);
-                                                const krColor = krProgress >= 70 ? '#48bb78' : krProgress >= 40 ? '#ed8936' : '#e53e3e';
-                                                
-                                                return `
-                                                    <div style="margin-bottom: 8px; padding-left: 8px;">
-                                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                                            <div style="font-size: 0.75rem; color: #4a5568; font-weight: 500; line-height: 1.2;">
-                                                                ${kr.title.length > 30 ? kr.title.substring(0, 30) + '...' : kr.title}
-                                                            </div>
-                                                            <div style="font-size: 0.7rem; font-weight: bold; color: ${krColor};">
-                                                                ${krProgress}%
-                                                            </div>
-                                                        </div>
-                                                        <div class="progress-bar" style="height: 3px;">
-                                                            <div class="progress-fill" style="width: ${krProgress}%; background: ${krColor};"></div>
-                                                        </div>
-                                                        <div style="font-size: 0.65rem; color: #718096; margin-top: 2px;">
-                                                            ${completedActions}/${kr.actionPlans.length} plans done
-                                                        </div>
-                                                    </div>
-                                                `;
-                                            }).join('')}
-                                        </div>
-                                    `).join('')}
-
-                                    <!-- Performance Data -->
-                                    ${(() => {
-                                        const perfData = initializePerformanceData(outlet.id);
-                                        return `
-                                            <div style="margin-top: 15px; padding: 12px; background: linear-gradient(135deg, #f7fafc, #edf2f7); border-radius: 8px; border-left: 3px solid #38b2ac;">
-                                                <div style="font-size: 0.7rem; font-weight: 600; color: #2d3748; margin-bottom: 8px; text-align: center;">📊 Revenue & Transactions</div>
-                                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                                                    <div style="text-align: center;">
-                                                        <div style="font-size: 0.75rem; font-weight: bold; color: #667eea;">
-                                                            ${perfData.currentMonth.revenue.total > 0 ? 
-                                                                (perfData.currentMonth.revenue.total / 1000000).toFixed(1) + 'M' : 
-                                                                '0'}
-                                                        </div>
-                                                        <div style="font-size: 0.6rem; color: #718096;">Revenue</div>
-                                                        <div style="font-size: 0.55rem; ${perfData.growth.revenue >= 0 ? 'color: #48bb78;' : 'color: #e53e3e;'}">
-                                                            ${perfData.growth.revenue >= 0 ? '↗' : '↘'} ${Math.abs(perfData.growth.revenue)}%
-                                                            ${perfData.growth.revenueDetails && perfData.growth.revenueDetails.method === 'forecast' ? '*' : ''}
-                                                        </div>
-                                                    </div>
-                                                    <div style="text-align: center;">
-                                                        <div style="font-size: 0.75rem; font-weight: bold; color: #48bb78;">
-                                                            ${perfData.currentMonth.trano.total > 0 ? 
-                                                                (perfData.currentMonth.trano.total > 1000 ? 
-                                                                    (perfData.currentMonth.trano.total / 1000).toFixed(1) + 'K' : 
-                                                                    perfData.currentMonth.trano.total) : 
-                                                                '0'}
-                                                        </div>
-                                                        <div style="font-size: 0.6rem; color: #718096;">Transactions</div>
-                                                        <div style="font-size: 0.55rem; ${perfData.growth.trano >= 0 ? 'color: #48bb78;' : 'color: #e53e3e;'}">
-                                                            ${perfData.growth.trano >= 0 ? '↗' : '↘'} ${Math.abs(perfData.growth.trano)}%
-                                                            ${perfData.growth.tranoDetails && perfData.growth.tranoDetails.method === 'forecast' ? '*' : ''}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                ${(() => {
-                                                    const hasForecasted = (perfData.growth.revenueDetails && perfData.growth.revenueDetails.method === 'forecast') ||
-                                                                         (perfData.growth.tranoDetails && perfData.growth.tranoDetails.method === 'forecast');
-                                                    return hasForecasted ? `
-                                                        <div style="margin-top: 8px; font-size: 0.5rem; color: #718096; text-align: center; font-style: italic;">
-                                                            * Forecasted based on partial month data
-                                                        </div>
-                                                    ` : '';
-                                                })()}
-                                            </div>
-                                        `;
-                                    })()}
-
-                                    <!-- Summary Stats -->
-                                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding-top: 12px; border-top: 1px solid #e2e8f0;">
-                                        <div style="text-align: center;">
-                                            <div style="font-size: 0.9rem; font-weight: bold; color: #2d3748;">${outlet.okrs.length}</div>
-                                            <div style="font-size: 0.65rem; color: #a0aec0;">OKRs</div>
-                                        </div>
-                                        <div style="text-align: center;">
-                                            <div style="font-size: 0.9rem; font-weight: bold; color: #48bb78;">${outlet.completedOKRs}</div>
-                                            <div style="font-size: 0.65rem; color: #a0aec0;">Done</div>
-                                        </div>
-                                        <div style="text-align: center;">
-                                            <div style="font-size: 0.9rem; font-weight: bold; color: #ed8936;">${outlet.onTrackOKRs}</div>
-                                            <div style="font-size: 0.65rem; color: #a0aec0;">Active</div>
-                                        </div>
-                                        <div style="text-align: center;">
-                                            <div style="font-size: 0.9rem; font-weight: bold; color: #e53e3e;">${outlet.criticalOKRs}</div>
-                                            <div style="font-size: 0.65rem; color: #a0aec0;">Risk</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                ` : ''}
-
-                <div class="main-actions">
-                    <h2 style="margin-bottom: 20px; color: #2d3748;">➕ Add New Outlet to OKR Program</h2>
-                    <div class="outlet-selector">
-                        <select class="outlet-dropdown" onchange="selectOutletFromDropdown(this.value)">
-                            <option value="">Choose an outlet to start OKR tracking...</option>
-                            ${allowedOutlets.filter(outlet => !allOKRS[outlet.id] || allOKRS[outlet.id].length === 0).map(outlet => `
-                                <option value="${outlet.id}">
-                                    ${outlet.code} - ${outlet.name} (No OKRs yet)
-                                </option>
-                            `).join('')}
-                        </select>
-                    </div>
-                </div>
-
-                <div class="recent-activity">
-                    <h3 style="margin-bottom: 20px; color: #2d3748;">📈 Recent Activity</h3>
-                    ${recentActivities.map(activity => `
-                        <div class="activity-item">
-                            <div class="activity-icon">${activity.icon}</div>
-                            <div class="activity-content">
-                                <div class="activity-text">
-                                    <strong>${activity.outlet}</strong> - ${activity.action}
-                                </div>
-                                <div class="activity-time">${activity.time}</div>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        }
-
-        function selectOutlet(outletId) {
-            const outlet = outlets.find(o => o.id === parseInt(outletId));
-            const allowedOutlets = filterOutletsByPermission(outlets);
-            
-            // Check if user has permission to access this outlet
-            if (!allowedOutlets.some(allowedOutlet => allowedOutlet.id === outlet?.id)) {
-                alert('You do not have permission to access this outlet.');
-                return;
-            }
-            
-            selectedOutlet = outlet;
-            currentView = 'outlet';
-            renderOutletDashboard();
-        }
-
-        function selectOutletFromDropdown(outletId) {
-            if (!outletId) return;
-            selectOutlet(outletId);
-        }
-
-        function renderOutletDashboard() {
-            const app = document.getElementById('app');
-            const outletOKRs = allOKRS[selectedOutlet.id] || [];
-            
-            // Initialize performance data for this outlet
-            const performanceData = initializePerformanceData(selectedOutlet.id);
-            
-            let content = '';
-            
-            if (outletOKRs.length === 0) {
-                content = `
-                    <div style="background: white; padding: 40px; border-radius: 15px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
-                        <div style="font-size: 4rem; margin-bottom: 20px;">🎯</div>
-                        <h2 style="color: #2d3748; margin-bottom: 15px;">Setup OKRs for ${selectedOutlet.name}</h2>
-                        <p style="color: #718096; margin-bottom: 30px; font-size: 1.1rem;">
-                            Choose from Phoenix Project templates to start tracking this outlet's performance
-                        </p>
-                        <button class="button" onclick="showTemplates()">
-                            📋 Choose OKR Template
-                        </button>
-                        <button class="button button-success" onclick="createCustomOKR()">
-                            ➕ Create Custom OKR
-                        </button>
-                    </div>
-                `;
-            } else {
-                const outletStats = {
-                    total: outletOKRs.length,
-                    active: outletOKRs.filter(okr => okr.status === 'active').length,
-                    completed: outletOKRs.filter(okr => okr.progress === 100).length,
-                    avgProgress: Math.round(outletOKRs.reduce((sum, okr) => sum + okr.progress, 0) / outletOKRs.length)
-                };
-
-                content = `
-                    <div class="dashboard-stats">
-                        <div class="stat-card">
-                            <div class="stat-number">${outletStats.total}</div>
-                            <div class="stat-label">Total OKRs</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">${outletStats.active}</div>
-                            <div class="stat-label">Active</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">${outletStats.completed}</div>
-                            <div class="stat-label">Completed</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">${outletStats.avgProgress}%</div>
-                            <div class="stat-label">Progress</div>
-                        </div>
-                    </div>
-
-                    <div style="text-align: center; margin-bottom: 30px;">
-                        <button class="button" onclick="showTemplates()">➕ Add New OKR</button>
-                    </div>
-
-                    <div class="okr-list">
-                        ${outletOKRs.map(okr => renderOKRCard(okr)).join('')}
-                    </div>
-                `;
-            }
-
-            app.innerHTML = `
-                <button class="button button-secondary" onclick="backToDashboard()">← Back to Dashboard</button>
-                <h2 style="margin: 20px 0; color: #2d3748;">
-                    🏪 ${selectedOutlet.name} 
-                    <span style="color: #718096; font-size: 1rem; font-weight: normal;">(${selectedOutlet.code})</span>
-                </h2>
-                
-                ${renderPerformanceTrackingSection(performanceData)}
-                
-                ${content}
-            `;
-        }
-
-        function renderPerformanceTrackingSection(performanceData) {
-            const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-            
-            return `
-                <div style="background: white; padding: 30px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
-                    <h3 style="color: #2d3748; margin-bottom: 25px; display: flex; align-items: center;">
-                        📊 Revenue & Transaction Tracking - ${currentMonth}
-                    </h3>
-                    
-                    <!-- Performance Summary Cards -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                        <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; border-radius: 12px; text-align: center;">
-                            <div style="font-size: 1.8rem; font-weight: bold; margin-bottom: 5px;">
-                                ${formatCurrency(performanceData.currentMonth.revenue.total)}
-                            </div>
-                            <div style="font-size: 0.9rem; opacity: 0.9;">Current Revenue</div>
-                            ${(() => {
-                                const details = performanceData.growth.revenueDetails || {};
-                                const method = details.method || 'actual';
-                                const growth = performanceData.growth.revenue || 0;
-                                return `
-                                    <div style="font-size: 0.8rem; margin-top: 5px; ${growth >= 0 ? 'color: #90EE90;' : 'color: #FFB6C1;'}">
-                                        ${growth >= 0 ? '↗' : '↘'} ${Math.abs(growth)}% vs Baseline
-                                    </div>
-                                    <div style="font-size: 0.7rem; margin-top: 3px; opacity: 0.8;">
-                                        ${method === 'forecast' ? '(Forecasted to full month)' : '(Full month actual)'}
-                                    </div>
-                                    ${details.forecast && details.forecast !== details.current ? `
-                                        <div style="font-size: 0.65rem; margin-top: 2px; opacity: 0.7;">
-                                            Forecast: ${formatCurrency(details.forecast)}
-                                        </div>
-                                    ` : ''}
-                                `;
-                            })()}
-                        </div>
-                        
-                        <div style="background: linear-gradient(135deg, #48bb78, #38a169); color: white; padding: 20px; border-radius: 12px; text-align: center;">
-                            <div style="font-size: 1.8rem; font-weight: bold; margin-bottom: 5px;">
-                                ${performanceData.currentMonth.trano.total.toLocaleString()}
-                            </div>
-                            <div style="font-size: 0.9rem; opacity: 0.9;">Current Transactions</div>
-                            ${(() => {
-                                const details = performanceData.growth.tranoDetails || {};
-                                const method = details.method || 'actual';
-                                const growth = performanceData.growth.trano || 0;
-                                return `
-                                    <div style="font-size: 0.8rem; margin-top: 5px; ${growth >= 0 ? 'color: #90EE90;' : 'color: #FFB6C1;'}">
-                                        ${growth >= 0 ? '↗' : '↘'} ${Math.abs(growth)}% vs Baseline
-                                    </div>
-                                    <div style="font-size: 0.7rem; margin-top: 3px; opacity: 0.8;">
-                                        ${method === 'forecast' ? '(Forecasted to full month)' : '(Full month actual)'}
-                                    </div>
-                                    ${details.forecast && details.forecast !== details.current ? `
-                                        <div style="font-size: 0.65rem; margin-top: 2px; opacity: 0.7;">
-                                            Forecast: ${details.forecast.toLocaleString()}
-                                        </div>
-                                    ` : ''}
-                                `;
-                            })()}
-                        </div>
-                        
-                        <div style="background: linear-gradient(135deg, #ed8936, #dd6b20); color: white; padding: 20px; border-radius: 12px; text-align: center;">
-                            <div style="font-size: 1.8rem; font-weight: bold; margin-bottom: 5px;">
-                                ${formatCurrency(performanceData.baseline.revenue)}
-                            </div>
-                            <div style="font-size: 0.9rem; opacity: 0.9;">Baseline Revenue</div>
-                        </div>
-                        
-                        <div style="background: linear-gradient(135deg, #9f7aea, #805ad5); color: white; padding: 20px; border-radius: 12px; text-align: center;">
-                            <div style="font-size: 1.8rem; font-weight: bold; margin-bottom: 5px;">
-                                ${performanceData.baseline.trano.toLocaleString()}
-                            </div>
-                            <div style="font-size: 0.9rem; opacity: 0.9;">Baseline Transactions</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Data Entry Forms -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px;">
-                        <!-- Current Month Data Entry -->
-                        <div>
-                            <h4 style="color: #2d3748; margin-bottom: 20px; padding: 15px; background: #f7fafc; border-radius: 8px; border-left: 4px solid #667eea;">
-                                📅 Current Month Entry
-                            </h4>
-                            
-                            <!-- Revenue Entry -->
-                            <div style="margin-bottom: 25px; padding: 20px; border: 2px solid #e2e8f0; border-radius: 10px;">
-                                <h5 style="color: #4a5568; margin-bottom: 15px;">💰 Revenue Entry</h5>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                                    <div>
-                                        <label style="display: block; font-size: 0.8rem; color: #718096; margin-bottom: 5px;">Term 1 (1-10th)</label>
-                                        <input type="number" id="revenue-term1" value="${performanceData.currentMonth.revenue.term1}" 
-                                               style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem;">
-                                    </div>
-                                    <div>
-                                        <label style="display: block; font-size: 0.8rem; color: #718096; margin-bottom: 5px;">Term 2 (11-20th)</label>
-                                        <input type="number" id="revenue-term2" value="${performanceData.currentMonth.revenue.term2}" 
-                                               style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem;">
-                                    </div>
-                                    <div>
-                                        <label style="display: block; font-size: 0.8rem; color: #718096; margin-bottom: 5px;">Term 3 (21-30/31st)</label>
-                                        <input type="number" id="revenue-term3" value="${performanceData.currentMonth.revenue.term3}" 
-                                               style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem;">
-                                    </div>
-                                </div>
-                                <div style="text-align: center; font-weight: bold; color: #667eea; background: #f7fafc; padding: 10px; border-radius: 6px;">
-                                    Total: ${formatCurrency(performanceData.currentMonth.revenue.total)}
-                                </div>
-                            </div>
-                            
-                            <!-- Transaction Entry -->
-                            <div style="margin-bottom: 25px; padding: 20px; border: 2px solid #e2e8f0; border-radius: 10px;">
-                                <h5 style="color: #4a5568; margin-bottom: 15px;">🛒 Transaction Entry</h5>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                                    <div>
-                                        <label style="display: block; font-size: 0.8rem; color: #718096; margin-bottom: 5px;">Term 1 (1-10th)</label>
-                                        <input type="number" id="trano-term1" value="${performanceData.currentMonth.trano.term1}" 
-                                               style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem;">
-                                    </div>
-                                    <div>
-                                        <label style="display: block; font-size: 0.8rem; color: #718096; margin-bottom: 5px;">Term 2 (11-20th)</label>
-                                        <input type="number" id="trano-term2" value="${performanceData.currentMonth.trano.term2}" 
-                                               style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem;">
-                                    </div>
-                                    <div>
-                                        <label style="display: block; font-size: 0.8rem; color: #718096; margin-bottom: 5px;">Term 3 (21-30/31st)</label>
-                                        <input type="number" id="trano-term3" value="${performanceData.currentMonth.trano.term3}" 
-                                               style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem;">
-                                    </div>
-                                </div>
-                                <div style="text-align: center; font-weight: bold; color: #48bb78; background: #f7fafc; padding: 10px; border-radius: 6px;">
-                                    Total: ${performanceData.currentMonth.trano.total.toLocaleString()}
-                                </div>
-                            </div>
-                            
-                            <button onclick="updateCurrentMonthData()" 
-                                    style="width: 100%; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                                💾 Update Current Month
-                            </button>
-                        </div>
-                        
-                        <!-- Baseline Data Entry -->
-                        <div>
-                            <h4 style="color: #2d3748; margin-bottom: 20px; padding: 15px; background: #f7fafc; border-radius: 8px; border-left: 4px solid #ed8936;">
-                                📊 Baseline Configuration
-                            </h4>
-                            
-                            <div style="padding: 20px; border: 2px solid #fed7d7; border-radius: 10px; background: #fffaf0;">
-                                <div style="margin-bottom: 20px;">
-                                    <label style="display: block; font-size: 0.9rem; color: #4a5568; margin-bottom: 8px; font-weight: 600;">💰 Baseline Revenue</label>
-                                    <input type="number" id="baseline-revenue" value="${performanceData.baseline.revenue}" 
-                                           style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem;">
-                                </div>
-                                
-                                <div style="margin-bottom: 25px;">
-                                    <label style="display: block; font-size: 0.9rem; color: #4a5568; margin-bottom: 8px; font-weight: 600;">🛒 Baseline Transactions</label>
-                                    <input type="number" id="baseline-trano" value="${performanceData.baseline.trano}" 
-                                           style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem;">
-                                </div>
-                                
-                                <button onclick="updateBaselineData()" 
-                                        style="width: 100%; background: linear-gradient(135deg, #ed8936, #dd6b20); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                                    🎯 Set Baseline
-                                </button>
-                                
-                                <div style="margin-top: 15px; padding: 10px; background: #e6fffa; border-left: 4px solid #38b2ac; border-radius: 4px; font-size: 0.85rem; color: #234e52;">
-                                    <strong>💡 Tip:</strong> Set your baseline once per month to track growth accurately.
-                                </div>
-                                
-                                <div style="margin-top: 10px; padding: 10px; background: #fef5e7; border-left: 4px solid #f6ad55; border-radius: 4px; font-size: 0.8rem; color: #744210;">
-                                    <strong>📊 Fair Comparison:</strong> When you have partial month data (1-2 terms), we forecast your full month performance for fair comparison with baseline.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderOKRCard(okr) {
-            return `
-                <div class="okr-card">
-                    <div class="okr-header">
-                        <div>
-                            <div class="okr-title">${okr.title}</div>
-                            <div class="okr-desc">${okr.description}</div>
-                            <div class="status-badge status-active">${okr.status}</div>
-                        </div>
-                        <div class="kr-progress" style="font-size: 2rem;">${okr.progress}%</div>
-                    </div>
-                    
-                    <div class="progress-section">
-                        <div class="progress-header">
-                            <span style="font-weight: 600;">Overall Progress</span>
-                            <span style="font-weight: 700; color: #667eea;">${okr.progress}%</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${okr.progress}%"></div>
-                        </div>
-                    </div>
-
-                    ${okr.keyResults.map(kr => renderKeyResult(kr, okr.id)).join('')}
-                </div>
-            `;
-        }
-
-        function renderKeyResult(kr, okrId) {
-            const completedActions = kr.actionPlans.filter(ap => ap.completed).length;
-            const krProgress = Math.round((completedActions / kr.actionPlans.length) * 100);
-
-            return `
-                <div class="key-result">
-                    <div class="kr-header">
-                        <div class="kr-title">${kr.title}</div>
-                        <div class="kr-progress">${krProgress}%</div>
-                    </div>
-                    <div class="kr-description">${kr.description}</div>
-                    
-                    <div style="margin-bottom: 10px;">
-                        <div class="progress-bar" style="height: 8px;">
-                            <div class="progress-fill" style="width: ${krProgress}%"></div>
-                        </div>
-                    </div>
-
-                    <div class="action-plans">
-                        <h4 style="margin-bottom: 15px; color: #4a5568;">Action Plans:</h4>
-                        ${kr.actionPlans.map((ap, index) => renderActionPlan(ap, index, kr.id, okrId)).join('')}
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderActionPlan(actionPlan, index, krId, okrId) {
-            const isEditing = actionPlan.editing;
-            const hasComments = actionPlan.comments && actionPlan.comments.length > 0;
-            const showComments = actionPlan.showComments || false;
-
-            return `
-                <div class="action-plan">
-                    <input type="checkbox" class="action-checkbox" 
-                           ${actionPlan.completed ? 'checked' : ''} 
-                           onchange="toggleActionPlan(${okrId}, ${krId}, ${index}, this.checked)">
-                    
-                    <div class="action-content">
-                        ${isEditing ? `
-                            <textarea class="action-edit" id="edit-${okrId}-${krId}-${index}">${actionPlan.text}</textarea>
-                            <div class="action-buttons">
-                                <button class="btn-small btn-save" onclick="saveActionPlan(${okrId}, ${krId}, ${index})">Save</button>
-                                <button class="btn-small btn-cancel" onclick="cancelEditActionPlan(${okrId}, ${krId}, ${index})">Cancel</button>
-                            </div>
-                        ` : `
-                            <div class="action-text ${actionPlan.completed ? 'completed' : ''}" 
-                                 onclick="editActionPlan(${okrId}, ${krId}, ${index})">
-                                ${actionPlan.text}
-                            </div>
-                            <div class="action-buttons">
-                                <button class="btn-small btn-edit" onclick="editActionPlan(${okrId}, ${krId}, ${index})">Edit</button>
-                                <button class="btn-small btn-comment" onclick="toggleComments(${okrId}, ${krId}, ${index})">
-                                    💬 ${hasComments ? `(${actionPlan.comments.length})` : 'Comment'}
-                                </button>
-                            </div>
-                        `}
-                        
-                        ${showComments ? `
-                            <div class="comments-section">
-                                ${actionPlan.comments ? actionPlan.comments.map(comment => `
-                                    <div class="comment">
-                                        ${comment.text}
-                                        <div class="comment-time">${comment.time}</div>
-                                    </div>
-                                `).join('') : ''}
-                                
-                                <textarea class="comment-input" id="comment-${okrId}-${krId}-${index}" 
-                                          placeholder="Add a comment..."></textarea>
-                                <button class="btn-small btn-save" onclick="addComment(${okrId}, ${krId}, ${index})">Add Comment</button>
-                            </div>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
-        }
-
-        function showTemplates() {
-            const app = document.getElementById('app');
-            
-            app.innerHTML = `
-                <button class="button button-secondary" onclick="renderOutletDashboard()">← Back to Outlet</button>
-                <h2 style="margin: 20px 0; color: #2d3748;">📋 Choose OKR Template</h2>
-                <p style="color: #718096; margin-bottom: 30px;">Select a Phoenix Project template for ${selectedOutlet.name}</p>
-                
-                <div class="templates-grid">
-                    ${templates.map(template => `
-                        <div class="template-card" onclick="createOKRFromTemplate(${template.id})">
-                            <div class="okr-title">${template.title}</div>
-                            <div class="okr-desc" style="margin-bottom: 20px;">${template.description}</div>
-                            
-                            ${template.keyResults.map(kr => `
-                                <div style="margin-bottom: 15px; padding: 15px; background: #f7fafc; border-radius: 8px;">
-                                    <div style="font-weight: 600; color: #667eea; margin-bottom: 8px;">${kr.title}</div>
-                                    <div style="color: #4a5568; font-size: 0.9rem; margin-bottom: 10px;">${kr.description}</div>
-                                    <div style="font-size: 0.85rem; color: #718096;">
-                                        ${kr.actionPlans.length} action plans included
-                                    </div>
-                                </div>
-                            `).join('')}
-                            
-                            <div style="text-align: center; margin-top: 20px; color: #667eea; font-weight: 600;">
-                                Click to use this template
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-                
-                <div style="text-align: center; margin-top: 30px;">
-                    <button class="button button-success" onclick="createCustomOKR()">
-                        ➕ Create Custom OKR Instead
-                    </button>
-                </div>
-            `;
-        }
-
-        function createOKRFromTemplate(templateId) {
-            const template = templates.find(t => t.id === templateId);
-            if (!template) return;
-
-            const newOKR = {
-                id: Date.now(),
-                outlet_id: selectedOutlet.id,
-                template_id: template.id,
-                title: template.title,
-                description: template.description,
-                keyResults: template.keyResults.map(kr => ({
-                    ...kr,
-                    actionPlans: kr.actionPlans.map(ap => ({
-                        text: ap,
-                        completed: false,
-                        comments: [],
-                        editing: false,
-                        showComments: false
-                    }))
-                })),
-                progress: 0,
-                status: 'active'
-            };
-
-            if (!allOKRS[selectedOutlet.id]) {
-                allOKRS[selectedOutlet.id] = [];
-            }
-            allOKRS[selectedOutlet.id].push(newOKR);
-            
-            // Add to recent activity
-            recentActivities.unshift({
-                outlet: selectedOutlet.name,
-                action: 'Created new OKR from template',
-                time: 'Just now',
-                icon: '🎯'
-            });
-
-            renderOutletDashboard();
-        }
-
-        function createCustomOKR() {
-            const title = prompt('Enter OKR title:', 'Custom OKR for ' + selectedOutlet.name);
-            const description = prompt('Enter OKR description:', 'Custom objective description');
-            
-            if (title && description) {
-                const newOKR = {
-                    id: Date.now(),
-                    outlet_id: selectedOutlet.id,
-                    title: title,
-                    description: description,
-                    keyResults: [{
-                        id: 1,
-                        title: 'KR1: Custom Key Result',
-                        description: 'Define your first key result',
-                        actionPlans: [
-                            { text: 'Action plan 1 - edit to customize', completed: false, comments: [], editing: false, showComments: false },
-                            { text: 'Action plan 2 - edit to customize', completed: false, comments: [], editing: false, showComments: false },
-                            { text: 'Action plan 3 - edit to customize', completed: false, comments: [], editing: false, showComments: false }
-                        ]
-                    }],
-                    progress: 0,
-                    status: 'active'
-                };
-
-                if (!allOKRS[selectedOutlet.id]) {
-                    allOKRS[selectedOutlet.id] = [];
-                }
-                allOKRS[selectedOutlet.id].push(newOKR);
-                
-                recentActivities.unshift({
-                    outlet: selectedOutlet.name,
-                    action: 'Created custom OKR',
-                    time: 'Just now',
-                    icon: '🎯'
-                });
-
-                renderOutletDashboard();
-            }
-        }
-
-        function toggleActionPlan(okrId, krId, actionIndex, completed) {
-            const outletOKRs = allOKRS[selectedOutlet.id];
-            const okr = outletOKRs.find(o => o.id === okrId);
-            const kr = okr.keyResults.find(k => k.id === krId);
-            
-            kr.actionPlans[actionIndex].completed = completed;
-            
-            // Update progress
-            updateOKRProgress(okr);
-            
-            recentActivities.unshift({
-                outlet: selectedOutlet.name,
-                action: completed ? 'Completed action plan' : 'Unchecked action plan',
-                time: 'Just now',
-                icon: completed ? '✅' : '📋'
-            });
-
-            renderOutletDashboard();
-        }
-
-        function editActionPlan(okrId, krId, actionIndex) {
-            const outletOKRs = allOKRS[selectedOutlet.id];
-            const okr = outletOKRs.find(o => o.id === okrId);
-            const kr = okr.keyResults.find(k => k.id === krId);
-            
-            kr.actionPlans[actionIndex].editing = true;
-            renderOutletDashboard();
-        }
-
-        function saveActionPlan(okrId, krId, actionIndex) {
-            const outletOKRs = allOKRS[selectedOutlet.id];
-            const okr = outletOKRs.find(o => o.id === okrId);
-            const kr = okr.keyResults.find(k => k.id === krId);
-            
-            const newText = document.getElementById(`edit-${okrId}-${krId}-${actionIndex}`).value;
-            kr.actionPlans[actionIndex].text = newText;
-            kr.actionPlans[actionIndex].editing = false;
-            
-            recentActivities.unshift({
-                outlet: selectedOutlet.name,
-                action: 'Updated action plan',
-                time: 'Just now',
-                icon: '✏️'
-            });
-
-            renderOutletDashboard();
-        }
-
-        function cancelEditActionPlan(okrId, krId, actionIndex) {
-            const outletOKRs = allOKRS[selectedOutlet.id];
-            const okr = outletOKRs.find(o => o.id === okrId);
-            const kr = okr.keyResults.find(k => k.id === krId);
-            
-            kr.actionPlans[actionIndex].editing = false;
-            renderOutletDashboard();
-        }
-
-        function toggleComments(okrId, krId, actionIndex) {
-            const outletOKRs = allOKRS[selectedOutlet.id];
-            const okr = outletOKRs.find(o => o.id === okrId);
-            const kr = okr.keyResults.find(k => k.id === krId);
-            
-            kr.actionPlans[actionIndex].showComments = !kr.actionPlans[actionIndex].showComments;
-            renderOutletDashboard();
-        }
-
-        function addComment(okrId, krId, actionIndex) {
-            const commentText = document.getElementById(`comment-${okrId}-${krId}-${actionIndex}`).value;
-            if (!commentText.trim()) return;
-
-            const outletOKRs = allOKRS[selectedOutlet.id];
-            const okr = outletOKRs.find(o => o.id === okrId);
-            const kr = okr.keyResults.find(k => k.id === krId);
-            
-            if (!kr.actionPlans[actionIndex].comments) {
-                kr.actionPlans[actionIndex].comments = [];
-            }
-            
-            kr.actionPlans[actionIndex].comments.push({
-                text: commentText,
-                time: new Date().toLocaleString()
-            });
-            
-            recentActivities.unshift({
-                outlet: selectedOutlet.name,
-                action: 'Added comment',
-                time: 'Just now',
-                icon: '💬'
-            });
-
-            renderOutletDashboard();
-        }
-
-        function updateOKRProgress(okr) {
-            let totalActions = 0;
-            let completedActions = 0;
-            
-            okr.keyResults.forEach(kr => {
-                totalActions += kr.actionPlans.length;
-                completedActions += kr.actionPlans.filter(ap => ap.completed).length;
-            });
-            
-            okr.progress = totalActions > 0 ? Math.round((completedActions / totalActions) * 100) : 0;
-        }
-
-        function backToDashboard() {
-            currentView = 'dashboard';
-            selectedOutlet = null;
-            renderDashboard();
-        }
-
-        // Initialize performance data for demo outlets with sample data
-        function initializeDemoData() {
-            // Outlet 1: Full month data (all 3 terms completed)
-            updatePerformanceData(1, 'baseline', { revenue: 50000000, trano: 1200 });
-            updatePerformanceData(1, 'current', { 
-                revenue: { term1: 18000000, term2: 19000000, term3: 15000000 }, // Total: 52M
-                trano: { term1: 420, term2: 450, term3: 380 } // Total: 1250
-            });
-            
-            // Outlet 2: Partial month data (only 2 terms, showing forecasting)
-            updatePerformanceData(2, 'baseline', { revenue: 45000000, trano: 1000 });
-            updatePerformanceData(2, 'current', { 
-                revenue: { term1: 16000000, term2: 18000000, term3: 0 }, // Total: 34M, Forecast: 51M
-                trano: { term1: 380, term2: 400, term3: 0 } // Total: 780, Forecast: 1170
-            });
-            
-            // Outlet 3: Only 1 term data (showing extreme forecasting)
-            if (outlets.length > 2) {
-                updatePerformanceData(3, 'baseline', { revenue: 50000000, trano: 1200 });
-                updatePerformanceData(3, 'current', { 
-                    revenue: { term1: 18000000, term2: 0, term3: 0 }, // Total: 18M, Forecast: 54M
-                    trano: { term1: 420, term2: 0, term3: 0 } // Total: 420, Forecast: 1260
-                });
-            }
-        }
-
-        // Function to update total outlets display
-        function updateTotalOutletsDisplay(count, isFallback = false) {
-            // This will be called after outlets are loaded to update the UI
-            const statusText = isFallback ? `${count} total outlets (offline mode)` : `${count} total outlets (live data)`;
-            console.log(`📊 Total outlets loaded: ${statusText}`);
-        }
-        
-        // Initialize the app
-        // Dashboard will be rendered after authentication check
-        // Demo data will be initialized after outlets are loaded
     </script>
 </body>
 </html>
