@@ -1661,9 +1661,11 @@
                                                                             
                                                                             <!-- Like Button -->
                                                                             <button onclick="toggleActionLike('${outlet.code}', '${krKey}', ${actionIndex}); event.stopPropagation();" 
-                                                                                    style="background: none; border: none; cursor: pointer; font-size: 1rem; padding: 4px; transition: transform 0.1s;" 
-                                                                                    onmousedown="this.style.transform='scale(0.9)'" 
-                                                                                    onmouseup="this.style.transform='scale(1)'" 
+                                                                                    style="background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 6px; transition: all 0.2s ease; border-radius: 50%; min-width: 32px; min-height: 32px; display: flex; align-items: center; justify-content: center;" 
+                                                                                    onmouseover="this.style.background='rgba(72, 187, 120, 0.1)'; this.style.transform='scale(1.1)'" 
+                                                                                    onmouseout="this.style.background='none'; this.style.transform='scale(1)'" 
+                                                                                    onmousedown="this.style.transform='scale(0.95)'" 
+                                                                                    onmouseup="this.style.transform='scale(1.1)'" 
                                                                                     title="Like this action">
                                                                                 ${krProgressData.likes?.[`action_${actionIndex}`] ? '❤️' : '🤍'}
                                                                             </button>
@@ -1864,8 +1866,13 @@
         }
         
         function toggleActionLike(outletCode, krKey, actionIndex) {
+            console.log(`🔄 Toggling like for action ${actionIndex} in ${krKey} for outlet ${outletCode}`);
+            
             const outlet = phoenixOutlets.find(o => o.code === outletCode);
-            if (!outlet || !outlet.okr) return;
+            if (!outlet || !outlet.okr) {
+                console.error('❌ Outlet or OKR not found');
+                return;
+            }
             
             // Initialize KR progress data if it doesn't exist
             if (!outlet.okr.krProgress) {
@@ -1878,16 +1885,40 @@
             // Toggle like status
             const likeKey = `action_${actionIndex}`;
             const currentLike = outlet.okr.krProgress[krKey].likes[likeKey] || false;
-            outlet.okr.krProgress[krKey].likes[likeKey] = !currentLike;
+            const newLikeStatus = !currentLike;
+            outlet.okr.krProgress[krKey].likes[likeKey] = newLikeStatus;
             
-            // Update localStorage
+            console.log(`💝 Like status changed from ${currentLike} to ${newLikeStatus}`);
+            
+            // Update phoenixData (localStorage sync)
+            if (!phoenixData.outlets[outletCode]) {
+                phoenixData.outlets[outletCode] = { okr: outlet.okr };
+            }
+            if (!phoenixData.outlets[outletCode].okr) {
+                phoenixData.outlets[outletCode].okr = outlet.okr;
+            }
             phoenixData.outlets[outletCode].okr.krProgress = outlet.okr.krProgress;
             localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
             
-            // Refresh view
+            // Immediate UI update - find and update the button directly
+            const likeButtons = document.querySelectorAll(`button[onclick*="toggleActionLike('${outletCode}', '${krKey}', ${actionIndex})"]`);
+            likeButtons.forEach(button => {
+                button.innerHTML = newLikeStatus ? '❤️' : '🤍';
+                // Add visual feedback
+                button.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    button.style.transform = 'scale(1)';
+                }, 150);
+            });
+            
+            // Also refresh the entire section for consistency
             renderOutletOKRSection(outlet);
             
-            console.log(`✅ Toggled like for action ${actionIndex} in ${krKey} for outlet ${outletCode}`);
+            // Show user feedback
+            const feedbackMsg = newLikeStatus ? '❤️ Liked!' : '🤍 Unliked!';
+            showNotification(feedbackMsg, 'success', 1000);
+            
+            console.log(`✅ Successfully toggled like for action ${actionIndex} in ${krKey} for outlet ${outletCode}`);
         }
         
         function updateActionPriority(outletCode, krKey, actionIndex, priority) {
