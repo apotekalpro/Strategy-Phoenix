@@ -292,7 +292,7 @@
                 // Check if user is already logged in
                 if (authService.isAuthenticated()) {
                     showSystemStatus('🔄 Redirecting to dashboard...', false);
-                    window.location.href = 'okr-dashboard-v2.html';
+                    window.location.href = 'okr-phoenix-real.html';
                 }
             } catch (error) {
                 console.error('Failed to initialize authentication:', error);
@@ -352,7 +352,7 @@
                     
                     // Brief delay to show success message
                     setTimeout(() => {
-                        window.location.href = 'okr-dashboard-v2.html';
+                        window.location.href = 'okr-phoenix-real.html';
                     }, 1000);
                 } else {
                     showError(loginResult.message || 'Login failed');
