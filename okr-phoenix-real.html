@@ -663,6 +663,9 @@
                 
                 <!-- Medal Showcase -->
                 <div id="medal-showcase" style="margin-top: 20px;"></div>
+                
+                <!-- Admin Debug Panel (only visible for admin users) -->
+                <div id="admin-debug-panel" style="display: none; margin-top: 20px;"></div>
             </div>
 
             <div class="dashboard-content">
@@ -1263,6 +1266,7 @@
             // Render cards and medal showcase
             renderOutletCards();
             renderMedalShowcase();
+            renderAdminDebugPanel();
         }
 
         function calculateOutletProgress(outlet) {
@@ -1422,11 +1426,22 @@
                 `;
                     } catch (error) {
                         console.error('❌ Error rendering outlet card:', outlet.code, error);
+                        console.error('❌ Outlet data causing error:', outlet);
                         return `
-                            <div class="phoenix-outlet-card" style="background: #fed7d7; border: 1px solid #e53e3e;">
-                                <div style="text-align: center; padding: 20px; color: #e53e3e;">
+                            <div class="phoenix-outlet-card" style="background: #fed7d7; border: 1px solid #e53e3e; border-radius: 12px; padding: 20px;">
+                                <div style="text-align: center; color: #e53e3e;">
                                     <div style="font-size: 1.5rem; margin-bottom: 10px;">⚠️</div>
-                                    <div>Error loading outlet: ${outlet.code}</div>
+                                    <div style="font-weight: 600; margin-bottom: 8px;">Error loading outlet: ${outlet.code}</div>
+                                    <div style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 12px;">
+                                        ${outlet.name || 'Unknown outlet name'}
+                                    </div>
+                                    <div style="font-size: 0.75rem; background: rgba(255,255,255,0.2); padding: 8px; border-radius: 4px;">
+                                        Error: ${error.message || 'Unknown rendering error'}
+                                    </div>
+                                    <button onclick="event.stopPropagation(); fixOutletData('${outlet.code}')" 
+                                            style="background: #48bb78; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; margin-top: 10px;">
+                                        🔧 Try to Fix
+                                    </button>
                                 </div>
                             </div>
                         `;
@@ -1455,10 +1470,49 @@
             }).format(amount);
         }
 
+        function fixOutletData(outletCode) {
+            console.log(`🔧 Attempting to fix outlet data for: ${outletCode}`);
+            
+            // Reset outlet data to a clean state
+            if (!phoenixData.outlets[outletCode]) {
+                phoenixData.outlets[outletCode] = {};
+            }
+            
+            // Ensure basic structure exists
+            if (!phoenixData.outlets[outletCode].performanceData) {
+                phoenixData.outlets[outletCode].performanceData = {
+                    term1: { revenue: 0, trano: 0 },
+                    term2: { revenue: 0, trano: 0 },
+                    term3: { revenue: 0, trano: 0 }
+                };
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+            
+            // Refresh the dashboard
+            loadPhoenixOutlets();
+            renderOutletCards();
+            
+            showNotification(`🔧 Fixed data structure for outlet ${outletCode}`, 'success');
+        }
+
         function renderSalesTargetSystem(outlet, currentRevenue) {
-            // Get sales target data from outlet or initialize if not exists
-            const salesTargetData = outlet.salesTarget || {};
-            const monthlyTarget = salesTargetData.monthlyTarget || 0;
+            try {
+                // Validate inputs
+                if (!outlet) {
+                    console.error('❌ renderSalesTargetSystem: outlet is null or undefined');
+                    return '<div style="color: red;">Error: Invalid outlet data</div>';
+                }
+                
+                if (typeof currentRevenue !== 'number' || isNaN(currentRevenue)) {
+                    console.warn('⚠️ renderSalesTargetSystem: currentRevenue is not a valid number, using 0');
+                    currentRevenue = 0;
+                }
+                
+                // Get sales target data from outlet or initialize if not exists
+                const salesTargetData = outlet.salesTarget || {};
+                const monthlyTarget = salesTargetData.monthlyTarget || 0;
             
             // Calculate tier targets
             const tier1Target = Math.round(monthlyTarget * 0.8); // 80%
@@ -1571,6 +1625,20 @@
                     `}
                 </div>
             `;
+            } catch (error) {
+                console.error('❌ Error in renderSalesTargetSystem:', error);
+                console.error('❌ Outlet data:', outlet);
+                console.error('❌ Current revenue:', currentRevenue);
+                return `
+                    <div class="sales-target-system" style="background: #fed7d7; border: 1px solid #e53e3e; border-radius: 12px; padding: 16px; margin: 15px 0; color: #e53e3e;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 1.2rem; margin-bottom: 8px;">⚠️</div>
+                            <div style="font-size: 0.9rem;">Sales target system temporarily unavailable</div>
+                            <div style="font-size: 0.75rem; margin-top: 4px; opacity: 0.8;">Error: ${error.message}</div>
+                        </div>
+                    </div>
+                `;
+            }
         }
 
         function updateMonthlyTarget(outletCode, targetValue) {
@@ -1673,6 +1741,87 @@
                 console.error('❌ Error getting user medals:', error);
                 return [];
             }
+        }
+
+        function renderAdminDebugPanel() {
+            // Only show for admin users
+            if (!currentUser || currentUser.type === 'outlet') {
+                return;
+            }
+            
+            const debugPanel = document.getElementById('admin-debug-panel');
+            if (!debugPanel) return;
+            
+            debugPanel.style.display = 'block';
+            debugPanel.innerHTML = `
+                <div style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 20px;">
+                    <h3 style="color: #4a5568; margin: 0 0 15px 0;">🔧 Admin Debug Panel</h3>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                        <div style="background: #f7fafc; border-radius: 8px; padding: 12px;">
+                            <div style="font-size: 0.8rem; color: #4a5568; margin-bottom: 4px;">Total Outlets Loaded</div>
+                            <div style="font-size: 1.2rem; font-weight: 600; color: #2d3748;">${allOutlets.length}</div>
+                        </div>
+                        <div style="background: #f7fafc; border-radius: 8px; padding: 12px;">
+                            <div style="font-size: 0.8rem; color: #4a5568; margin-bottom: 4px;">Phoenix Outlets</div>
+                            <div style="font-size: 1.2rem; font-weight: 600; color: #2d3748;">${phoenixOutlets.length}</div>
+                        </div>
+                        <div style="background: #f7fafc; border-radius: 8px; padding: 12px;">
+                            <div style="font-size: 0.8rem; color: #4a5568; margin-bottom: 4px;">User Type</div>
+                            <div style="font-size: 1.2rem; font-weight: 600; color: #2d3748;">${currentUser.type || 'Unknown'}</div>
+                        </div>
+                        <div style="background: #f7fafc; border-radius: 8px; padding: 12px;">
+                            <div style="font-size: 0.8rem; color: #4a5568; margin-bottom: 4px;">Allowed Outlets</div>
+                            <div style="font-size: 1.2rem; font-weight: 600; color: #2d3748;">${userPermissions?.allowedOutlets?.length || 0}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button onclick="showAllOutletsData()" 
+                                style="background: #48bb78; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
+                            📊 Show All Outlets Data
+                        </button>
+                        <button onclick="showPhoenixOutletsData()" 
+                                style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
+                            🔥 Show Phoenix Outlets
+                        </button>
+                        <button onclick="clearAllData()" 
+                                style="background: #e53e3e; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
+                            🗑️ Clear All Data
+                        </button>
+                        <button onclick="reloadDashboard()" 
+                                style="background: #d69e2e; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
+                            🔄 Reload Dashboard
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showAllOutletsData() {
+            console.log('📊 All outlets data:', allOutlets);
+            showNotification(`📊 All outlets data logged to console (${allOutlets.length} outlets)`, 'success');
+        }
+
+        function showPhoenixOutletsData() {
+            console.log('🔥 Phoenix outlets data:', phoenixOutlets);
+            console.log('🔥 Phoenix data from localStorage:', phoenixData);
+            showNotification(`🔥 Phoenix outlets data logged to console (${phoenixOutlets.length} outlets)`, 'success');
+        }
+
+        function clearAllData() {
+            if (confirm('⚠️ Are you sure you want to clear all Phoenix data? This cannot be undone.')) {
+                localStorage.removeItem('phoenixProjectData');
+                localStorage.removeItem('userMedals');
+                showNotification('🗑️ All data cleared. Reloading...', 'warning');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            }
+        }
+
+        function reloadDashboard() {
+            window.location.reload();
         }
 
         function renderMedalShowcase() {
