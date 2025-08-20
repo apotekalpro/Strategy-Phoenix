@@ -120,12 +120,13 @@ class GoogleSheetsAPI {
                 console.log(`📊 Row ${i}:`, row);
             }
             
-            if (row && row.length >= 8) {
+            if (row && row.length >= 2) { // At least email column must exist
                 const email = row[1]?.toString().trim().toLowerCase();
                 const name = row[2]?.toString().trim() || '';
                 const role = row[3]?.toString().trim() || 'AM'; // Column D contains the role
                 const outlets = row[4]?.toString().trim();
-                const password = row[7]?.toString().trim();
+                // Handle both column H (index 7) and potential shorter rows
+                const password = (row[7] || row[6] || row[5])?.toString().trim();
                 
                 // Parse outlets - handle empty or undefined values
                 let outletList = [];
@@ -133,15 +134,17 @@ class GoogleSheetsAPI {
                     outletList = outlets.split(',').map(o => o.trim()).filter(o => o.length > 0);
                 }
                 
-                if (email && email.length > 0 && password && password.length > 0) {
+                // More flexible validation - allow for missing password temporarily
+                if (email && email.length > 0) {
+                    const finalPassword = password || 'Alpro@123'; // Default password if missing
                     credentials[email] = {
-                        password: password,
+                        password: finalPassword,
                         name: name || email.split('@')[0].toUpperCase(),
                         role: role.toUpperCase(),
                         outlets: outletList
                     };
                     
-                    console.log(`✅ Added HQ user: ${email} (${role}) - ${name}`);
+                    console.log(`✅ Added HQ user: ${email} (${role}) - ${name} - Password: ${password ? 'From Sheet' : 'Default'}`);
                 } else {
                     if (i <= 10) { // Log issues for first 10 rows
                         console.log(`⚠️ Skipped row ${i}: email="${email}", password="${password ? '***' : 'EMPTY'}"`, row);

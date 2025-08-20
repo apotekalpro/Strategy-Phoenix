@@ -28,3 +28,8 @@
 10.12.5.138 - - [20/Aug/2025 18:01:31] "GET /debug-hq-login.html HTTP/1.1" 200 -
 10.12.5.138 - - [20/Aug/2025 18:01:31] code 404, message File not found
 10.12.5.138 - - [20/Aug/2025 18:01:31] "GET /robots.txt HTTP/1.1" 404 -
+10.12.5.138 - - [20/Aug/2025 18:02:44] "GET /okr-phoenix-real.html HTTP/1.1" 304 -
+10.12.5.138 - - [20/Aug/2025 18:02:44] "GET /config.js HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 18:02:44] "GET /auth-service.js HTTP/1.1" 304 -
+10.12.5.138 - - [20/Aug/2025 18:02:44] "GET /google-sheets-api.js HTTP/1.1" 304 -
+10.12.5.138 - - [20/Aug/2025 18:02:45] "GET /okr-login.html HTTP/1.1" 304 -
