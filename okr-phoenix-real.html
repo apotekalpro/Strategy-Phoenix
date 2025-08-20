@@ -549,6 +549,32 @@
             }
         }
 
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #e53e3e, #c53030);
+        }
+
+        .notification.warning {
+            background: linear-gradient(135deg, #d69e2e, #b7791f);
+        }
+
         .okr-template-option {
             border: 2px solid #e2e8f0;
             border-radius: 10px;
@@ -1034,13 +1060,20 @@
                 currentUser = JSON.parse(userAuth);
                 console.log('✅ Phoenix Real Dashboard - User authenticated:', currentUser.username);
                 
-                // Initialize services
-                const googleSheetsAPI = new GoogleSheetsAPI();
-                const authService = new AuthService();
-                await authService.initialize();
-                
-                // Load all outlets from Google Sheets
-                await loadAllOutlets(googleSheetsAPI);
+                // Initialize services (optional - don't fail if unavailable)
+                try {
+                    const googleSheetsAPI = new GoogleSheetsAPI();
+                    const authService = new AuthService();
+                    await authService.initialize();
+                    
+                    // Load all outlets from Google Sheets
+                    await loadAllOutlets(googleSheetsAPI);
+                    console.log('✅ External services initialized successfully');
+                } catch (serviceError) {
+                    console.warn('⚠️ External services unavailable, using fallback data:', serviceError.message);
+                    // Use fallback outlet data if Google Sheets is unavailable
+                    allOutlets = [];
+                }
                 
                 // Setup user permissions
                 setupUserPermissions();
@@ -1055,9 +1088,30 @@
                 
             } catch (error) {
                 console.error('❌ Phoenix Real Dashboard initialization failed:', error);
-                sessionStorage.removeItem('userAuth');
-                sessionStorage.setItem('returnUrl', 'okr-phoenix-real.html');
-                window.location.href = 'okr-login.html';
+                console.error('❌ Error details:', error.message, error.stack);
+                
+                // Don't auto-logout on initialization errors - allow user to stay logged in
+                // Only logout if it's a critical authentication error
+                if (error.message && error.message.includes('auth')) {
+                    sessionStorage.removeItem('userAuth');
+                    sessionStorage.setItem('returnUrl', 'okr-phoenix-real.html');
+                    window.location.href = 'okr-login.html';
+                } else {
+                    // Show error but keep user logged in
+                    showNotification('⚠️ Some features may not work properly due to initialization errors', 'warning');
+                    console.warn('⚠️ Continuing with limited functionality...');
+                    
+                    // Try to render basic dashboard without external services
+                    try {
+                        setupUserPermissions();
+                        loadPhoenixOutlets();
+                        renderPhoenixDashboard();
+                        renderMedalShowcase();
+                    } catch (fallbackError) {
+                        console.error('❌ Fallback rendering also failed:', fallbackError);
+                        showNotification('❌ Dashboard failed to load. Please refresh the page.', 'error');
+                    }
+                }
             }
         });
 
