@@ -814,21 +814,55 @@
         
         <!-- Comment Modal -->
         <div id="comment-modal" class="modal">
-            <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-content" style="max-width: 600px; max-height: 80vh;">
                 <div class="modal-header" id="comment-modal-title">💬 Action Plan Comments</div>
                 <div id="comment-modal-body">
                     <div id="comment-action-text" style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9rem; color: #4a5568;"></div>
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; font-weight: 600; color: #4a5568; margin-bottom: 8px;">Comments & Notes:</label>
-                        <textarea id="comment-textarea" 
-                                  placeholder="Add your comments, notes, or updates here..."
-                                  style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; min-height: 120px; resize: vertical; font-family: inherit;">
-                        </textarea>
+                    
+                    <!-- Chat Messages Container -->
+                    <div id="chat-messages" style="max-height: 300px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: #fafafa;">
+                        <!-- Messages will be rendered here -->
+                    </div>
+                    
+                    <!-- New Comment Input -->
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="new-comment-input" 
+                               placeholder="Type your comment here..."
+                               style="flex: 1; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem;"
+                               onkeypress="if(event.key==='Enter') addNewComment()">
+                        <button onclick="addNewComment()" 
+                                style="background: #48bb78; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            Send
+                        </button>
                     </div>
                 </div>
                 <div class="modal-buttons">
-                    <button class="btn btn-secondary" onclick="closeCommentModal()">Cancel</button>
-                    <button class="btn btn-primary" onclick="saveComment()">Save Comment</button>
+                    <button class="btn btn-secondary" onclick="closeCommentModal()">Close</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- KR Edit Modal -->
+        <div id="kr-edit-modal" class="modal">
+            <div class="modal-content" style="max-width: 700px; max-height: 80vh;">
+                <div class="modal-header" id="kr-edit-modal-title">✏️ Edit Key Result Actions</div>
+                <div id="kr-edit-modal-body">
+                    <div id="kr-edit-text" style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9rem; color: #4a5568; font-weight: 600;"></div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-weight: 600; color: #4a5568; margin-bottom: 10px;">Action Plans:</label>
+                        <div id="action-plans-editor" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; background: #fafafa;">
+                            <!-- Editable action plans will be rendered here -->
+                        </div>
+                        <button onclick="addNewActionPlan()" 
+                                style="background: #48bb78; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-top: 10px; font-size: 0.9rem;">
+                            + Add New Action Plan
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" onclick="closeKREditModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveKREdit()">Save Changes</button>
                 </div>
             </div>
         </div>
@@ -1568,7 +1602,7 @@
                                 ${outlet.okr.keyResults.map((kr, krIndex) => {
                                     const krKey = `kr${krIndex + 1}`;
                                     const actionPlans = outlet.okr.actionPlans?.[krKey] || [];
-                                    const krProgressData = outlet.okr.krProgress?.[krKey] || { completedActions: [], comments: {}, likes: {}, priorities: {} };
+                                    const krProgressData = outlet.okr.krProgress?.[krKey] || { completedActions: [], comments: {}, likes: {}, priorities: {}, chatMessages: {} };
                                     const completedActions = krProgressData.completedActions || [];
                                     const comments = krProgressData.comments || {};
                                     const krProgress = actionPlans.length > 0 ? Math.round((completedActions.length / actionPlans.length) * 100) : 0;
@@ -1579,9 +1613,16 @@
                                                 <div style="flex: 1;">
                                                     <div style="font-size: 0.95rem; font-weight: 600; color: #2d3748; margin-bottom: 8px;">${kr}</div>
                                                 </div>
-                                                <div style="text-align: right;">
-                                                    <div style="color: #48bb78; font-weight: 700; font-size: 1rem;">${krProgress}%</div>
-                                                    <div style="color: #718096; font-size: 0.75rem;">Progress</div>
+                                                <div style="display: flex; align-items: center; gap: 10px;">
+                                                    <button onclick="editKRActionPlans('${outlet.code}', '${krKey}')" 
+                                                            style="background: #667eea; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;" 
+                                                            title="Edit action plans">
+                                                        ✏️ Edit
+                                                    </button>
+                                                    <div style="text-align: right;">
+                                                        <div style="color: #48bb78; font-weight: 700; font-size: 1rem;">${krProgress}%</div>
+                                                        <div style="color: #718096; font-size: 0.75rem;">Progress</div>
+                                                    </div>
                                                 </div>
                                             </div>
                                             
@@ -1619,8 +1660,10 @@
                                                                             </select>
                                                                             
                                                                             <!-- Like Button -->
-                                                                            <button onclick="toggleActionLike('${outlet.code}', '${krKey}', ${actionIndex})" 
-                                                                                    style="background: none; border: none; cursor: pointer; font-size: 1rem; padding: 2px;" 
+                                                                            <button onclick="toggleActionLike('${outlet.code}', '${krKey}', ${actionIndex}); event.stopPropagation();" 
+                                                                                    style="background: none; border: none; cursor: pointer; font-size: 1rem; padding: 4px; transition: transform 0.1s;" 
+                                                                                    onmousedown="this.style.transform='scale(0.9)'" 
+                                                                                    onmouseup="this.style.transform='scale(1)'" 
                                                                                     title="Like this action">
                                                                                 ${krProgressData.likes?.[`action_${actionIndex}`] ? '❤️' : '🤍'}
                                                                             </button>
@@ -1630,7 +1673,7 @@
                                                                                     style="background: none; border: none; cursor: pointer; font-size: 1rem; padding: 2px; position: relative;" 
                                                                                     title="Add/view comments">
                                                                                 💬
-                                                                                ${comment ? '<span style="position: absolute; top: -2px; right: -2px; background: #48bb78; color: white; border-radius: 50%; width: 8px; height: 8px; font-size: 0;">.</span>' : ''}
+                                                                                ${(comment || (krProgressData.chatMessages?.[`action_${actionIndex}`] && krProgressData.chatMessages[`action_${actionIndex}`].length > 0)) ? '<span style="position: absolute; top: -2px; right: -2px; background: #48bb78; color: white; border-radius: 50%; width: 8px; height: 8px; font-size: 0;">.</span>' : ''}
                                                                             </button>
                                                                         </div>
                                                                     </div>
@@ -1679,7 +1722,7 @@
                 outlet.okr.krProgress = {};
             }
             if (!outlet.okr.krProgress[krKey]) {
-                outlet.okr.krProgress[krKey] = { completedActions: [], comments: {}, likes: {}, priorities: {} };
+                outlet.okr.krProgress[krKey] = { completedActions: [], comments: {}, likes: {}, priorities: {}, chatMessages: {} };
             }
             
             const completedActions = outlet.okr.krProgress[krKey].completedActions;
@@ -1708,10 +1751,12 @@
             console.log(`✅ Toggled action plan ${actionIndex} for ${krKey} in outlet ${outletCode}`);
         }
         
-        // Global variables for comment modal
+        // Global variables for modals
         let currentCommentOutlet = null;
         let currentCommentKR = null;
         let currentCommentAction = null;
+        let currentEditOutlet = null;
+        let currentEditKR = null;
         
         function openCommentModal(outletCode, krKey, actionIndex) {
             const outlet = phoenixOutlets.find(o => o.code === outletCode);
@@ -1724,27 +1769,48 @@
             const actionPlans = outlet.okr.actionPlans[krKey] || [];
             const actionText = actionPlans[actionIndex] || '';
             const commentKey = `action_${actionIndex}`;
-            const existingComment = outlet.okr.krProgress?.[krKey]?.comments?.[commentKey] || '';
+            const chatMessages = outlet.okr.krProgress?.[krKey]?.chatMessages?.[commentKey] || [];
             
             // Update modal content
             document.getElementById('comment-action-text').textContent = actionText;
-            document.getElementById('comment-textarea').value = existingComment;
+            document.getElementById('new-comment-input').value = '';
+            
+            // Render chat messages
+            renderChatMessages(chatMessages);
             
             // Show modal
             document.getElementById('comment-modal').style.display = 'flex';
         }
         
-        function closeCommentModal() {
-            document.getElementById('comment-modal').style.display = 'none';
-            currentCommentOutlet = null;
-            currentCommentKR = null;
-            currentCommentAction = null;
+        function renderChatMessages(messages) {
+            const chatContainer = document.getElementById('chat-messages');
+            
+            if (messages.length === 0) {
+                chatContainer.innerHTML = '<div style="text-align: center; color: #718096; font-style: italic;">No comments yet. Be the first to comment!</div>';
+                return;
+            }
+            
+            chatContainer.innerHTML = messages.map(msg => `
+                <div style="margin-bottom: 12px; padding: 10px; background: white; border-radius: 8px; border-left: 3px solid #48bb78;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <div style="font-weight: 600; color: #2d3748; font-size: 0.85rem;">${msg.user}</div>
+                        <div style="color: #718096; font-size: 0.75rem;">${new Date(msg.timestamp).toLocaleString()}</div>
+                    </div>
+                    <div style="color: #4a5568; font-size: 0.9rem; line-height: 1.4;">${msg.message}</div>
+                </div>
+            `).join('');
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         }
         
-        function saveComment() {
+        function addNewComment() {
             if (!currentCommentOutlet || !currentCommentKR || currentCommentAction === null) return;
             
-            const comment = document.getElementById('comment-textarea').value.trim();
+            const messageInput = document.getElementById('new-comment-input');
+            const message = messageInput.value.trim();
+            if (!message) return;
+            
             const outlet = phoenixOutlets.find(o => o.code === currentCommentOutlet);
             if (!outlet || !outlet.okr) return;
             
@@ -1753,23 +1819,48 @@
                 outlet.okr.krProgress = {};
             }
             if (!outlet.okr.krProgress[currentCommentKR]) {
-                outlet.okr.krProgress[currentCommentKR] = { completedActions: [], comments: {}, likes: {}, priorities: {} };
+                outlet.okr.krProgress[currentCommentKR] = { completedActions: [], comments: {}, likes: {}, priorities: {}, chatMessages: {} };
             }
             
-            // Update comment
             const commentKey = `action_${currentCommentAction}`;
-            outlet.okr.krProgress[currentCommentKR].comments[commentKey] = comment;
+            if (!outlet.okr.krProgress[currentCommentKR].chatMessages) {
+                outlet.okr.krProgress[currentCommentKR].chatMessages = {};
+            }
+            if (!outlet.okr.krProgress[currentCommentKR].chatMessages[commentKey]) {
+                outlet.okr.krProgress[currentCommentKR].chatMessages[commentKey] = [];
+            }
+            
+            // Add new message
+            const newMessage = {
+                user: currentUser.name || currentUser.username,
+                message: message,
+                timestamp: new Date().toISOString()
+            };
+            
+            outlet.okr.krProgress[currentCommentKR].chatMessages[commentKey].push(newMessage);
+            
+            // Update old comment field for backward compatibility (show latest message)
+            outlet.okr.krProgress[currentCommentKR].comments[commentKey] = message;
             
             // Update localStorage
             phoenixData.outlets[currentCommentOutlet].okr.krProgress = outlet.okr.krProgress;
             localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
             
-            // Close modal and refresh view
-            closeCommentModal();
+            // Clear input and refresh chat
+            messageInput.value = '';
+            renderChatMessages(outlet.okr.krProgress[currentCommentKR].chatMessages[commentKey]);
+            
+            // Refresh main view to show comment indicator
             renderOutletOKRSection(outlet);
             
-            showNotification('✅ Comment saved successfully!', 'success');
-            console.log(`✅ Updated comment for action ${currentCommentAction} in ${currentCommentKR} for outlet ${currentCommentOutlet}`);
+            console.log(`✅ Added new comment for action ${currentCommentAction} in ${currentCommentKR} for outlet ${currentCommentOutlet}`);
+        }
+        
+        function closeCommentModal() {
+            document.getElementById('comment-modal').style.display = 'none';
+            currentCommentOutlet = null;
+            currentCommentKR = null;
+            currentCommentAction = null;
         }
         
         function toggleActionLike(outletCode, krKey, actionIndex) {
@@ -1781,7 +1872,7 @@
                 outlet.okr.krProgress = {};
             }
             if (!outlet.okr.krProgress[krKey]) {
-                outlet.okr.krProgress[krKey] = { completedActions: [], comments: {}, likes: {}, priorities: {} };
+                outlet.okr.krProgress[krKey] = { completedActions: [], comments: {}, likes: {}, priorities: {}, chatMessages: {} };
             }
             
             // Toggle like status
@@ -1808,7 +1899,7 @@
                 outlet.okr.krProgress = {};
             }
             if (!outlet.okr.krProgress[krKey]) {
-                outlet.okr.krProgress[krKey] = { completedActions: [], comments: {}, likes: {}, priorities: {} };
+                outlet.okr.krProgress[krKey] = { completedActions: [], comments: {}, likes: {}, priorities: {}, chatMessages: {} };
             }
             
             // Update priority
@@ -1820,6 +1911,177 @@
             localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
             
             console.log(`✅ Updated priority to ${priority} for action ${actionIndex} in ${krKey} for outlet ${outletCode}`);
+        }
+        
+        function editKRActionPlans(outletCode, krKey) {
+            const outlet = phoenixOutlets.find(o => o.code === outletCode);
+            if (!outlet || !outlet.okr) return;
+            
+            currentEditOutlet = outletCode;
+            currentEditKR = krKey;
+            
+            const krIndex = parseInt(krKey.replace('kr', '')) - 1;
+            const krText = outlet.okr.keyResults[krIndex] || '';
+            const actionPlans = outlet.okr.actionPlans[krKey] || [];
+            
+            // Update modal content
+            document.getElementById('kr-edit-text').textContent = krText;
+            
+            // Render editable action plans
+            renderEditableActionPlans(actionPlans);
+            
+            // Show modal
+            document.getElementById('kr-edit-modal').style.display = 'flex';
+        }
+        
+        function renderEditableActionPlans(actionPlans) {
+            const container = document.getElementById('action-plans-editor');
+            
+            container.innerHTML = actionPlans.map((action, index) => `
+                <div class="action-plan-item" data-index="${index}" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 10px; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+                    <div style="cursor: grab; color: #718096;" title="Drag to reorder">☰</div>
+                    <textarea class="action-text-edit" 
+                              style="flex: 1; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 0.85rem; min-height: 40px; resize: vertical; font-family: inherit;">${action}</textarea>
+                    <button onclick="removeActionPlan(${index})" 
+                            style="background: #e53e3e; color: white; border: none; padding: 6px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;" 
+                            title="Remove action plan">
+                        ✖
+                    </button>
+                </div>
+            `).join('');
+            
+            // Add drag and drop functionality
+            makeSortable(container);
+        }
+        
+        function makeSortable(container) {
+            let draggedElement = null;
+            
+            container.addEventListener('dragstart', (e) => {
+                if (e.target.closest('.action-plan-item')) {
+                    draggedElement = e.target.closest('.action-plan-item');
+                    e.dataTransfer.effectAllowed = 'move';
+                }
+            });
+            
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                
+                const afterElement = getDragAfterElement(container, e.clientY);
+                if (afterElement == null) {
+                    container.appendChild(draggedElement);
+                } else {
+                    container.insertBefore(draggedElement, afterElement);
+                }
+            });
+            
+            container.addEventListener('dragend', () => {
+                draggedElement = null;
+            });
+            
+            // Make items draggable
+            container.querySelectorAll('.action-plan-item').forEach(item => {
+                item.setAttribute('draggable', true);
+            });
+        }
+        
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.action-plan-item:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+        
+        function addNewActionPlan() {
+            const container = document.getElementById('action-plans-editor');
+            const existingItems = container.querySelectorAll('.action-plan-item');
+            const newIndex = existingItems.length;
+            
+            const newItem = document.createElement('div');
+            newItem.className = 'action-plan-item';
+            newItem.setAttribute('data-index', newIndex);
+            newItem.setAttribute('draggable', true);
+            newItem.style.cssText = 'display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 10px; background: white; border-radius: 6px; border: 1px solid #e2e8f0;';
+            
+            newItem.innerHTML = `
+                <div style="cursor: grab; color: #718096;" title="Drag to reorder">☰</div>
+                <textarea class="action-text-edit" 
+                          style="flex: 1; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 0.85rem; min-height: 40px; resize: vertical; font-family: inherit;" 
+                          placeholder="Enter new action plan..."></textarea>
+                <button onclick="removeActionPlan(${newIndex})" 
+                        style="background: #e53e3e; color: white; border: none; padding: 6px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;" 
+                        title="Remove action plan">
+                    ✖
+                </button>
+            `;
+            
+            container.appendChild(newItem);
+            
+            // Focus on the new textarea
+            newItem.querySelector('.action-text-edit').focus();
+        }
+        
+        function removeActionPlan(index) {
+            const container = document.getElementById('action-plans-editor');
+            const items = container.querySelectorAll('.action-plan-item');
+            if (items[index]) {
+                items[index].remove();
+            }
+        }
+        
+        function saveKREdit() {
+            if (!currentEditOutlet || !currentEditKR) return;
+            
+            const outlet = phoenixOutlets.find(o => o.code === currentEditOutlet);
+            if (!outlet || !outlet.okr) return;
+            
+            // Get updated action plans from the editor
+            const container = document.getElementById('action-plans-editor');
+            const actionItems = container.querySelectorAll('.action-plan-item');
+            const updatedActionPlans = [];
+            
+            actionItems.forEach(item => {
+                const text = item.querySelector('.action-text-edit').value.trim();
+                if (text) {
+                    updatedActionPlans.push(text);
+                }
+            });
+            
+            // Update the outlet's action plans
+            outlet.okr.actionPlans[currentEditKR] = updatedActionPlans;
+            
+            // Update localStorage
+            phoenixData.outlets[currentEditOutlet].okr.actionPlans = outlet.okr.actionPlans;
+            localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+            
+            // Update phoenixOutlets array
+            const outletIndex = phoenixOutlets.findIndex(o => o.code === currentEditOutlet);
+            if (outletIndex >= 0) {
+                phoenixOutlets[outletIndex].okr.actionPlans = outlet.okr.actionPlans;
+            }
+            
+            // Close modal and refresh view
+            closeKREditModal();
+            renderOutletOKRSection(outlet);
+            renderPhoenixDashboard();
+            
+            showNotification('✅ Action plans updated successfully!', 'success');
+            console.log(`✅ Updated action plans for ${currentEditKR} in outlet ${currentEditOutlet}`);
+        }
+        
+        function closeKREditModal() {
+            document.getElementById('kr-edit-modal').style.display = 'none';
+            currentEditOutlet = null;
+            currentEditKR = null;
         }
         
         function updateOverallOKRProgress(outletCode) {
@@ -1884,6 +2146,7 @@
             const addModal = document.getElementById('add-outlet-modal');
             const okrModal = document.getElementById('okr-modal');
             const commentModal = document.getElementById('comment-modal');
+            const krEditModal = document.getElementById('kr-edit-modal');
             
             if (e.target === addModal) {
                 closeAddOutletModal();
@@ -1893,6 +2156,9 @@
             }
             if (e.target === commentModal) {
                 closeCommentModal();
+            }
+            if (e.target === krEditModal) {
+                closeKREditModal();
             }
         });
 
