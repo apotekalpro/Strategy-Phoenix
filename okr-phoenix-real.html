@@ -1660,7 +1660,8 @@
                                                                             </select>
                                                                             
                                                                             <!-- Like Button -->
-                                                                            <button onclick="toggleActionLike('${outlet.code}', '${krKey}', ${actionIndex}); event.stopPropagation();" 
+                                                                            <button id="like-btn-${outlet.code}-${krKey}-${actionIndex}" 
+                                                                                    onclick="toggleActionLike('${outlet.code}', '${krKey}', ${actionIndex}); event.stopPropagation();" 
                                                                                     style="background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 6px; transition: all 0.2s ease; border-radius: 50%; min-width: 32px; min-height: 32px; display: flex; align-items: center; justify-content: center;" 
                                                                                     onmouseover="this.style.background='rgba(72, 187, 120, 0.1)'; this.style.transform='scale(1.1)'" 
                                                                                     onmouseout="this.style.background='none'; this.style.transform='scale(1)'" 
@@ -1900,19 +1901,29 @@
             phoenixData.outlets[outletCode].okr.krProgress = outlet.okr.krProgress;
             localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
             
-            // Immediate UI update - find and update the button directly
-            const likeButtons = document.querySelectorAll(`button[onclick*="toggleActionLike('${outletCode}', '${krKey}', ${actionIndex})"]`);
-            likeButtons.forEach(button => {
-                button.innerHTML = newLikeStatus ? '❤️' : '🤍';
-                // Add visual feedback
-                button.style.transform = 'scale(1.2)';
-                setTimeout(() => {
-                    button.style.transform = 'scale(1)';
-                }, 150);
-            });
+            // Immediate UI update - find and update the specific button
+            const buttonId = `like-btn-${outletCode}-${krKey}-${actionIndex}`;
+            const likeButton = document.getElementById(buttonId);
             
-            // Also refresh the entire section for consistency
-            renderOutletOKRSection(outlet);
+            if (likeButton) {
+                likeButton.innerHTML = newLikeStatus ? '❤️' : '🤍';
+                // Add visual feedback with animation
+                likeButton.style.transform = 'scale(1.4)';
+                likeButton.style.transition = 'all 0.3s ease';
+                
+                // Reset animation after delay
+                setTimeout(() => {
+                    likeButton.style.transform = 'scale(1)';
+                }, 300);
+                
+                console.log(`🎯 Updated button ${buttonId} to show ${newLikeStatus ? '❤️' : '🤍'}`);
+            } else {
+                console.error(`❌ Could not find like button with ID: ${buttonId}`);
+            }
+            
+            // Update the progress display to reflect any changes in overall completion
+            updateOverallOKRProgress(outletCode);
+            renderPhoenixDashboard();
             
             // Show user feedback
             const feedbackMsg = newLikeStatus ? '❤️ Liked!' : '🤍 Unliked!';
