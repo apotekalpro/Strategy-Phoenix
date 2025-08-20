@@ -664,8 +664,7 @@
                 <!-- Medal Showcase -->
                 <div id="medal-showcase" style="margin-top: 20px;"></div>
                 
-                <!-- Admin Debug Panel (only visible for admin users) -->
-                <div id="admin-debug-panel" style="display: none; margin-top: 20px;"></div>
+
             </div>
 
             <div class="dashboard-content">
@@ -837,8 +836,13 @@
                                 <span id="detail-tier-name" style="font-size: 1rem; font-weight: 700;">Not Qualified</span>
                                 <span id="detail-achievement-percentage" style="font-size: 1rem; font-weight: 700;">0%</span>
                             </div>
-                            <div style="background: rgba(255,255,255,0.2); border-radius: 12px; height: 12px; overflow: hidden;">
+                            <div style="position: relative; background: rgba(255,255,255,0.2); border-radius: 12px; height: 12px; overflow: visible;">
                                 <div id="detail-progress-bar" style="background: #48bb78; height: 100%; width: 0%; transition: width 0.3s ease; border-radius: 12px;"></div>
+                                
+                                <!-- Lock Icons at 80%, 90%, 100% positions -->
+                                <div id="detail-tier1-lock" style="position: absolute; left: 80%; top: 50%; transform: translate(-50%, -50%); font-size: 1rem;">🔒</div>
+                                <div id="detail-tier2-lock" style="position: absolute; left: 90%; top: 50%; transform: translate(-50%, -50%); font-size: 1rem;">🔒</div>
+                                <div id="detail-tier3-lock" style="position: absolute; left: 100%; top: 50%; transform: translate(-50%, -50%); font-size: 1rem;">🔒</div>
                             </div>
                         </div>
                         
@@ -1324,6 +1328,9 @@
         }
 
         function renderPhoenixDashboard() {
+            // Clear cache when dashboard refreshes to ensure fresh data
+            clearTierUnlockCache();
+            
             // Update stats
             const totalRevenue = phoenixOutlets.reduce((sum, outlet) => {
                 const performanceData = outlet.performanceData || {};
@@ -1341,7 +1348,6 @@
             // Render cards and medal showcase
             renderOutletCards();
             renderMedalShowcase();
-            renderAdminDebugPanel();
         }
 
         function calculateOutletProgress(outlet) {
@@ -1385,7 +1391,12 @@
                 outletsGrid.style.display = 'grid';
                 if (emptyState) emptyState.style.display = 'none';
                 
-                outletsGrid.innerHTML = phoenixOutlets.map(outlet => {
+                // Show loading state first for better perceived performance
+                outletsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: #667eea;">🔄 Loading outlet cards...</div>';
+                
+                // Use requestAnimationFrame for better performance
+                requestAnimationFrame(() => {
+                    outletsGrid.innerHTML = phoenixOutlets.map(outlet => {
                     try {
                 const progress = calculateOutletProgress(outlet);
                 const performanceData = outlet.performanceData || {};
@@ -1521,7 +1532,8 @@
                             </div>
                         `;
                     }
-                }).join('');
+                    }).join('');
+                });
             } catch (error) {
                 console.error('❌ Error rendering outlet cards:', error);
                 const outletsGrid = document.getElementById('outlets-grid');
@@ -1747,8 +1759,24 @@
             console.log(`✅ Updated monthly target for ${outletCode} to ${target}`);
         }
         
+        // Cache for tier unlock bars to avoid recalculating
+        const tierUnlockCache = new Map();
+        
+        // Clear cache when outlet data changes
+        function clearTierUnlockCache() {
+            tierUnlockCache.clear();
+        }
+        
         function renderTierUnlockBar(outlet, currentRevenue) {
             try {
+                // Create cache key based on outlet and revenue
+                const cacheKey = `${outlet.code}_${currentRevenue}`;
+                
+                // Check cache first for performance
+                if (tierUnlockCache.has(cacheKey)) {
+                    return tierUnlockCache.get(cacheKey);
+                }
+                
                 // Get monthly target from detail view or localStorage
                 const detailTargetKey = `detail_monthly_target_${outlet.code}`;
                 let monthlyTarget = 0;
@@ -1795,7 +1823,7 @@
                 // Calculate tier targets (only if target is set)
                 if (monthlyTarget <= 0) {
                     // No target set - show locked tiers
-                    return `
+                    const result = `
                         <div class="tier-unlock-bar" style="background: linear-gradient(135deg, #718096 0%, #4a5568 100%); border-radius: 8px; padding: 12px; margin: 10px 0; color: white;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <span style="font-size: 0.85rem; opacity: 0.9;">🏆 Achievement Tiers</span>
@@ -1817,6 +1845,8 @@
                             </div>
                         </div>
                     `;
+                    tierUnlockCache.set(cacheKey, result);
+                    return result;
                 }
                 
                 // Calculate tier targets
@@ -1832,16 +1862,21 @@
                 // Calculate overall progress percentage
                 const progressPercentage = Math.min((currentRevenue / monthlyTarget) * 100, 100);
                 
-                return `
+                const result = `
                     <div class="tier-unlock-bar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; padding: 12px; margin: 10px 0; color: white;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <span style="font-size: 0.85rem; font-weight: 600;">🏆 Achievement Progress</span>
                             <span style="font-size: 0.8rem; font-weight: 600;">${progressPercentage.toFixed(1)}%</span>
                         </div>
                         
-                        <!-- Progress Bar -->
-                        <div style="background: rgba(255,255,255,0.2); border-radius: 10px; height: 6px; margin-bottom: 10px; overflow: hidden;">
+                        <!-- Progress Bar with Lock Icons -->
+                        <div style="position: relative; background: rgba(255,255,255,0.2); border-radius: 10px; height: 12px; margin-bottom: 10px; overflow: visible;">
                             <div style="background: linear-gradient(90deg, #48bb78 0%, #38a169 100%); height: 100%; width: ${progressPercentage}%; transition: width 0.3s ease; border-radius: 10px;"></div>
+                            
+                            <!-- Lock Icons at 80%, 90%, 100% positions -->
+                            <div style="position: absolute; left: 80%; top: 50%; transform: translate(-50%, -50%); font-size: 1rem; ${tier1Unlocked ? 'filter: drop-shadow(0 0 3px #CD7F32);' : ''}">${tier1Unlocked ? '🥉' : '🔒'}</div>
+                            <div style="position: absolute; left: 90%; top: 50%; transform: translate(-50%, -50%); font-size: 1rem; ${tier2Unlocked ? 'filter: drop-shadow(0 0 3px #C0C0C0);' : ''}">${tier2Unlocked ? '🥈' : '🔒'}</div>
+                            <div style="position: absolute; left: 100%; top: 50%; transform: translate(-50%, -50%); font-size: 1rem; ${tier3Unlocked ? 'filter: drop-shadow(0 0 3px #FFD700);' : ''}">${tier3Unlocked ? '🥇' : '🔒'}</div>
                         </div>
                         
                         <!-- Tier Status -->
@@ -1864,13 +1899,18 @@
                         </div>
                     </div>
                 `;
+                
+                tierUnlockCache.set(cacheKey, result);
+                return result;
             } catch (error) {
                 console.error('❌ Error in renderTierUnlockBar:', error);
-                return `
+                const errorResult = `
                     <div class="tier-unlock-bar" style="background: #fed7d7; border: 1px solid #e53e3e; border-radius: 8px; padding: 12px; margin: 10px 0; color: #e53e3e; text-align: center;">
                         <div style="font-size: 0.8rem;">⚠️ Tier system temporarily unavailable</div>
                     </div>
                 `;
+                tierUnlockCache.set(cacheKey, errorResult);
+                return errorResult;
             }
         }
 
@@ -1945,86 +1985,7 @@
             }
         }
 
-        function renderAdminDebugPanel() {
-            // Only show for admin users
-            if (!currentUser || currentUser.type === 'outlet') {
-                return;
-            }
-            
-            const debugPanel = document.getElementById('admin-debug-panel');
-            if (!debugPanel) return;
-            
-            debugPanel.style.display = 'block';
-            debugPanel.innerHTML = `
-                <div style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 20px;">
-                    <h3 style="color: #4a5568; margin: 0 0 15px 0;">🔧 Admin Debug Panel</h3>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
-                        <div style="background: #f7fafc; border-radius: 8px; padding: 12px;">
-                            <div style="font-size: 0.8rem; color: #4a5568; margin-bottom: 4px;">Total Outlets Loaded</div>
-                            <div style="font-size: 1.2rem; font-weight: 600; color: #2d3748;">${allOutlets.length}</div>
-                        </div>
-                        <div style="background: #f7fafc; border-radius: 8px; padding: 12px;">
-                            <div style="font-size: 0.8rem; color: #4a5568; margin-bottom: 4px;">Phoenix Outlets</div>
-                            <div style="font-size: 1.2rem; font-weight: 600; color: #2d3748;">${phoenixOutlets.length}</div>
-                        </div>
-                        <div style="background: #f7fafc; border-radius: 8px; padding: 12px;">
-                            <div style="font-size: 0.8rem; color: #4a5568; margin-bottom: 4px;">User Type</div>
-                            <div style="font-size: 1.2rem; font-weight: 600; color: #2d3748;">${currentUser.type || 'Unknown'}</div>
-                        </div>
-                        <div style="background: #f7fafc; border-radius: 8px; padding: 12px;">
-                            <div style="font-size: 0.8rem; color: #4a5568; margin-bottom: 4px;">Allowed Outlets</div>
-                            <div style="font-size: 1.2rem; font-weight: 600; color: #2d3748;">${userPermissions?.allowedOutlets?.length || 0}</div>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button onclick="showAllOutletsData()" 
-                                style="background: #48bb78; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
-                            📊 Show All Outlets Data
-                        </button>
-                        <button onclick="showPhoenixOutletsData()" 
-                                style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
-                            🔥 Show Phoenix Outlets
-                        </button>
-                        <button onclick="clearAllData()" 
-                                style="background: #e53e3e; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
-                            🗑️ Clear All Data
-                        </button>
-                        <button onclick="reloadDashboard()" 
-                                style="background: #d69e2e; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
-                            🔄 Reload Dashboard
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
 
-        function showAllOutletsData() {
-            console.log('📊 All outlets data:', allOutlets);
-            showNotification(`📊 All outlets data logged to console (${allOutlets.length} outlets)`, 'success');
-        }
-
-        function showPhoenixOutletsData() {
-            console.log('🔥 Phoenix outlets data:', phoenixOutlets);
-            console.log('🔥 Phoenix data from localStorage:', phoenixData);
-            showNotification(`🔥 Phoenix outlets data logged to console (${phoenixOutlets.length} outlets)`, 'success');
-        }
-
-        function clearAllData() {
-            if (confirm('⚠️ Are you sure you want to clear all Phoenix data? This cannot be undone.')) {
-                localStorage.removeItem('phoenixProjectData');
-                localStorage.removeItem('userMedals');
-                showNotification('🗑️ All data cleared. Reloading...', 'warning');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 2000);
-            }
-        }
-
-        function reloadDashboard() {
-            window.location.reload();
-        }
 
         function renderMedalShowcase() {
             try {
@@ -2857,6 +2818,15 @@
             document.getElementById('detail-tier1').style.borderColor = currentSales >= tier1Amount ? '#CD7F32' : 'rgba(255,255,255,0.3)';
             document.getElementById('detail-tier2').style.borderColor = currentSales >= tier2Amount ? '#C0C0C0' : 'rgba(255,255,255,0.3)';
             document.getElementById('detail-tier3').style.borderColor = currentSales >= tier3Amount ? '#FFD700' : 'rgba(255,255,255,0.3)';
+            
+            // Update lock icons on progress bar
+            const tier1Lock = document.getElementById('detail-tier1-lock');
+            const tier2Lock = document.getElementById('detail-tier2-lock');
+            const tier3Lock = document.getElementById('detail-tier3-lock');
+            
+            if (tier1Lock) tier1Lock.textContent = currentSales >= tier1Amount ? '🥉' : '🔒';
+            if (tier2Lock) tier2Lock.textContent = currentSales >= tier2Amount ? '🥈' : '🔒';
+            if (tier3Lock) tier3Lock.textContent = currentSales >= tier3Amount ? '🥇' : '🔒';
             
             // Calculate and display reward
             const rewardAmount = Math.round(currentSales * (rewardPercentage / 100));
