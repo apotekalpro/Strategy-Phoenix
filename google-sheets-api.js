@@ -104,7 +104,7 @@ class GoogleSheetsAPI {
 
     /**
      * Parse HQ credentials from Google Sheets data
-     * Expected format: Column B = email, Column H = password
+     * Expected format: Column B = email, Column D = role, Column H = password
      */
     parseHQCredentials(rows) {
         const credentials = {};
@@ -115,7 +115,7 @@ class GoogleSheetsAPI {
             if (row.length >= 8) {
                 const email = row[1]?.toString().trim().toLowerCase();
                 const name = row[2]?.toString().trim() || '';
-                const role = row[3]?.toString().trim() || 'AM';
+                const role = row[3]?.toString().trim() || 'AM'; // Column D contains the role
                 const outlets = row[4]?.toString().trim().split(',').map(o => o.trim()) || [];
                 const password = row[7]?.toString().trim();
                 
@@ -131,6 +131,7 @@ class GoogleSheetsAPI {
         }
         
         console.log(`✅ Parsed ${Object.keys(credentials).length} HQ credentials`);
+        console.log(`✅ HQ Credentials roles:`, Object.entries(credentials).map(([email, data]) => `${email}: ${data.role}`));
         return credentials;
     }
 

@@ -8,7 +8,7 @@ const CONFIG = {
         
         // HQ login sheet (if separate sheet exists)
         HQ_LOGIN_SHEET_ID: '1wCvZ1WAlHAn-B8UPP5AUEPzQ5Auf84BJFeG48Hlo9wE',
-        HQ_LOGIN_RANGE: 'HQ Login!B:H', // Column B: emails, Column H: passwords
+        HQ_LOGIN_RANGE: 'HQ Login!B:H', // Column B: emails, Column D: role, Column H: passwords
         
         // API key for Google Sheets API (public read-only)
         // IMPORTANT: Replace 'YOUR_GOOGLE_SHEETS_API_KEY_HERE' with your actual Google Sheets API key
