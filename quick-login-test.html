@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Login Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background: #d4edda; }
+        .error { background: #f8d7da; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Quick Login Test</h1>
+    <button onclick="testDeviLogin()">Test devi.purba@apotekalpro.id Login</button>
+    <div id="results"></div>
+
+    <script src="config.js"></script>
+    <script src="google-sheets-api.js"></script>
+
+    <script>
+        function addResult(content, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = content;
+            document.getElementById('results').appendChild(div);
+        }
+
+        // Hardcoded credentials from login page
+        const hqCredentials = {
+            'khoo.ziyu@apotekalpro.id': { 
+                password: 'Alpro@123', 
+                name: 'KHOO ZI YU', 
+                role: 'ADMIN',
+                outlets: []
+            },
+            'devi.purba@apotekalpro.id': {
+                password: 'Alpro@123',
+                name: 'DEVI PURBA',
+                role: 'ADMIN',
+                outlets: []
+            }
+        };
+
+        async function testDeviLogin() {
+            document.getElementById('results').innerHTML = '';
+            
+            try {
+                addResult('<h3>🔍 Testing devi.purba@apotekalpro.id authentication</h3>', 'info');
+                
+                const email = 'devi.purba@apotekalpro.id';
+                const password = 'Alpro@123';
+                
+                // Test with hardcoded credentials first
+                const hqUser = hqCredentials[email.toLowerCase()];
+                if (hqUser) {
+                    addResult(`✅ Found in hardcoded credentials: ${hqUser.name} (${hqUser.role})`, 'success');
+                    
+                    if (hqUser.password === password) {
+                        addResult(`✅ Password matches! Login should work.`, 'success');
+                        
+                        // Test creating user session data
+                        const userData = {
+                            type: 'hq',
+                            email: email.toLowerCase(),
+                            name: hqUser.name,
+                            role: hqUser.role,
+                            accessibleOutlets: hqUser.role === 'ADMIN' ? 'ALL' : hqUser.outlets,
+                            timestamp: Date.now()
+                        };
+                        
+                        addResult(`✅ User session data would be: <pre>${JSON.stringify(userData, null, 2)}</pre>`, 'success');
+                    } else {
+                        addResult(`❌ Password mismatch. Expected: ${hqUser.password}, Got: ${password}`, 'error');
+                    }
+                } else {
+                    addResult(`❌ User not found in hardcoded credentials`, 'error');
+                }
+                
+                // Also test with Google Sheets
+                try {
+                    const googleSheetsAPI = new GoogleSheetsAPI();
+                    const dynamicCredentials = await googleSheetsAPI.loadHQCredentials();
+                    
+                    const dynamicUser = dynamicCredentials[email.toLowerCase()];
+                    if (dynamicUser) {
+                        addResult(`✅ Also found in Google Sheets: ${dynamicUser.name} (${dynamicUser.role})`, 'success');
+                    } else {
+                        addResult(`⚠️ Not found in Google Sheets data (but hardcoded should work)`, 'info');
+                    }
+                } catch (error) {
+                    addResult(`⚠️ Google Sheets test failed: ${error.message}`, 'info');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Test failed: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

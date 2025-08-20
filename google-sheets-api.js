@@ -104,7 +104,7 @@ class GoogleSheetsAPI {
 
     /**
      * Parse HQ credentials from Google Sheets data
-     * Expected format: Column B = email, Column D = role, Column H = password
+     * Expected format: Column A = name, Column B = email, Column D = role, Column H = password
      */
     parseHQCredentials(rows) {
         const credentials = {};
@@ -121,8 +121,8 @@ class GoogleSheetsAPI {
             }
             
             if (row && row.length >= 2) { // At least email column must exist
+                const name = row[0]?.toString().trim() || ''; // Column A contains the name
                 const email = row[1]?.toString().trim().toLowerCase();
-                const name = row[2]?.toString().trim() || '';
                 const role = row[3]?.toString().trim() || 'AM'; // Column D contains the role
                 const outlets = row[4]?.toString().trim();
                 // Handle both column H (index 7) and potential shorter rows

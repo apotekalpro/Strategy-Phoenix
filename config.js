@@ -8,7 +8,7 @@ const CONFIG = {
         
         // HQ login sheet (if separate sheet exists)
         HQ_LOGIN_SHEET_ID: '1wCvZ1WAlHAn-B8UPP5AUEPzQ5Auf84BJFeG48Hlo9wE',
-        HQ_LOGIN_RANGE: 'HQ Login!A1:H50', // Column A-H, rows 1-50 to ensure we get ALL data including row 29+
+        HQ_LOGIN_RANGE: 'HQ Login!A1:H50', // Column A=name, B=email, D=role, H=password (rows 1-50 to capture all data)
         
         // API key for Google Sheets API (public read-only)
         // IMPORTANT: Replace 'YOUR_GOOGLE_SHEETS_API_KEY_HERE' with your actual Google Sheets API key
@@ -176,7 +176,7 @@ const CONFIG = {
         },
         'devi.purba@apotekalpro.id': {
             password: 'Alpro@123',
-            name: 'DEVI PURBA',
+            name: 'DEVI', // Column A name from Google Sheets
             role: 'ADMIN', // Updated to match Google Sheets role
             outlets: []
         },
