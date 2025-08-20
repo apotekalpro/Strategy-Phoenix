@@ -109,29 +109,53 @@ class GoogleSheetsAPI {
     parseHQCredentials(rows) {
         const credentials = {};
         
+        console.log(`📋 Parsing HQ credentials from ${rows.length} rows...`);
+        
         // Skip header row (index 0)
         for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
-            if (row.length >= 8) {
+            
+            // Debug log for each row
+            if (i <= 5) { // Log first 5 rows for debugging
+                console.log(`📊 Row ${i}:`, row);
+            }
+            
+            if (row && row.length >= 8) {
                 const email = row[1]?.toString().trim().toLowerCase();
                 const name = row[2]?.toString().trim() || '';
                 const role = row[3]?.toString().trim() || 'AM'; // Column D contains the role
-                const outlets = row[4]?.toString().trim().split(',').map(o => o.trim()) || [];
+                const outlets = row[4]?.toString().trim();
                 const password = row[7]?.toString().trim();
                 
-                if (email && password) {
+                // Parse outlets - handle empty or undefined values
+                let outletList = [];
+                if (outlets && outlets.length > 0) {
+                    outletList = outlets.split(',').map(o => o.trim()).filter(o => o.length > 0);
+                }
+                
+                if (email && email.length > 0 && password && password.length > 0) {
                     credentials[email] = {
                         password: password,
-                        name: name,
+                        name: name || email.split('@')[0].toUpperCase(),
                         role: role.toUpperCase(),
-                        outlets: outlets
+                        outlets: outletList
                     };
+                    
+                    console.log(`✅ Added HQ user: ${email} (${role}) - ${name}`);
+                } else {
+                    if (i <= 10) { // Log issues for first 10 rows
+                        console.log(`⚠️ Skipped row ${i}: email="${email}", password="${password ? '***' : 'EMPTY'}"`, row);
+                    }
+                }
+            } else {
+                if (i <= 10) { // Log issues for first 10 rows
+                    console.log(`⚠️ Row ${i} insufficient columns (${row?.length || 0} < 8):`, row);
                 }
             }
         }
         
-        console.log(`✅ Parsed ${Object.keys(credentials).length} HQ credentials`);
-        console.log(`✅ HQ Credentials roles:`, Object.entries(credentials).map(([email, data]) => `${email}: ${data.role}`));
+        console.log(`✅ Parsed ${Object.keys(credentials).length} HQ credentials from ${rows.length} total rows`);
+        console.log(`📋 HQ Users:`, Object.entries(credentials).map(([email, data]) => `${email} (${data.role})`));
         return credentials;
     }
 
@@ -175,19 +199,30 @@ class GoogleSheetsAPI {
      * Load HQ credentials from Google Sheets
      */
     async loadHQCredentials() {
+        console.log('🔐 Loading HQ credentials from Google Sheets...');
+        
         try {
             const rows = await this.fetchSheetData(
                 CONFIG.GOOGLE_SHEETS.HQ_LOGIN_SHEET_ID,
                 CONFIG.GOOGLE_SHEETS.HQ_LOGIN_RANGE
             );
             
+            console.log(`📊 Retrieved ${rows.length} rows from HQ Login sheet`);
+            
             const credentials = this.parseHQCredentials(rows);
             
-            // Merge with default HQ users
-            return { ...CONFIG.DEFAULT_HQ_USERS, ...credentials };
+            // Always merge with defaults to ensure system admin access
+            const allCredentials = { ...CONFIG.DEFAULT_HQ_USERS, ...credentials };
+            
+            console.log(`✅ Total HQ credentials available: ${Object.keys(allCredentials).length}`);
+            console.log(`📋 All HQ emails:`, Object.keys(allCredentials));
+            
+            return allCredentials;
             
         } catch (error) {
-            console.error('❌ Failed to load HQ credentials, using defaults:', error);
+            console.error('❌ Failed to load HQ credentials from Google Sheets:', error);
+            console.error('❌ Error details:', error.message);
+            console.log('📋 Falling back to default HQ users only');
             return CONFIG.DEFAULT_HQ_USERS;
         }
     }

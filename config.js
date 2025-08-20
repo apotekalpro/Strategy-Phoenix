@@ -8,7 +8,7 @@ const CONFIG = {
         
         // HQ login sheet (if separate sheet exists)
         HQ_LOGIN_SHEET_ID: '1wCvZ1WAlHAn-B8UPP5AUEPzQ5Auf84BJFeG48Hlo9wE',
-        HQ_LOGIN_RANGE: 'HQ Login!B:H', // Column B: emails, Column D: role, Column H: passwords
+        HQ_LOGIN_RANGE: 'HQ Login!A:H', // Column A-H to ensure we get all data: Column B: emails, Column D: role, Column H: passwords
         
         // API key for Google Sheets API (public read-only)
         // IMPORTANT: Replace 'YOUR_GOOGLE_SHEETS_API_KEY_HERE' with your actual Google Sheets API key
@@ -179,6 +179,19 @@ const CONFIG = {
             name: 'SYSTEM ADMIN', 
             role: 'ADMIN',
             outlets: []
+        },
+        // Add some example HQ users to demonstrate functionality
+        'manager@apotekalpro.id': {
+            password: 'Alpro@123',
+            name: 'AREA MANAGER',
+            role: 'AM',
+            outlets: ['JKJSTT1', 'JKJSVR1', 'JKJBTM1']
+        },
+        'supervisor@apotekalpro.id': {
+            password: 'Alpro@123',
+            name: 'SUPERVISOR',
+            role: 'SUPERVISOR',
+            outlets: ['BTTSGV1', 'BTTSSU1']
         }
     }
 };

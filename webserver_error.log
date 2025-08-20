@@ -1,0 +1,13 @@
+10.12.5.138 - - [20/Aug/2025 17:48:08] "GET /okr-phoenix-real.html HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 17:48:09] "GET /config.js HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 17:48:09] "GET /auth-service.js HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 17:48:09] "GET /google-sheets-api.js HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 17:48:09] "GET /okr-login.html HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 17:48:09] code 404, message File not found
+10.12.5.138 - - [20/Aug/2025 17:48:09] "GET /favicon.ico HTTP/1.1" 404 -
+10.12.5.138 - - [20/Aug/2025 17:48:19] "GET /okr-phoenix-real.html HTTP/1.1" 200 -
+10.12.5.138 - - [20/Aug/2025 17:51:36] "GET /okr-login.html HTTP/1.1" 304 -
+10.12.5.138 - - [20/Aug/2025 17:52:39] "GET /okr-phoenix-real.html HTTP/1.1" 304 -
+10.12.5.138 - - [20/Aug/2025 17:52:40] "GET /google-sheets-api.js HTTP/1.1" 304 -
+10.12.5.138 - - [20/Aug/2025 17:52:40] "GET /config.js HTTP/1.1" 304 -
+10.12.5.138 - - [20/Aug/2025 17:52:40] "GET /auth-service.js HTTP/1.1" 304 -
