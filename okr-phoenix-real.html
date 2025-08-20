@@ -10,17 +10,34 @@
             padding: 0;
             box-sizing: border-box;
         }
+        
+        /* Global performance optimizations */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        *,
+        *::before,
+        *::after {
+            backface-visibility: hidden;
+        }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
+            /* Scroll performance optimizations */
+            overflow-x: hidden;
+            scroll-behavior: smooth;
         }
 
         .dashboard-container {
             max-width: 1400px;
             margin: 0 auto;
+            /* Performance optimizations */
+            will-change: scroll-position;
+            backface-visibility: hidden;
         }
 
         .dashboard-header {
@@ -144,6 +161,9 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
             gap: 20px;
+            /* Performance optimizations */
+            contain: layout style paint;
+            transform: translateZ(0); /* Force hardware acceleration */
         }
 
         .phoenix-outlet-card {
@@ -154,10 +174,14 @@
             border-left: 5px solid #ff6b6b;
             transition: all 0.3s;
             cursor: pointer;
+            /* Performance optimizations */
+            will-change: transform, box-shadow;
+            backface-visibility: hidden;
+            transform: translateZ(0); /* Force hardware acceleration */
         }
 
         .phoenix-outlet-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-5px) translateZ(0);
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
 
@@ -836,13 +860,22 @@
                                 <span id="detail-tier-name" style="font-size: 1rem; font-weight: 700;">Not Qualified</span>
                                 <span id="detail-achievement-percentage" style="font-size: 1rem; font-weight: 700;">0%</span>
                             </div>
-                            <div style="position: relative; background: rgba(255,255,255,0.2); border-radius: 12px; height: 12px; overflow: visible;">
+                            <div style="position: relative; background: rgba(255,255,255,0.2); border-radius: 12px; height: 12px; margin-bottom: 25px; overflow: visible;">
                                 <div id="detail-progress-bar" style="background: #48bb78; height: 100%; width: 0%; transition: width 0.3s ease; border-radius: 12px;"></div>
                                 
-                                <!-- Lock Icons at 80%, 90%, 100% positions -->
-                                <div id="detail-tier1-lock" style="position: absolute; left: 80%; top: 50%; transform: translate(-50%, -50%); font-size: 1rem;">🔒</div>
-                                <div id="detail-tier2-lock" style="position: absolute; left: 90%; top: 50%; transform: translate(-50%, -50%); font-size: 1rem;">🔒</div>
-                                <div id="detail-tier3-lock" style="position: absolute; left: 100%; top: 50%; transform: translate(-50%, -50%); font-size: 1rem;">🔒</div>
+                                <!-- Lock Icons with Labels at 80%, 90%, 100% positions -->
+                                <div style="position: absolute; left: 80%; top: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                    <div id="detail-tier1-lock" style="font-size: 1rem;">🔒</div>
+                                    <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 4px; white-space: nowrap; color: white;">Tier 1<br>Bronze</div>
+                                </div>
+                                <div style="position: absolute; left: 90%; top: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                    <div id="detail-tier2-lock" style="font-size: 1rem;">🔒</div>
+                                    <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 4px; white-space: nowrap; color: white;">Tier 2<br>Silver</div>
+                                </div>
+                                <div style="position: absolute; left: 100%; top: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                    <div id="detail-tier3-lock" style="font-size: 1rem;">🔒</div>
+                                    <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 4px; white-space: nowrap; color: white;">Tier 3<br>Gold</div>
+                                </div>
                             </div>
                         </div>
                         
@@ -1284,15 +1317,23 @@
             try {
                 const userMedals = getUserMedals();
                 const medalDisplay = userMedals.length > 0 ? `${userMedals.slice(0, 3).map(m => m.tierEmoji).join('')} ` : '';
+                
+                // Get role display name
+                const roleDisplay = getUserRoleDisplay(currentUser);
+                
                 const userNameElement = document.getElementById('user-name');
                 if (userNameElement) {
-                    userNameElement.textContent = `👋 ${medalDisplay}${currentUser.name || currentUser.username}`;
+                    userNameElement.textContent = `👋 ${medalDisplay}${currentUser.name || currentUser.username} (${roleDisplay})`;
                 }
             } catch (error) {
                 console.error('❌ Error setting up user display:', error);
+                
+                // Get role display name for fallback
+                const roleDisplay = getUserRoleDisplay(currentUser);
+                
                 const userNameElement = document.getElementById('user-name');
                 if (userNameElement) {
-                    userNameElement.textContent = `👋 ${currentUser.name || currentUser.username}`;
+                    userNameElement.textContent = `👋 ${currentUser.name || currentUser.username} (${roleDisplay})`;
                 }
             }
         }
@@ -1767,6 +1808,30 @@
             tierUnlockCache.clear();
         }
         
+        // Get user role display name
+        function getUserRoleDisplay(user) {
+            if (!user || !user.type) return 'User';
+            
+            switch (user.type.toLowerCase()) {
+                case 'admin':
+                case 'administrator':
+                    return 'Admin';
+                case 'am':
+                case 'area_manager':
+                    return 'Area Manager';
+                case 'outlet':
+                case 'outlet_manager':
+                    return 'Outlet Manager';
+                case 'supervisor':
+                    return 'Supervisor';
+                case 'manager':
+                    return 'Manager';
+                default:
+                    // Capitalize first letter of any other role
+                    return user.type.charAt(0).toUpperCase() + user.type.slice(1);
+            }
+        }
+        
         function renderTierUnlockBar(outlet, currentRevenue) {
             try {
                 // Create cache key based on outlet and revenue
@@ -1829,18 +1894,23 @@
                                 <span style="font-size: 0.85rem; opacity: 0.9;">🏆 Achievement Tiers</span>
                                 <span style="font-size: 0.75rem; opacity: 0.7;">Set target in detail view</span>
                             </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div style="text-align: center; flex: 1;">
-                                    <div style="font-size: 1.2rem; opacity: 0.5;">🔒</div>
-                                    <div style="font-size: 0.7rem; opacity: 0.7;">Tier 1</div>
+                            
+                            <!-- Progress Bar with Lock Icons and Labels -->
+                            <div style="position: relative; background: rgba(255,255,255,0.2); border-radius: 10px; height: 12px; margin-bottom: 25px; overflow: visible;">
+                                <div style="background: rgba(255,255,255,0.1); height: 100%; width: 0%; border-radius: 10px;"></div>
+                                
+                                <!-- Lock Icons with Labels at 80%, 90%, 100% positions -->
+                                <div style="position: absolute; left: 80%; top: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                    <div style="font-size: 1rem; opacity: 0.5;">🔒</div>
+                                    <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 4px; white-space: nowrap;">Tier 1<br>Bronze</div>
                                 </div>
-                                <div style="text-align: center; flex: 1;">
-                                    <div style="font-size: 1.2rem; opacity: 0.5;">🔒</div>
-                                    <div style="font-size: 0.7rem; opacity: 0.7;">Tier 2</div>
+                                <div style="position: absolute; left: 90%; top: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                    <div style="font-size: 1rem; opacity: 0.5;">🔒</div>
+                                    <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 4px; white-space: nowrap;">Tier 2<br>Silver</div>
                                 </div>
-                                <div style="text-align: center; flex: 1;">
-                                    <div style="font-size: 1.2rem; opacity: 0.5;">🔒</div>
-                                    <div style="font-size: 0.7rem; opacity: 0.7;">Tier 3</div>
+                                <div style="position: absolute; left: 100%; top: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                    <div style="font-size: 1rem; opacity: 0.5;">🔒</div>
+                                    <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 4px; white-space: nowrap;">Tier 3<br>Gold</div>
                                 </div>
                             </div>
                         </div>
@@ -1869,32 +1939,22 @@
                             <span style="font-size: 0.8rem; font-weight: 600;">${progressPercentage.toFixed(1)}%</span>
                         </div>
                         
-                        <!-- Progress Bar with Lock Icons -->
-                        <div style="position: relative; background: rgba(255,255,255,0.2); border-radius: 10px; height: 12px; margin-bottom: 10px; overflow: visible;">
+                        <!-- Progress Bar with Lock Icons and Labels -->
+                        <div style="position: relative; background: rgba(255,255,255,0.2); border-radius: 10px; height: 12px; margin-bottom: 25px; overflow: visible;">
                             <div style="background: linear-gradient(90deg, #48bb78 0%, #38a169 100%); height: 100%; width: ${progressPercentage}%; transition: width 0.3s ease; border-radius: 10px;"></div>
                             
-                            <!-- Lock Icons at 80%, 90%, 100% positions -->
-                            <div style="position: absolute; left: 80%; top: 50%; transform: translate(-50%, -50%); font-size: 1rem; ${tier1Unlocked ? 'filter: drop-shadow(0 0 3px #CD7F32);' : ''}">${tier1Unlocked ? '🥉' : '🔒'}</div>
-                            <div style="position: absolute; left: 90%; top: 50%; transform: translate(-50%, -50%); font-size: 1rem; ${tier2Unlocked ? 'filter: drop-shadow(0 0 3px #C0C0C0);' : ''}">${tier2Unlocked ? '🥈' : '🔒'}</div>
-                            <div style="position: absolute; left: 100%; top: 50%; transform: translate(-50%, -50%); font-size: 1rem; ${tier3Unlocked ? 'filter: drop-shadow(0 0 3px #FFD700);' : ''}">${tier3Unlocked ? '🥇' : '🔒'}</div>
-                        </div>
-                        
-                        <!-- Tier Status -->
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="text-align: center; flex: 1;">
-                                <div style="font-size: 1.2rem;">${tier1Unlocked ? '🥉' : '🔒'}</div>
-                                <div style="font-size: 0.7rem; opacity: ${tier1Unlocked ? '1' : '0.6'};">Tier 1</div>
-                                <div style="font-size: 0.65rem; opacity: 0.8;">Bronze</div>
+                            <!-- Lock Icons with Labels at 80%, 90%, 100% positions -->
+                            <div style="position: absolute; left: 80%; top: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                <div style="font-size: 1rem; ${tier1Unlocked ? 'filter: drop-shadow(0 0 3px #CD7F32);' : ''}">${tier1Unlocked ? '🥉' : '🔒'}</div>
+                                <div style="font-size: 0.6rem; opacity: ${tier1Unlocked ? '1' : '0.7'}; margin-top: 4px; white-space: nowrap;">Tier 1<br>Bronze</div>
                             </div>
-                            <div style="text-align: center; flex: 1;">
-                                <div style="font-size: 1.2rem;">${tier2Unlocked ? '🥈' : '🔒'}</div>
-                                <div style="font-size: 0.7rem; opacity: ${tier2Unlocked ? '1' : '0.6'};">Tier 2</div>
-                                <div style="font-size: 0.65rem; opacity: 0.8;">Silver</div>
+                            <div style="position: absolute; left: 90%; top: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                <div style="font-size: 1rem; ${tier2Unlocked ? 'filter: drop-shadow(0 0 3px #C0C0C0);' : ''}">${tier2Unlocked ? '🥈' : '🔒'}</div>
+                                <div style="font-size: 0.6rem; opacity: ${tier2Unlocked ? '1' : '0.7'}; margin-top: 4px; white-space: nowrap;">Tier 2<br>Silver</div>
                             </div>
-                            <div style="text-align: center; flex: 1;">
-                                <div style="font-size: 1.2rem;">${tier3Unlocked ? '🥇' : '🔒'}</div>
-                                <div style="font-size: 0.7rem; opacity: ${tier3Unlocked ? '1' : '0.6'};">Tier 3</div>
-                                <div style="font-size: 0.65rem; opacity: 0.8;">Gold</div>
+                            <div style="position: absolute; left: 100%; top: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                <div style="font-size: 1rem; ${tier3Unlocked ? 'filter: drop-shadow(0 0 3px #FFD700);' : ''}">${tier3Unlocked ? '🥇' : '🔒'}</div>
+                                <div style="font-size: 0.6rem; opacity: ${tier3Unlocked ? '1' : '0.7'}; margin-top: 4px; white-space: nowrap;">Tier 3<br>Gold</div>
                             </div>
                         </div>
                     </div>
