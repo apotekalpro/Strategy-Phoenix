@@ -1072,7 +1072,45 @@
                 } catch (serviceError) {
                     console.warn('⚠️ External services unavailable, using fallback data:', serviceError.message);
                     // Use fallback outlet data if Google Sheets is unavailable
-                    allOutlets = [];
+                    allOutlets = [
+                        { id: 1, code: 'DEMO01', name: 'APOTEK ALPRO DEMO 1', am: 'DEMO AM' },
+                        { id: 2, code: 'DEMO02', name: 'APOTEK ALPRO DEMO 2', am: 'DEMO AM' },
+                        { id: 3, code: 'DEMO03', name: 'APOTEK ALPRO DEMO 3', am: 'DEMO AM' }
+                    ];
+                    
+                    // Add some demo Phoenix data if none exists
+                    if (Object.keys(phoenixData.outlets).length === 0) {
+                        phoenixData.outlets['DEMO01'] = {
+                            okr: {
+                                objective: "Meningkatkan volume transaksi harian sebanyak 10%/mth melalui peningkatan trafik masuk (walk-in), pendaftaran member baru, dan kunjungan ulang pelanggan dengan strategi booth & flyering.",
+                                description: "Focus on increasing daily transaction volume through targeted customer acquisition and retention strategies.",
+                                keyResults: [
+                                    "Melakukan 15 Tes Kesehatan/Hari melalui Booth Campaign (Setiap Selasa, Kamis, Minggu)",
+                                    "Ajak pelanggan sekitar atau yang lewat untuk cek tekanan darah secara gratis (tanpa form registrasi)",
+                                    "Setelah tes, arahkan pelanggan masuk ke outlet untuk daftar sebagai member VIP gratis"
+                                ],
+                                actionPlans: {
+                                    kr1: [
+                                        "Pasang tripod banner bertuliskan 'Diskon 50% Cek Kesehatan' dan putar lagu Apotek Alpro dengan speaker",
+                                        "Ajak pelanggan sekitar atau yang lewat untuk cek tekanan darah secara gratis (tanpa form registrasi)",
+                                        "Setelah tes, arahkan pelanggan masuk ke outlet untuk daftar sebagai member VIP gratis dan mendapatkan paket voucher senilai Rp40rb"
+                                    ],
+                                    kr2: [
+                                        "Kirim hasil tes ke pelanggan melalui WhatsApp via sistem Octopus"
+                                    ],
+                                    kr3: [
+                                        "Setup booth setiap hari di dalam Pavilion GS"
+                                    ]
+                                },
+                                progress: 25
+                            },
+                            performanceData: {
+                                term1: { revenue: 8500000, trano: 150 },
+                                term2: { revenue: 9200000, trano: 165 },
+                                term3: { revenue: 8800000, trano: 158 }
+                            }
+                        };
+                    }
                 }
                 
                 // Setup user permissions
@@ -1154,16 +1192,27 @@
                 userPermissions = {
                     canViewAllOutlets: true,
                     canAddOutlets: true,
-                    allowedOutlets: allOutlets.map(outlet => outlet.code),
+                    allowedOutlets: allOutlets.length > 0 ? allOutlets.map(outlet => outlet.code) : ['DEMO01', 'DEMO02', 'DEMO03'],
                     canAssignOKR: true,
                     canEditOKR: true
                 };
             }
             
             // Update UI based on permissions
-            const userMedals = getUserMedals();
-            const medalDisplay = userMedals.length > 0 ? `${userMedals.slice(0, 3).map(m => m.tierEmoji).join('')} ` : '';
-            document.getElementById('user-name').textContent = `👋 ${medalDisplay}${currentUser.name || currentUser.username}`;
+            try {
+                const userMedals = getUserMedals();
+                const medalDisplay = userMedals.length > 0 ? `${userMedals.slice(0, 3).map(m => m.tierEmoji).join('')} ` : '';
+                const userNameElement = document.getElementById('user-name');
+                if (userNameElement) {
+                    userNameElement.textContent = `👋 ${medalDisplay}${currentUser.name || currentUser.username}`;
+                }
+            } catch (error) {
+                console.error('❌ Error setting up user display:', error);
+                const userNameElement = document.getElementById('user-name');
+                if (userNameElement) {
+                    userNameElement.textContent = `👋 ${currentUser.name || currentUser.username}`;
+                }
+            }
         }
 
         function loadPhoenixOutlets() {
@@ -1239,19 +1288,26 @@
         }
 
         function renderOutletCards() {
-            const outletsGrid = document.getElementById('outlets-grid');
-            const emptyState = document.getElementById('empty-state');
-            
-            if (phoenixOutlets.length === 0) {
-                outletsGrid.style.display = 'none';
-                emptyState.style.display = 'block';
-                return;
-            }
-            
-            outletsGrid.style.display = 'grid';
-            emptyState.style.display = 'none';
-            
-            outletsGrid.innerHTML = phoenixOutlets.map(outlet => {
+            try {
+                const outletsGrid = document.getElementById('outlets-grid');
+                const emptyState = document.getElementById('empty-state');
+                
+                if (!outletsGrid) {
+                    console.error('❌ outlets-grid element not found');
+                    return;
+                }
+                
+                if (phoenixOutlets.length === 0) {
+                    if (outletsGrid) outletsGrid.style.display = 'none';
+                    if (emptyState) emptyState.style.display = 'block';
+                    return;
+                }
+                
+                outletsGrid.style.display = 'grid';
+                if (emptyState) emptyState.style.display = 'none';
+                
+                outletsGrid.innerHTML = phoenixOutlets.map(outlet => {
+                    try {
                 const progress = calculateOutletProgress(outlet);
                 const performanceData = outlet.performanceData || {};
                 const totalRevenue = (performanceData.term1?.revenue || 0) + (performanceData.term2?.revenue || 0) + (performanceData.term3?.revenue || 0);
@@ -1364,7 +1420,30 @@
                         </div>
                     </div>
                 `;
-            }).join('');
+                    } catch (error) {
+                        console.error('❌ Error rendering outlet card:', outlet.code, error);
+                        return `
+                            <div class="phoenix-outlet-card" style="background: #fed7d7; border: 1px solid #e53e3e;">
+                                <div style="text-align: center; padding: 20px; color: #e53e3e;">
+                                    <div style="font-size: 1.5rem; margin-bottom: 10px;">⚠️</div>
+                                    <div>Error loading outlet: ${outlet.code}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }).join('');
+            } catch (error) {
+                console.error('❌ Error rendering outlet cards:', error);
+                const outletsGrid = document.getElementById('outlets-grid');
+                if (outletsGrid) {
+                    outletsGrid.innerHTML = `
+                        <div style="background: #fed7d7; border: 1px solid #e53e3e; border-radius: 12px; padding: 20px; text-align: center; color: #e53e3e;">
+                            <div style="font-size: 1.5rem; margin-bottom: 10px;">⚠️</div>
+                            <div>Error loading outlet cards</div>
+                        </div>
+                    `;
+                }
+            }
         }
 
         function formatCurrency(amount) {
@@ -1578,24 +1657,30 @@
         }
 
         function getUserMedals() {
-            const currentUser = JSON.parse(sessionStorage.getItem('userAuth') || '{}');
-            const userMedals = JSON.parse(localStorage.getItem('userMedals') || '{}');
-            
-            if (!userMedals[currentUser.username]) {
+            try {
+                const currentUser = JSON.parse(sessionStorage.getItem('userAuth') || '{}');
+                const userMedals = JSON.parse(localStorage.getItem('userMedals') || '{}');
+                
+                if (!currentUser.username || !userMedals[currentUser.username]) {
+                    return [];
+                }
+                
+                return userMedals[currentUser.username].medals.map(medal => ({
+                    ...medal,
+                    tierEmoji: medal.tier === 3 ? '🥇' : medal.tier === 2 ? '🥈' : '🥉'
+                })).sort((a, b) => b.tier - a.tier || new Date(b.achievedDate) - new Date(a.achievedDate));
+            } catch (error) {
+                console.error('❌ Error getting user medals:', error);
                 return [];
             }
-            
-            return userMedals[currentUser.username].medals.map(medal => ({
-                ...medal,
-                tierEmoji: medal.tier === 3 ? '🥇' : medal.tier === 2 ? '🥈' : '🥉'
-            })).sort((a, b) => b.tier - a.tier || new Date(b.achievedDate) - new Date(a.achievedDate));
         }
 
         function renderMedalShowcase() {
-            const userMedals = getUserMedals();
-            const currentUser = JSON.parse(sessionStorage.getItem('userAuth') || '{}');
-            const userMedalData = JSON.parse(localStorage.getItem('userMedals') || '{}')[currentUser.username];
-            const totalRewards = userMedalData?.totalRewards || 0;
+            try {
+                const userMedals = getUserMedals();
+                const currentUser = JSON.parse(sessionStorage.getItem('userAuth') || '{}');
+                const userMedalData = JSON.parse(localStorage.getItem('userMedals') || '{}')[currentUser.username];
+                const totalRewards = userMedalData?.totalRewards || 0;
             
             const showcaseElement = document.getElementById('medal-showcase');
             
@@ -1645,6 +1730,17 @@
                     </div>
                 </div>
             `;
+            } catch (error) {
+                console.error('❌ Medal showcase rendering failed:', error);
+                const showcaseElement = document.getElementById('medal-showcase');
+                if (showcaseElement) {
+                    showcaseElement.innerHTML = `
+                        <div style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 20px; text-align: center;">
+                            <div style="color: #e53e3e; font-size: 0.9rem;">⚠️ Medal showcase temporarily unavailable</div>
+                        </div>
+                    `;
+                }
+            }
         }
 
         function showNotification(message, type = 'success') {
