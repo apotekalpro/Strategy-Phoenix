@@ -827,51 +827,98 @@
         let selectedOutletForAdd = null;
         let currentOKROutlet = null;
 
-        // Phoenix OKR Templates based on the exact reference document
+        // Phoenix OKR Templates - EXACT from user's reference document
         const phoenixOKRTemplates = [
             {
                 id: 1,
-                title: 'OKR Phoenix Project – Peningkatan Transaksi (Trafik Baru & Return Rate)',
+                title: '🔥 OKR PHOENIX PROJECT – PENINGKATAN TRANSAKSI (TRAFIK BARU & RETURN RATE)',
                 description: 'Meningkatkan volume transaksi harian sebanyak 10%/mth melalui peningkatan trafik masuk (walk-in), pendaftaran member baru, dan kunjungan ulang pelanggan dengan strategi booth & flyering.',
                 category: 'Phoenix Main',
                 keyResults: [
                     'KR1 – Melakukan 15 Tes Kesehatan/Hari melalui Booth Campaign (Setiap Selasa, Kamis, Minggu)',
                     'KR2 – Capai >90% Tingkat Rekrutmen Member VIP dari Pelanggan Non-Member + Picu Kunjungan Ulang melalui Reminder & Voucher',
-                    'KR3 – Flyering di area sekitar outlet: minimum 100 leaflet/hari dengan follow up ke 20% (20 orang)',
-                    'KR4 – Capai Brand Awareness 70% di area sekitar outlet melalui booth & flyering campaign'
+                    'KR3 – Sebar 1.000 Flyer AJH di Hotzone dengan Hook Membership + Voucher (Dalam 30 Hari)',
+                    'KR4 – Gunakan Menit Konsult (MK) untuk Tingkatkan Kunjungan Unik Kasus Penyakit Ringan'
                 ],
                 actionPlans: {
                     kr1: [
-                        'Set up booth kampanye setiap Selasa, Kamis, dan Minggu',
-                        'Sediakan alat tes kesehatan: tensi, gula darah, asam urat',
-                        'Target minimum 15 orang per hari untuk tes kesehatan',
-                        'Follow up dengan konsultasi dan rekomendasi produk'
+                        'Pasang tripod banner bertuliskan "Diskon 50% Cek Kesehatan" dan putar lagu Apotek Alpro dengan speaker',
+                        'Ajak pelanggan sekitar atau yang lewat untuk cek tekanan darah secara gratis (tanpa form registrasi)',
+                        'Setelah tes, arahkan pelanggan masuk ke outlet untuk daftar sebagai member VIP gratis dan mendapatkan paket voucher senilai Rp40rb',
+                        'Kirim hasil tes ke pelanggan melalui WhatsApp via sistem Octopus',
+                        'Catat jumlah tester harian ke dalam Tracking GS'
                     ],
                     kr2: [
-                        'Identifikasi pelanggan non-member saat transaksi',
-                        'Tawarkan program member VIP dengan benefit menarik',
-                        'Set up sistem reminder via WhatsApp/SMS',
-                        'Berikan voucher khusus untuk member baru'
+                        'Ajak semua pelanggan non-member untuk daftar sebagai member VIP (berlaku 3 bulan)',
+                        'Jelaskan dengan jelas keuntungan member VIP — terutama 4x voucher Rp10rb',
+                        'Ingatkan pelanggan agar kembali sebelum voucher kedaluwarsa',
+                        'Kirim reminder bulanan via WA kepada member baru terkait voucher yang belum digunakan'
                     ],
                     kr3: [
-                        'Distribusikan 100 leaflet per hari di area strategis',
-                        'Catat kontak 20% penerima leaflet (20 orang)',
-                        'Follow up via telepon/WhatsApp dalam 3 hari',
-                        'Tawarkan promo khusus untuk first-time customer'
+                        'Jadwalkan pembagian flyer saat jam sibuk di hotzone (radius maksimal 500 meter)',
+                        'Promosikan: "Gratis Tes + Member + Voucher Rp40rb – Datang & Klaim di Outlet!"',
+                        'Ajak penerima flyer langsung datang dan klaim, tidak perlu potong/stempel',
+                        'Catat sisa flyer harian dalam GS'
                     ],
                     kr4: [
-                        'Survey brand awareness bulanan di sekitar outlet',
-                        'Ukur recall dan recognition brand',
-                        'Target 70% masyarakat mengenal apotek',
-                        'Evaluasi efektivitas kampanye booth & flyering'
+                        'Siapkan paket MK terlebih dahulu & lakukan pelatihan kepada staf (oleh AM/BM)',
+                        'Gunakan MK sebagai strategi upsell untuk keluhan ringan (misalnya masuk angin, pusing ringan, maag)',
+                        'Catat jumlah MK yang keluar setiap hari di GS',
+                        'Tim Strategi akan memantau tren kenaikan MK bulanan'
                     ]
                 }
             },
             {
                 id: 2,
-                title: 'OKR Phoenix Project – Optimalisasi Penjualan dengan Advanced Strategy',
-                description: 'Mengoptimalkan revenue dan transaksi melalui strategi penjualan lanjutan: PWP (Product With Purchase), konsultasi berbayar, training produk, dan fokus SKU tertentu.',
-                category: 'Phoenix Advanced',
+                title: '🏢 OKR – APARTMENT OUTLET TRANSACTION BOOST',
+                description: 'Untuk meningkatkan jumlah transaksi sebanyak 10%/mth di outlet Apotek Alpro berbasis apartemen melalui visibilitas yang lebih kuat, peningkatan kenyamanan, dan keterlibatan komunitas yang terstruktur.',
+                category: 'Apartment Outlet',
+                keyResults: [
+                    'KR1 – Pasang minimal 2 titik materi promosi (banner/standee) di area lobby atau akses utama/jalur lift apartemen selama 2 bulan penuh (Agustus–September 2025)',
+                    'KR2 – Distribusikan 1.000 kartu nama WA Order/brosur per bulan (Agustus–Oktober), diselipkan ke struk pembelian obat kronis',
+                    'KR3 – Bangun engagement komunitas apartemen melalui WA Group, dengan target 100 member baru/bulan dan 10 posting edukatif/promo per bulan, selama 3 bulan',
+                    'KR4 – Meningkatkan repeat order rate pelanggan kronis apartemen sebesar 20% dibanding baseline Juli 2025 dalam waktu 60 hari',
+                    'KR5 – Distribusi 1.000 Flyer AJH di area apartemen (Agustus–September 2025), dengan izin untuk disisipkan ke mailbox atau jalur lift (jika memungkinkan)'
+                ],
+                actionPlans: {
+                    kr1: [
+                        'Survei titik strategis: lobby utama, pintu masuk tower, area lift',
+                        'Foto&ajukan titik + minta quotation ke Strategy Team, cc BPT',
+                        'Setelah disetujui, pasang materi promosi dan dokumentasikan',
+                        'Materi tetap terpasang selama minimal 2 bulan penuh'
+                    ],
+                    kr2: [
+                        'Cetak 1.000 kartu nama atau flyer mini setiap bulan (request ke BPT)',
+                        'Setiap transaksi obat kronis wajib diselipkan 1 kartu nama di atas struk',
+                        'Edukasi pelanggan: bisa pesan ulang via WA, barang dititipkan di lobby',
+                        'Pantau jumlah kartu terpakai setiap minggu di GS'
+                    ],
+                    kr3: [
+                        'Gabung ke grup WA tower (jika tersedia) atau buat grup WA baru khusus penghuni tower',
+                        'Undang pelanggan untuk join saat transaksi atau di booth',
+                        'Ambil konten dari IG BPT atau WA Channel Alpro untuk dishare',
+                        'Lakukan minimal 10 posting edukasi/promo setiap bulan (setiap 3 hari)',
+                        'Target pertumbuhan grup: +100 member baru per bulan x 3 bulan'
+                    ],
+                    kr4: [
+                        'Export data pelanggan obat kronis dari penjualan bulan lalu',
+                        'Filter pelanggan yang pembelian terakhirnya sudah >1 bulan',
+                        'Kirim pesan WhatsApp follow-up untuk ingatkan jadwal konsumsi rutin',
+                        'Tawarkan untuk datang ke outlet atau titip ke lobby + voucher kecil'
+                    ],
+                    kr5: [
+                        'Ajukan izin ke pengelola apartemen untuk penyisipan flyer ke mailbox/unit',
+                        'Jika tidak diizinkan, sebar manual di area ramai (lobby, minimarket, parkiran)',
+                        'Gunakan flyer hook: "Gratis Cek + Member + Voucher Rp40rb"',
+                        'Catat jumlah flyer terdistribusi harian di GS'
+                    ]
+                }
+            },
+            {
+                id: 3,
+                title: '💰 SMART OKR – BUYING POWER BOOST',
+                description: 'To increase average Buying Power per customer by 10% per month through PWP, MK usage, internal product training, and targeted upselling.',
+                category: 'Buying Power',
                 keyResults: [
                     'KR1 – Capai 100% target PWP setiap bulan dengan pelatihan CE dan monitoring harian',
                     'KR2 – Capai penggunaan MK (Menit Konsult) sebanyak minimum 150x per bulan, dengan tracking harian',
@@ -882,8 +929,9 @@
                     kr1: [
                         'Lakukan pelatihan oleh BM kepada CE tentang cara mengkomunikasikan PWP secara persuasif',
                         'Gunakan skrip PWP: "Kak, produk ini lagi promo loh – bisa ditambah RpX saja, hematnya bisa sampai 30%"',
-                        'Update progres PWP setiap malam di grup internal outlet',
-                        'Tempelkan reminder produk PWP aktif di area kasir'
+                        'Update progres PWP setiap malam di grup internal outlet (dengan jumlah transaksi & % dari target)',
+                        'Tempelkan reminder produk PWP aktif di area kasir',
+                        'Pastikan seluruh tim tahu produk PWP yang aktif mingguan'
                     ],
                     kr2: [
                         'Tetapkan target harian MK = 5 pasien/hari',
@@ -894,6 +942,7 @@
                     kr3: [
                         'BM memilih 1 produk per hari yang akan difokuskan (misalnya: Omega 3, Vit C, Sari Kunyit)',
                         'BM melakukan briefing ke CE setiap pagi sebelum shift (5–10 menit)',
+                        'Sertakan skrip upsell dalam training, contoh: "Kalau beli obat darah tinggi, bisa ditambahkan Omega 3 sebagai pendamping"',
                         'Target: produk tersebut disampaikan minimal ke 5 customer per shift',
                         'Laporkan produk harian yang ditraining & hasilnya dalam tracking mingguan'
                     ],
@@ -901,6 +950,7 @@
                         'Outlet memilih 3 SKU add-on untuk bulan berjalan (rekomendasi dari Strategy/BPT)',
                         'Display produk di kasir dengan tag "Favorit Kami!" atau "Bisa Ditambahkan"',
                         'Tetapkan target: 50 pcs per SKU per bulan',
+                        'Pantau penjualan SKU ini mingguan',
                         'Laporkan hasil ke Strategy Team untuk evaluasi dampaknya terhadap BP'
                     ]
                 }
