@@ -1010,6 +1010,84 @@
                 </div>
             </div>
         </div>
+
+        <!-- Reward Medal Modal -->
+        <div id="reward-medal-modal" class="modal">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">🏆 Award Special Medal</div>
+                <div id="reward-medal-modal-body">
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-weight: 600; color: #4a5568; margin-bottom: 10px;">Select Outlet:</label>
+                        <select id="reward-outlet-select" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; background: white;">
+                            <option value="">Choose an outlet...</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-weight: 600; color: #4a5568; margin-bottom: 10px;">Medal Type:</label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                            <button class="medal-type-btn" data-type="most_improved" onclick="selectMedalType('most_improved')" 
+                                    style="padding: 15px; border: 2px solid #e2e8f0; border-radius: 8px; background: white; cursor: pointer; text-align: center; transition: all 0.2s;">
+                                <div style="font-size: 1.5rem;">📈</div>
+                                <div style="font-size: 0.9rem; font-weight: 600; color: #4a5568;">Most Improved</div>
+                            </button>
+                            <button class="medal-type-btn" data-type="most_compliant" onclick="selectMedalType('most_compliant')" 
+                                    style="padding: 15px; border: 2px solid #e2e8f0; border-radius: 8px; background: white; cursor: pointer; text-align: center; transition: all 0.2s;">
+                                <div style="font-size: 1.5rem;">✅</div>
+                                <div style="font-size: 0.9rem; font-weight: 600; color: #4a5568;">Most Compliant</div>
+                            </button>
+                            <button class="medal-type-btn" data-type="early_achiever" onclick="selectMedalType('early_achiever')" 
+                                    style="padding: 15px; border: 2px solid #e2e8f0; border-radius: 8px; background: white; cursor: pointer; text-align: center; transition: all 0.2s;">
+                                <div style="font-size: 1.5rem;">⚡</div>
+                                <div style="font-size: 0.9rem; font-weight: 600; color: #4a5568;">Early Achiever</div>
+                            </button>
+                            <button class="medal-type-btn" data-type="excellence" onclick="selectMedalType('excellence')" 
+                                    style="padding: 15px; border: 2px solid #e2e8f0; border-radius: 8px; background: white; cursor: pointer; text-align: center; transition: all 0.2s;">
+                                <div style="font-size: 1.5rem;">⭐</div>
+                                <div style="font-size: 0.9rem; font-weight: 600; color: #4a5568;">Excellence</div>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-weight: 600; color: #4a5568; margin-bottom: 10px;">Medal Tier:</label>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="medal-tier-btn" data-tier="3" onclick="selectMedalTier(3)" 
+                                    style="flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; background: white; cursor: pointer; text-align: center; transition: all 0.2s;">
+                                <div style="font-size: 1.2rem;">🥇</div>
+                                <div style="font-size: 0.8rem; font-weight: 600; color: #4a5568;">Gold</div>
+                            </button>
+                            <button class="medal-tier-btn" data-tier="2" onclick="selectMedalTier(2)" 
+                                    style="flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; background: white; cursor: pointer; text-align: center; transition: all 0.2s;">
+                                <div style="font-size: 1.2rem;">🥈</div>
+                                <div style="font-size: 0.8rem; font-weight: 600; color: #4a5568;">Silver</div>
+                            </button>
+                            <button class="medal-tier-btn" data-tier="1" onclick="selectMedalTier(1)" 
+                                    style="flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; background: white; cursor: pointer; text-align: center; transition: all 0.2s;">
+                                <div style="font-size: 1.2rem;">🥉</div>
+                                <div style="font-size: 0.8rem; font-weight: 600; color: #4a5568;">Bronze</div>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-weight: 600; color: #4a5568; margin-bottom: 10px;">Reward Amount (Rp):</label>
+                        <input type="number" id="reward-amount" placeholder="e.g., 500000" 
+                               style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;" min="0" step="1000">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-weight: 600; color: #4a5568; margin-bottom: 10px;">Reason/Notes:</label>
+                        <textarea id="reward-reason" placeholder="Reason for awarding this medal..." 
+                                  style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; min-height: 80px; resize: vertical;"></textarea>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" onclick="closeRewardMedalModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="awardSpecialMedal()">Award Medal</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Include required scripts -->
@@ -1291,9 +1369,30 @@
                     canAddOutlets: false,
                     allowedOutlets: [currentUser.username.toUpperCase()],
                     canAssignOKR: false,
-                    canEditOKR: true
+                    canEditOKR: true,
+                    canDeleteOKR: false,
+                    canRewardMedals: false,
+                    role: 'Outlet'
+                };
+            } else if (currentUser.type === 'hq') {
+                // HQ user with role-based permissions
+                const isAdmin = currentUser.role === 'ADMIN';
+                const isAM = currentUser.role === 'AM' || currentUser.role === 'AREA_MANAGER';
+                
+                userPermissions = {
+                    canViewAllOutlets: isAdmin || currentUser.accessibleOutlets === 'ALL',
+                    canAddOutlets: isAdmin || isAM,
+                    allowedOutlets: isAdmin || currentUser.accessibleOutlets === 'ALL' 
+                        ? (allOutlets.length > 0 ? allOutlets.map(outlet => outlet.code) : ['DEMO01', 'DEMO02', 'DEMO03'])
+                        : (currentUser.accessibleOutlets || []),
+                    canAssignOKR: isAdmin || isAM,
+                    canEditOKR: isAdmin || isAM,
+                    canDeleteOKR: isAdmin, // Only Admin can delete OKR cards
+                    canRewardMedals: isAdmin, // Only Admin can reward medals
+                    role: currentUser.role || 'HQ'
                 };
             } else if (currentUser.type === 'am') {
+                // Legacy AM support
                 userPermissions = {
                     canViewAllOutlets: false,
                     canAddOutlets: true,
@@ -1301,15 +1400,22 @@
                         outlet.am === currentUser.name || outlet.am === 'SYSTEM AM'
                     ).map(outlet => outlet.code),
                     canAssignOKR: true,
-                    canEditOKR: true
+                    canEditOKR: true,
+                    canDeleteOKR: false,
+                    canRewardMedals: false,
+                    role: 'AM'
                 };
             } else {
+                // Fallback/default permissions (assumed admin)
                 userPermissions = {
                     canViewAllOutlets: true,
                     canAddOutlets: true,
                     allowedOutlets: allOutlets.length > 0 ? allOutlets.map(outlet => outlet.code) : ['DEMO01', 'DEMO02', 'DEMO03'],
                     canAssignOKR: true,
-                    canEditOKR: true
+                    canEditOKR: true,
+                    canDeleteOKR: true,
+                    canRewardMedals: true,
+                    role: 'Admin'
                 };
             }
             
@@ -1318,8 +1424,8 @@
                 const userMedals = getUserMedals();
                 const medalDisplay = userMedals.length > 0 ? `${userMedals.slice(0, 3).map(m => m.tierEmoji).join('')} ` : '';
                 
-                // Get role display name
-                const roleDisplay = getUserRoleDisplay(currentUser);
+                // Get role display name from permissions (which now reflects the Google Sheets role)
+                const roleDisplay = userPermissions.role || getUserRoleDisplay(currentUser);
                 
                 const userNameElement = document.getElementById('user-name');
                 if (userNameElement) {
@@ -1329,7 +1435,7 @@
                 console.error('❌ Error setting up user display:', error);
                 
                 // Get role display name for fallback
-                const roleDisplay = getUserRoleDisplay(currentUser);
+                const roleDisplay = userPermissions?.role || getUserRoleDisplay(currentUser);
                 
                 const userNameElement = document.getElementById('user-name');
                 if (userNameElement) {
@@ -1480,8 +1586,18 @@
                 const term2Progress = kr2Progress; 
                 const term3Progress = kr3Progress;
                 
+                // Add admin controls for delete functionality
+                const adminControls = userPermissions && userPermissions.canDeleteOKR ? `
+                    <div class="admin-controls" style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+                        <button class="delete-okr-btn" onclick="event.stopPropagation(); deleteOutletOKR('${outlet.code}')" 
+                                style="background: #e53e3e; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" 
+                                title="Delete OKR Card">🗑️</button>
+                    </div>
+                ` : '';
+                
                 return `
-                    <div class="phoenix-outlet-card" onclick="showOutletDetail('${outlet.code}')">
+                    <div class="phoenix-outlet-card" onclick="showOutletDetail('${outlet.code}')" style="position: relative;">
+                        ${adminControls}
                         <div class="outlet-header">
                             <div class="outlet-info">
                                 <h3>${outlet.name}</h3>
@@ -1623,6 +1739,276 @@
             renderOutletCards();
             
             showNotification(`🔧 Fixed data structure for outlet ${outletCode}`, 'success');
+        }
+
+        function deleteOutletOKR(outletCode) {
+            // Check permissions
+            if (!userPermissions || !userPermissions.canDeleteOKR) {
+                showNotification('❌ You do not have permission to delete OKR cards', 'error');
+                return;
+            }
+            
+            const outlet = phoenixOutlets.find(o => o.code === outletCode);
+            if (!outlet) {
+                showNotification('❌ Outlet not found', 'error');
+                return;
+            }
+            
+            // Confirm deletion
+            if (!confirm(`Are you sure you want to delete the OKR card for ${outlet.name} (${outletCode})?\n\nThis will remove:\n- All OKR data and progress\n- Action plans and comments\n- Performance data\n\nThis action cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                // Remove outlet from Phoenix data
+                if (phoenixData.outlets[outletCode]) {
+                    delete phoenixData.outlets[outletCode];
+                }
+                
+                // Save to localStorage
+                localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+                
+                // Remove from phoenixOutlets array
+                const outletIndex = phoenixOutlets.findIndex(o => o.code === outletCode);
+                if (outletIndex >= 0) {
+                    phoenixOutlets.splice(outletIndex, 1);
+                }
+                
+                // Remove from performance data in localStorage
+                const performanceData = JSON.parse(localStorage.getItem('outletPerformanceData') || '{}');
+                if (performanceData[outletCode]) {
+                    delete performanceData[outletCode];
+                    localStorage.setItem('outletPerformanceData', JSON.stringify(performanceData));
+                }
+                
+                // Remove medal data for this outlet
+                const userMedals = JSON.parse(localStorage.getItem('userMedals') || '{}');
+                Object.keys(userMedals).forEach(username => {
+                    if (userMedals[username] && userMedals[username].medals) {
+                        userMedals[username].medals = userMedals[username].medals.filter(
+                            medal => medal.outletCode !== outletCode
+                        );
+                        // Recalculate total rewards
+                        userMedals[username].totalRewards = userMedals[username].medals.reduce(
+                            (sum, medal) => sum + medal.rewardAmount, 0
+                        );
+                    }
+                });
+                localStorage.setItem('userMedals', JSON.stringify(userMedals));
+                
+                // Re-render the dashboard
+                renderOutletCards();
+                renderMedalShowcase();
+                
+                showNotification(`🗑️ Successfully deleted OKR card for ${outlet.name}`, 'success');
+                console.log(`✅ Admin deleted OKR card for outlet: ${outletCode} by user: ${currentUser.name || currentUser.username}`);
+                
+            } catch (error) {
+                console.error('❌ Error deleting outlet OKR:', error);
+                showNotification('❌ Error deleting OKR card. Check console for details.', 'error');
+            }
+        }
+
+        // Medal Reward System Functions
+        let selectedMedalType = null;
+        let selectedMedalTier = null;
+
+        function openRewardMedalModal() {
+            // Check permissions
+            if (!userPermissions || !userPermissions.canRewardMedals) {
+                showNotification('❌ You do not have permission to award medals', 'error');
+                return;
+            }
+            
+            // Populate outlet dropdown
+            const outletSelect = document.getElementById('reward-outlet-select');
+            outletSelect.innerHTML = '<option value="">Choose an outlet...</option>';
+            
+            // Add all Phoenix outlets to the dropdown
+            phoenixOutlets.forEach(outlet => {
+                const option = document.createElement('option');
+                option.value = outlet.code;
+                option.textContent = `${outlet.name} (${outlet.code})`;
+                outletSelect.appendChild(option);
+            });
+            
+            // Reset form
+            selectedMedalType = null;
+            selectedMedalTier = null;
+            document.getElementById('reward-amount').value = '';
+            document.getElementById('reward-reason').value = '';
+            
+            // Reset button styles
+            document.querySelectorAll('.medal-type-btn').forEach(btn => {
+                btn.style.border = '2px solid #e2e8f0';
+                btn.style.background = 'white';
+            });
+            document.querySelectorAll('.medal-tier-btn').forEach(btn => {
+                btn.style.border = '2px solid #e2e8f0';
+                btn.style.background = 'white';
+            });
+            
+            // Show modal
+            document.getElementById('reward-medal-modal').style.display = 'flex';
+        }
+
+        function selectMedalType(type) {
+            selectedMedalType = type;
+            
+            // Update button styles
+            document.querySelectorAll('.medal-type-btn').forEach(btn => {
+                if (btn.dataset.type === type) {
+                    btn.style.border = '2px solid #667eea';
+                    btn.style.background = '#f7fafc';
+                } else {
+                    btn.style.border = '2px solid #e2e8f0';
+                    btn.style.background = 'white';
+                }
+            });
+            
+            // Set suggested reward amounts based on type
+            const rewardAmount = document.getElementById('reward-amount');
+            switch (type) {
+                case 'most_improved':
+                    rewardAmount.value = '750000';
+                    break;
+                case 'most_compliant':
+                    rewardAmount.value = '500000';
+                    break;
+                case 'early_achiever':
+                    rewardAmount.value = '1000000';
+                    break;
+                case 'excellence':
+                    rewardAmount.value = '1250000';
+                    break;
+            }
+        }
+
+        function selectMedalTier(tier) {
+            selectedMedalTier = tier;
+            
+            // Update button styles
+            document.querySelectorAll('.medal-tier-btn').forEach(btn => {
+                if (parseInt(btn.dataset.tier) === tier) {
+                    btn.style.border = '2px solid #667eea';
+                    btn.style.background = '#f7fafc';
+                } else {
+                    btn.style.border = '2px solid #e2e8f0';
+                    btn.style.background = 'white';
+                }
+            });
+        }
+
+        function awardSpecialMedal() {
+            const outletCode = document.getElementById('reward-outlet-select').value;
+            const rewardAmount = parseFloat(document.getElementById('reward-amount').value) || 0;
+            const reason = document.getElementById('reward-reason').value.trim();
+            
+            // Validation
+            if (!outletCode) {
+                showNotification('❌ Please select an outlet', 'error');
+                return;
+            }
+            
+            if (!selectedMedalType) {
+                showNotification('❌ Please select a medal type', 'error');
+                return;
+            }
+            
+            if (!selectedMedalTier) {
+                showNotification('❌ Please select a medal tier', 'error');
+                return;
+            }
+            
+            if (rewardAmount <= 0) {
+                showNotification('❌ Please enter a valid reward amount', 'error');
+                return;
+            }
+            
+            if (!reason) {
+                showNotification('❌ Please provide a reason for awarding this medal', 'error');
+                return;
+            }
+            
+            try {
+                // Get medal type info
+                const medalTypeInfo = getMedalTypeInfo(selectedMedalType);
+                const tierEmoji = selectedMedalTier === 3 ? '🥇' : selectedMedalTier === 2 ? '🥈' : '🥉';
+                const tierName = selectedMedalTier === 3 ? 'Gold' : selectedMedalTier === 2 ? 'Silver' : 'Bronze';
+                
+                // Create special medal data
+                const specialMedal = {
+                    outletCode: outletCode,
+                    tier: selectedMedalTier,
+                    tierEmoji: tierEmoji,
+                    tierName: tierName,
+                    medalType: selectedMedalType,
+                    medalTypeEmoji: medalTypeInfo.emoji,
+                    medalTypeName: medalTypeInfo.name,
+                    rewardAmount: rewardAmount,
+                    achievedDate: new Date().toISOString(),
+                    awardedBy: currentUser.name || currentUser.username,
+                    reason: reason,
+                    isSpecialAward: true
+                };
+                
+                // Add to current user's medals (admin awards medals to system/all users can see)
+                const userMedals = JSON.parse(localStorage.getItem('userMedals') || '{}');
+                
+                // Create a special entry for admin-awarded medals
+                const adminUsername = 'ADMIN_AWARDS';
+                if (!userMedals[adminUsername]) {
+                    userMedals[adminUsername] = {
+                        medals: [],
+                        totalRewards: 0
+                    };
+                }
+                
+                userMedals[adminUsername].medals.push(specialMedal);
+                userMedals[adminUsername].totalRewards += rewardAmount;
+                
+                // Also add to the specific outlet's performance record
+                const outlet = phoenixOutlets.find(o => o.code === outletCode);
+                if (outlet) {
+                    if (!phoenixData.outlets[outletCode].specialMedals) {
+                        phoenixData.outlets[outletCode].specialMedals = [];
+                    }
+                    phoenixData.outlets[outletCode].specialMedals.push(specialMedal);
+                    localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+                }
+                
+                localStorage.setItem('userMedals', JSON.stringify(userMedals));
+                
+                // Re-render showcase
+                renderMedalShowcase();
+                renderOutletCards();
+                
+                // Close modal
+                closeRewardMedalModal();
+                
+                showNotification(`🏆 ${tierName} ${medalTypeInfo.name} medal awarded to ${outlet?.name || outletCode}!`, 'success');
+                console.log(`✅ Admin awarded special medal: ${tierName} ${medalTypeInfo.name} to ${outletCode} by ${currentUser.name || currentUser.username}`);
+                
+            } catch (error) {
+                console.error('❌ Error awarding special medal:', error);
+                showNotification('❌ Error awarding medal. Check console for details.', 'error');
+            }
+        }
+
+        function getMedalTypeInfo(type) {
+            const types = {
+                'most_improved': { name: 'Most Improved', emoji: '📈' },
+                'most_compliant': { name: 'Most Compliant', emoji: '✅' },
+                'early_achiever': { name: 'Early Achiever', emoji: '⚡' },
+                'excellence': { name: 'Excellence', emoji: '⭐' }
+            };
+            return types[type] || { name: 'Special', emoji: '🏆' };
+        }
+
+        function closeRewardMedalModal() {
+            document.getElementById('reward-medal-modal').style.display = 'none';
+            selectedMedalType = null;
+            selectedMedalTier = null;
         }
 
         function renderSalesTargetSystem(outlet, currentRevenue) {
@@ -1811,6 +2197,23 @@
         // Get user role display name
         function getUserRoleDisplay(user) {
             if (!user || !user.type) return 'User';
+            
+            // For HQ users, use their specific role from Google Sheets (column D)
+            if (user.type === 'hq' && user.role) {
+                switch (user.role.toUpperCase()) {
+                    case 'ADMIN':
+                        return 'Admin';
+                    case 'AM':
+                    case 'AREA_MANAGER':
+                        return 'Area Manager';
+                    case 'SUPERVISOR':
+                        return 'Supervisor';
+                    case 'MANAGER':
+                        return 'Manager';
+                    default:
+                        return user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase();
+                }
+            }
             
             switch (user.type.toLowerCase()) {
                 case 'admin':
@@ -2056,9 +2459,22 @@
             
             const showcaseElement = document.getElementById('medal-showcase');
             
+            // Add admin controls for medal rewarding
+            const adminMedalControls = userPermissions && userPermissions.canRewardMedals ? `
+                <div style="margin-bottom: 15px;">
+                    <button onclick="openRewardMedalModal()" 
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: all 0.2s;"
+                            onmouseover="this.style.transform='translateY(-1px)'"
+                            onmouseout="this.style.transform='translateY(0)'">
+                        🏆 Award Special Medal
+                    </button>
+                </div>
+            ` : '';
+
             if (userMedals.length === 0) {
                 showcaseElement.innerHTML = `
                     <div style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 20px; text-align: center;">
+                        ${adminMedalControls}
                         <div style="font-size: 2rem; margin-bottom: 10px;">🏆</div>
                         <h3 style="color: #4a5568; margin-bottom: 10px;">Medal Collection</h3>
                         <p style="color: #718096; margin-bottom: 15px;">Complete sales targets to earn medals and rewards!</p>
@@ -2079,6 +2495,7 @@
                             <div style="color: #718096; font-size: 0.8rem;">Total Rewards Earned</div>
                         </div>
                     </div>
+                    ${adminMedalControls}
                     
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                         ${userMedals.slice(0, 6).map(medal => `

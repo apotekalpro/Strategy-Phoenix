@@ -20,18 +20,36 @@ class AuthService {
             console.log('🔐 Initializing Authentication Service...');
             
             // Load credentials from Google Sheets
-            this.outletCredentials = await googleSheetsAPI.loadOutletCredentials();
-            this.hqCredentials = await googleSheetsAPI.loadHQCredentials();
+            try {
+                this.outletCredentials = await googleSheetsAPI.loadOutletCredentials();
+                console.log(`✅ Loaded ${Object.keys(this.outletCredentials).length} outlet credentials`);
+            } catch (outletError) {
+                console.error('❌ Failed to load outlet credentials:', outletError);
+                this.outletCredentials = {};
+            }
+            
+            try {
+                this.hqCredentials = await googleSheetsAPI.loadHQCredentials();
+                console.log(`✅ Loaded ${Object.keys(this.hqCredentials).length} HQ credentials`);
+                console.log(`📋 Available HQ users:`, Object.keys(this.hqCredentials));
+            } catch (hqError) {
+                console.error('❌ Failed to load HQ credentials:', hqError);
+                // Use just the defaults from config
+                this.hqCredentials = CONFIG.DEFAULT_HQ_USERS;
+                console.log(`📋 Using default HQ users:`, Object.keys(this.hqCredentials));
+            }
             
             // Check for existing session
             await this.checkExistingSession();
             
             this.initialized = true;
-            console.log('✅ Authentication Service initialized');
+            console.log('✅ Authentication Service initialized successfully');
             
         } catch (error) {
             console.error('❌ Failed to initialize Authentication Service:', error);
-            throw error;
+            // Don't throw - allow the app to work with limited functionality
+            this.initialized = false;
+            console.log('⚠️ Authentication Service running in fallback mode');
         }
     }
 

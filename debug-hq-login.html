@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug HQ Login Issue</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #f5f5f5; 
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .result { 
+            margin: 10px 0; 
+            padding: 10px; 
+            border-radius: 5px; 
+            border: 1px solid #ddd; 
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        pre { 
+            background: #f8f9fa; 
+            padding: 10px; 
+            border-radius: 3px; 
+            overflow-x: auto; 
+            white-space: pre-wrap; 
+        }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug HQ Login Issue</h1>
+        <p>Testing why <code>devi.purba@apotekalpro.id</code> cannot login.</p>
+        
+        <button onclick="debugHQCredentials()">🔍 Debug HQ Credentials</button>
+        <button onclick="testSpecificUser()">👤 Test devi.purba@apotekalpro.id</button>
+        <button onclick="testGoogleSheetsRaw()">📊 Test Raw Google Sheets Data</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // Configuration (inline to avoid 404 issues)
+        const CONFIG = {
+            GOOGLE_SHEETS: {
+                HQ_LOGIN_SHEET_ID: '1wCvZ1WAlHAn-B8UPP5AUEPzQ5Auf84BJFeG48Hlo9wE',
+                HQ_LOGIN_RANGE: 'HQ Login!A1:H50',
+                API_KEY: 'AIzaSyCzDDSYZPknm2MOZIp5nLvfkmKBHCj8xEY',
+                BASE_URL: 'https://sheets.googleapis.com/v4/spreadsheets'
+            },
+            DEFAULT_HQ_USERS: {
+                'khoo.ziyu@apotekalpro.id': { 
+                    password: 'Alpro@123', 
+                    name: 'KHOO ZI YU', 
+                    role: 'ADMIN',
+                    outlets: []
+                },
+                'devi.purba@apotekalpro.id': {
+                    password: 'Alpro@123',
+                    name: 'DEVI PURBA',
+                    role: 'AM',
+                    outlets: []
+                }
+            }
+        };
+        
+        let resultsContainer = document.getElementById('results');
+        
+        function addResult(title, content, type = 'info') {
+            const section = document.createElement('div');
+            section.className = `result ${type}`;
+            section.innerHTML = `
+                <h3>${title}</h3>
+                <pre>${content}</pre>
+            `;
+            resultsContainer.appendChild(section);
+        }
+        
+        async function fetchSheetData(spreadsheetId, range) {
+            const url = `${CONFIG.GOOGLE_SHEETS.BASE_URL}/${spreadsheetId}/values/${range}?key=${CONFIG.GOOGLE_SHEETS.API_KEY}`;
+            
+            addResult('🌐 API Request', `URL: ${url}`, 'info');
+            
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            return data.values || [];
+        }
+        
+        function parseHQCredentials(rows) {
+            const credentials = {};
+            
+            addResult('📊 Raw Sheet Data', `Total rows: ${rows.length}\n\nFirst 5 rows:\n${JSON.stringify(rows.slice(0, 5), null, 2)}`, 'info');
+            
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                
+                if (row && row.length >= 8) {
+                    const email = row[1]?.toString().trim().toLowerCase();
+                    const name = row[2]?.toString().trim() || '';
+                    const role = row[3]?.toString().trim() || 'AM';
+                    const outlets = row[4]?.toString().trim();
+                    const password = row[7]?.toString().trim();
+                    
+                    let outletList = [];
+                    if (outlets && outlets.length > 0) {
+                        outletList = outlets.split(',').map(o => o.trim()).filter(o => o.length > 0);
+                    }
+                    
+                    if (email && email.length > 0 && password && password.length > 0) {
+                        credentials[email] = {
+                            password: password,
+                            name: name || email.split('@')[0].toUpperCase(),
+                            role: role.toUpperCase(),
+                            outlets: outletList
+                        };
+                    }
+                }
+            }
+            
+            return credentials;
+        }
+        
+        async function debugHQCredentials() {
+            try {
+                addResult('🔍 Starting HQ Credentials Debug', 'Loading credentials from Google Sheets...', 'info');
+                
+                const rows = await fetchSheetData(
+                    CONFIG.GOOGLE_SHEETS.HQ_LOGIN_SHEET_ID,
+                    CONFIG.GOOGLE_SHEETS.HQ_LOGIN_RANGE
+                );
+                
+                const credentials = parseHQCredentials(rows);
+                const allCredentials = { ...CONFIG.DEFAULT_HQ_USERS, ...credentials };
+                
+                const summary = Object.entries(allCredentials).map(([email, data]) => ({
+                    email,
+                    name: data.name,
+                    role: data.role,
+                    hasPassword: !!data.password,
+                    source: CONFIG.DEFAULT_HQ_USERS[email] ? 'Default' : 'Google Sheets'
+                }));
+                
+                addResult('✅ All Available HQ Users', JSON.stringify(summary, null, 2), 'success');
+                
+                // Check if devi.purba@apotekalpro.id is in the list
+                const deviUser = allCredentials['devi.purba@apotekalpro.id'];
+                if (deviUser) {
+                    addResult('✅ devi.purba@apotekalpro.id Found', JSON.stringify(deviUser, null, 2), 'success');
+                } else {
+                    addResult('❌ devi.purba@apotekalpro.id NOT Found', 'User not found in credentials', 'error');
+                }
+                
+            } catch (error) {
+                addResult('❌ Debug Failed', `Error: ${error.message}\n\nStack: ${error.stack}`, 'error');
+            }
+        }
+        
+        async function testSpecificUser() {
+            try {
+                addResult('👤 Testing Specific User Login', 'Testing devi.purba@apotekalpro.id...', 'info');
+                
+                // First load credentials
+                const rows = await fetchSheetData(
+                    CONFIG.GOOGLE_SHEETS.HQ_LOGIN_SHEET_ID,
+                    CONFIG.GOOGLE_SHEETS.HQ_LOGIN_RANGE
+                );
+                
+                const credentials = parseHQCredentials(rows);
+                const allCredentials = { ...CONFIG.DEFAULT_HQ_USERS, ...credentials };
+                
+                // Test authentication logic
+                const email = 'devi.purba@apotekalpro.id';
+                const password = 'Alpro@123'; // Assuming same password
+                const emailLower = email.toLowerCase().trim();
+                const hqUser = allCredentials[emailLower];
+                
+                if (!hqUser) {
+                    addResult('❌ Authentication Failed', `Email ${email} not found in credentials`, 'error');
+                    return;
+                }
+                
+                if (hqUser.password !== password) {
+                    addResult('❌ Authentication Failed', `Password mismatch for ${email}.\nExpected: ${hqUser.password}\nProvided: ${password}`, 'error');
+                    return;
+                }
+                
+                const userData = {
+                    type: 'hq',
+                    email: emailLower,
+                    name: hqUser.name,
+                    role: hqUser.role,
+                    accessibleOutlets: hqUser.role === 'ADMIN' ? 'ALL' : hqUser.outlets,
+                    timestamp: Date.now()
+                };
+                
+                addResult('✅ Authentication Success', `User would be authenticated successfully:\n${JSON.stringify(userData, null, 2)}`, 'success');
+                
+            } catch (error) {
+                addResult('❌ Test Failed', `Error: ${error.message}\n\nStack: ${error.stack}`, 'error');
+            }
+        }
+        
+        async function testGoogleSheetsRaw() {
+            try {
+                addResult('📊 Testing Raw Google Sheets Access', 'Fetching raw data...', 'info');
+                
+                const rows = await fetchSheetData(
+                    CONFIG.GOOGLE_SHEETS.HQ_LOGIN_SHEET_ID,
+                    CONFIG.GOOGLE_SHEETS.HQ_LOGIN_RANGE
+                );
+                
+                addResult('✅ Raw Google Sheets Data', `Retrieved ${rows.length} rows:\n\n${JSON.stringify(rows, null, 2)}`, 'success');
+                
+                // Look for devi.purba specifically
+                let deviFound = false;
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (row && row[1] && row[1].toString().toLowerCase().includes('devi.purba')) {
+                        addResult('🎯 Found devi.purba in raw data', `Row ${i}: ${JSON.stringify(row, null, 2)}`, 'success');
+                        deviFound = true;
+                    }
+                }
+                
+                if (!deviFound) {
+                    addResult('❌ devi.purba NOT found in raw data', 'Email not present in Google Sheets', 'error');
+                }
+                
+            } catch (error) {
+                addResult('❌ Raw Data Test Failed', `Error: ${error.message}\n\nStack: ${error.stack}`, 'error');
+            }
+        }
+        
+        // Auto-run basic debug on page load
+        window.addEventListener('load', () => {
+            addResult('🏁 Debug Page Loaded', 'Ready to debug HQ login issue. Click buttons above to run tests.', 'info');
+        });
+    </script>
+</body>
+</html>
