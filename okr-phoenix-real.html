@@ -1102,20 +1102,25 @@
         }
 
         function calculateOutletProgress(outlet) {
-            // Calculate progress based on how much data is filled
-            const performanceData = outlet.performanceData || {};
-            const fields = [
-                performanceData.baseline?.revenue,
-                performanceData.baseline?.trano,
-                performanceData.term1?.revenue,
-                performanceData.term1?.trano,
-                performanceData.term2?.revenue,
-                performanceData.term2?.trano,
-                performanceData.term3?.revenue,
-                performanceData.term3?.trano
-            ];
-            const filledFields = fields.filter(field => field && field > 0).length;
-            return Math.round((filledFields / fields.length) * 100);
+            // Calculate progress based on OKR action plan completion, not data entry
+            if (!outlet.okr || !outlet.okr.actionPlans) {
+                return 0; // No OKR assigned
+            }
+            
+            const krProgressData = outlet.okr.krProgress || {};
+            let totalActions = 0;
+            let completedActions = 0;
+            
+            // Count total and completed actions across all KRs
+            ['kr1', 'kr2', 'kr3', 'kr4', 'kr5'].forEach(krKey => {
+                const actionPlans = outlet.okr.actionPlans[krKey] || [];
+                const completed = krProgressData[krKey]?.completedActions || [];
+                totalActions += actionPlans.length;
+                completedActions += completed.length;
+            });
+            
+            // Calculate overall progress
+            return totalActions > 0 ? Math.round((completedActions / totalActions) * 100) : 0;
         }
 
         function renderOutletCards() {
@@ -1137,14 +1142,41 @@
                 const totalRevenue = (performanceData.term1?.revenue || 0) + (performanceData.term2?.revenue || 0) + (performanceData.term3?.revenue || 0);
                 const totalTrano = (performanceData.term1?.trano || 0) + (performanceData.term2?.trano || 0) + (performanceData.term3?.trano || 0);
                 
-                // Calculate term progress using proportional baseline
-                const dailyBaselineTrano = (performanceData.baseline?.trano || 0) / 30;
-                const term1Progress = dailyBaselineTrano > 0 && performanceData.term1?.trano > 0 ? 
-                    Math.min(Math.round((performanceData.term1.trano / (dailyBaselineTrano * 10)) * 100), 150) : 0;
-                const term2Progress = dailyBaselineTrano > 0 && (performanceData.term1?.trano + performanceData.term2?.trano) > 0 ? 
-                    Math.min(Math.round(((performanceData.term1?.trano || 0) + (performanceData.term2?.trano || 0)) / (dailyBaselineTrano * 20) * 100), 150) : 0;
-                const term3Progress = dailyBaselineTrano > 0 && totalTrano > 0 ? 
-                    Math.min(Math.round(totalTrano / (performanceData.baseline?.trano || 1) * 100), 150) : 0;
+                // Calculate OKR Key Results progress instead of data entry progress
+                let kr1Progress = 0, kr2Progress = 0, kr3Progress = 0;
+                
+                if (outlet.okr && outlet.okr.keyResults) {
+                    // Calculate progress for each KR based on completed action plans
+                    const krProgressData = outlet.okr.krProgress || {};
+                    
+                    // KR1 progress (if exists)
+                    if (outlet.okr.keyResults[0]) {
+                        const kr1ActionPlans = outlet.okr.actionPlans?.kr1 || [];
+                        const kr1Completed = krProgressData.kr1?.completedActions || [];
+                        kr1Progress = kr1ActionPlans.length > 0 ? Math.round((kr1Completed.length / kr1ActionPlans.length) * 100) : 0;
+                    }
+                    
+                    // KR2 progress (if exists) 
+                    if (outlet.okr.keyResults[1]) {
+                        const kr2ActionPlans = outlet.okr.actionPlans?.kr2 || [];
+                        const kr2Completed = krProgressData.kr2?.completedActions || [];
+                        kr2Progress = kr2ActionPlans.length > 0 ? Math.round((kr2Completed.length / kr2ActionPlans.length) * 100) : 0;
+                    }
+                    
+                    // KR3 progress (if exists)
+                    if (outlet.okr.keyResults[2]) {
+                        const kr3ActionPlans = outlet.okr.actionPlans?.kr3 || [];
+                        const kr3Completed = krProgressData.kr3?.completedActions || [];
+                        kr3Progress = kr3ActionPlans.length > 0 ? Math.round((kr3Completed.length / kr3ActionPlans.length) * 100) : 0;
+                    }
+                } else {
+                    // No OKR assigned - show 0% progress
+                    kr1Progress = kr2Progress = kr3Progress = 0;
+                }
+                
+                const term1Progress = kr1Progress;
+                const term2Progress = kr2Progress; 
+                const term3Progress = kr3Progress;
                 
                 return `
                     <div class="phoenix-outlet-card" onclick="showOutletDetail('${outlet.code}')">
@@ -1168,24 +1200,24 @@
                         </div>
 
                         <div class="progress-section">
-                            <div class="progress-title">📊 Terms Progress</div>
+                            <div class="progress-title">🎯 OKR Key Results Progress</div>
                             <div class="progress-bars">
                                 <div class="progress-item">
-                                    <div class="progress-label">Term 1</div>
+                                    <div class="progress-label">KR1</div>
                                     <div class="progress-value">${term1Progress}%</div>
                                     <div class="progress-bar">
                                         <div class="progress-fill" style="width: ${Math.min(term1Progress, 100)}%"></div>
                                     </div>
                                 </div>
                                 <div class="progress-item">
-                                    <div class="progress-label">Term 2</div>
+                                    <div class="progress-label">KR2</div>
                                     <div class="progress-value">${term2Progress}%</div>
                                     <div class="progress-bar">
                                         <div class="progress-fill" style="width: ${Math.min(term2Progress, 100)}%"></div>
                                     </div>
                                 </div>
                                 <div class="progress-item">
-                                    <div class="progress-label">Term 3</div>
+                                    <div class="progress-label">KR3</div>
                                     <div class="progress-value">${term3Progress}%</div>
                                     <div class="progress-bar">
                                         <div class="progress-fill" style="width: ${Math.min(term3Progress, 100)}%"></div>
@@ -1510,13 +1542,64 @@
                         </div>
                         
                         <div style="margin-bottom: 20px;">
-                            <h5 style="color: #4a5568; margin-bottom: 10px;">🎯 Key Results (${outlet.okr.keyResults.length})</h5>
-                            <div style="display: grid; gap: 12px;">
-                                ${outlet.okr.keyResults.map((kr, index) => `
-                                    <div style="background: white; padding: 12px; border-radius: 8px; border-left: 3px solid #48bb78;">
-                                        <div style="font-size: 0.9rem; color: #4a5568;">${kr}</div>
-                                    </div>
-                                `).join('')}
+                            <h5 style="color: #4a5568; margin-bottom: 15px;">🎯 Key Results & Action Plans (${outlet.okr.keyResults.length})</h5>
+                            <div style="display: grid; gap: 20px;">
+                                ${outlet.okr.keyResults.map((kr, krIndex) => {
+                                    const krKey = `kr${krIndex + 1}`;
+                                    const actionPlans = outlet.okr.actionPlans?.[krKey] || [];
+                                    const krProgressData = outlet.okr.krProgress?.[krKey] || { completedActions: [], comments: {} };
+                                    const completedActions = krProgressData.completedActions || [];
+                                    const comments = krProgressData.comments || {};
+                                    const krProgress = actionPlans.length > 0 ? Math.round((completedActions.length / actionPlans.length) * 100) : 0;
+                                    
+                                    return `
+                                        <div style="background: white; padding: 16px; border-radius: 12px; border-left: 4px solid #48bb78; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                                                <div style="flex: 1;">
+                                                    <div style="font-size: 0.95rem; font-weight: 600; color: #2d3748; margin-bottom: 8px;">${kr}</div>
+                                                </div>
+                                                <div style="text-align: right;">
+                                                    <div style="color: #48bb78; font-weight: 700; font-size: 1rem;">${krProgress}%</div>
+                                                    <div style="color: #718096; font-size: 0.75rem;">Progress</div>
+                                                </div>
+                                            </div>
+                                            
+                                            ${actionPlans.length > 0 ? `
+                                                <div style="margin-top: 12px;">
+                                                    <h6 style="color: #4a5568; font-size: 0.85rem; font-weight: 600; margin-bottom: 10px;">📝 Action Plans:</h6>
+                                                    <div style="display: grid; gap: 12px;">
+                                                        ${actionPlans.map((action, actionIndex) => {
+                                                            const isCompleted = completedActions.includes(actionIndex);
+                                                            const commentKey = `action_${actionIndex}`;
+                                                            const comment = comments[commentKey] || '';
+                                                            
+                                                            return `
+                                                                <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; border-left: 3px solid ${isCompleted ? '#48bb78' : '#e2e8f0'};">
+                                                                    <div style="display: flex; align-items: start; gap: 10px; margin-bottom: 8px;">
+                                                                        <input type="checkbox" id="action_${outlet.code}_${krKey}_${actionIndex}" 
+                                                                               ${isCompleted ? 'checked' : ''}
+                                                                               onchange="toggleActionPlan('${outlet.code}', '${krKey}', ${actionIndex})"
+                                                                               style="margin-top: 2px; cursor: pointer;">
+                                                                        <label for="action_${outlet.code}_${krKey}_${actionIndex}" 
+                                                                               style="flex: 1; font-size: 0.85rem; color: #4a5568; cursor: pointer; ${isCompleted ? 'text-decoration: line-through; opacity: 0.7;' : ''}">
+                                                                            ${action}
+                                                                        </label>
+                                                                    </div>
+                                                                    <div style="margin-left: 30px;">
+                                                                        <textarea id="comment_${outlet.code}_${krKey}_${actionIndex}" 
+                                                                                  placeholder="Add comments or notes..."
+                                                                                  onchange="updateActionComment('${outlet.code}', '${krKey}', ${actionIndex}, this.value)"
+                                                                                  style="width: 100%; padding: 6px 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 0.8rem; min-height: 60px; resize: vertical;">${comment}</textarea>
+                                                                    </div>
+                                                                </div>
+                                                            `;
+                                                        }).join('')}
+                                                    </div>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    `;
+                                }).join('')}
                             </div>
                         </div>
                         
@@ -1544,6 +1627,93 @@
             }
         }
 
+        function toggleActionPlan(outletCode, krKey, actionIndex) {
+            const outlet = phoenixOutlets.find(o => o.code === outletCode);
+            if (!outlet || !outlet.okr) return;
+            
+            // Initialize KR progress data if it doesn't exist
+            if (!outlet.okr.krProgress) {
+                outlet.okr.krProgress = {};
+            }
+            if (!outlet.okr.krProgress[krKey]) {
+                outlet.okr.krProgress[krKey] = { completedActions: [], comments: {} };
+            }
+            
+            const completedActions = outlet.okr.krProgress[krKey].completedActions;
+            const actionIndexInArray = completedActions.indexOf(actionIndex);
+            
+            // Toggle completion status
+            if (actionIndexInArray > -1) {
+                // Remove from completed actions
+                completedActions.splice(actionIndexInArray, 1);
+            } else {
+                // Add to completed actions
+                completedActions.push(actionIndex);
+            }
+            
+            // Update localStorage
+            phoenixData.outlets[outletCode].okr.krProgress = outlet.okr.krProgress;
+            localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+            
+            // Calculate overall OKR progress
+            updateOverallOKRProgress(outletCode);
+            
+            // Refresh views
+            renderOutletOKRSection(outlet);
+            renderPhoenixDashboard();
+            
+            console.log(`✅ Toggled action plan ${actionIndex} for ${krKey} in outlet ${outletCode}`);
+        }
+        
+        function updateActionComment(outletCode, krKey, actionIndex, comment) {
+            const outlet = phoenixOutlets.find(o => o.code === outletCode);
+            if (!outlet || !outlet.okr) return;
+            
+            // Initialize KR progress data if it doesn't exist
+            if (!outlet.okr.krProgress) {
+                outlet.okr.krProgress = {};
+            }
+            if (!outlet.okr.krProgress[krKey]) {
+                outlet.okr.krProgress[krKey] = { completedActions: [], comments: {} };
+            }
+            
+            // Update comment
+            const commentKey = `action_${actionIndex}`;
+            outlet.okr.krProgress[krKey].comments[commentKey] = comment;
+            
+            // Update localStorage
+            phoenixData.outlets[outletCode].okr.krProgress = outlet.okr.krProgress;
+            localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+            
+            console.log(`✅ Updated comment for action ${actionIndex} in ${krKey} for outlet ${outletCode}`);
+        }
+        
+        function updateOverallOKRProgress(outletCode) {
+            const outlet = phoenixOutlets.find(o => o.code === outletCode);
+            if (!outlet || !outlet.okr) return;
+            
+            const krProgressData = outlet.okr.krProgress || {};
+            let totalActions = 0;
+            let completedActions = 0;
+            
+            // Count total and completed actions across all KRs
+            ['kr1', 'kr2', 'kr3', 'kr4', 'kr5'].forEach(krKey => {
+                const actionPlans = outlet.okr.actionPlans?.[krKey] || [];
+                const completed = krProgressData[krKey]?.completedActions || [];
+                totalActions += actionPlans.length;
+                completedActions += completed.length;
+            });
+            
+            // Calculate overall progress
+            const overallProgress = totalActions > 0 ? Math.round((completedActions / totalActions) * 100) : 0;
+            
+            // Update OKR progress
+            outlet.okr.progress = overallProgress;
+            phoenixData.outlets[outletCode].okr.progress = overallProgress;
+            
+            console.log(`✅ Updated overall OKR progress to ${overallProgress}% for outlet ${outletCode}`);
+        }
+        
         function updateOKRProgress(outletCode) {
             const progress = prompt('Enter OKR progress percentage (0-100):');
             if (progress === null) return;
