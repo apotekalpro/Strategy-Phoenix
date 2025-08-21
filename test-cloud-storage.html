@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Cloud Storage</title>
+</head>
+<body>
+    <h1>Test Cloud Storage</h1>
+    <div id="output"></div>
+    <button onclick="testSave()">Test Save</button>
+    <button onclick="testLoad()">Test Load</button>
+    <button onclick="clearData()">Clear Data</button>
+    
+    <script src="simple-cloud-storage.js"></script>
+    <script>
+        function log(message) {
+            const output = document.getElementById('output');
+            output.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
+        }
+        
+        async function testSave() {
+            log('Testing cloud storage save...');
+            const testData = {
+                outlets: {
+                    'TEST001': {
+                        code: 'TEST001',
+                        name: 'Test Outlet',
+                        okr: { title: 'Test OKR' }
+                    }
+                }
+            };
+            
+            const cloudStorage = new SimpleCloudStorage();
+            const success = await cloudStorage.savePhoenixData(testData);
+            log(`Save result: ${success}`);
+            log(`Blob ID: ${cloudStorage.getBlobId()}`);
+        }
+        
+        async function testLoad() {
+            log('Testing cloud storage load...');
+            const cloudStorage = new SimpleCloudStorage();
+            const data = await cloudStorage.loadPhoenixData();
+            log(`Loaded outlets: ${Object.keys(data.outlets || {}).length}`);
+            log(`Data: ${JSON.stringify(data, null, 2)}`);
+        }
+        
+        async function clearData() {
+            log('Clearing all data...');
+            const cloudStorage = new SimpleCloudStorage();
+            await cloudStorage.clearPhoenixData();
+            log('Data cleared');
+        }
+    </script>
+</body>
+</html>
