@@ -10,6 +10,11 @@ const CONFIG = {
         HQ_LOGIN_SHEET_ID: '1wCvZ1WAlHAn-B8UPP5AUEPzQ5Auf84BJFeG48Hlo9wE',
         HQ_LOGIN_RANGE: 'HQ Login!A1:H50', // Column A=name, B=email, D=role, H=password (rows 1-50 to capture all data)
         
+        // GitHub Data Storage (NEW: For cross-device access using GitHub API)
+        GITHUB_DATA_REPO: 'apotekalpro/phoenix-data-storage', // Repository for Phoenix data
+        GITHUB_DATA_BRANCH: 'main', // Branch to store data
+        GITHUB_API_URL: 'https://api.github.com', // GitHub API base URL
+        
         // API key for Google Sheets API (public read-only)
         // IMPORTANT: Replace 'YOUR_GOOGLE_SHEETS_API_KEY_HERE' with your actual Google Sheets API key
         // to enable live data integration. Get it from: https://console.cloud.google.com/
