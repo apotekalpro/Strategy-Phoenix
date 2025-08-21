@@ -479,9 +479,45 @@
             }
         }
         
+        // Load dynamic outlet credentials from Google Sheets (all 204+ outlets)
+        async function loadDynamicOutletCredentials() {
+            try {
+                // Load configuration and Google Sheets API
+                if (typeof CONFIG !== 'undefined' && typeof GoogleSheetsAPI !== 'undefined') {
+                    console.log('🏪 Loading dynamic outlet credentials from Google Sheets...');
+                    console.log('📊 Current hardcoded outlets:', Object.keys(outletCredentials).length);
+                    
+                    const googleSheetsAPI = new GoogleSheetsAPI();
+                    const dynamicCredentials = await googleSheetsAPI.loadOutletCredentials();
+                    
+                    // Replace hardcoded credentials with dynamic ones
+                    Object.keys(outletCredentials).forEach(key => delete outletCredentials[key]);
+                    Object.assign(outletCredentials, dynamicCredentials);
+                    
+                    console.log(`✅ Loaded ${Object.keys(dynamicCredentials).length} outlet credentials from Google Sheets`);
+                    console.log('📈 Total outlets now available:', Object.keys(outletCredentials).length);
+                    console.log('🏪 Sample outlets:', Object.keys(dynamicCredentials).slice(0, 10).join(', '));
+                    console.log('🏪 Last 5 outlets:', Object.keys(dynamicCredentials).slice(-5).join(', '));
+                } else {
+                    console.log('⚠️ Google Sheets API not available, using hardcoded outlet credentials only');
+                }
+            } catch (error) {
+                console.error('❌ Failed to load dynamic outlet credentials:', error);
+                console.log('📋 Using hardcoded outlet credentials as fallback');
+            }
+        }
+        
         // Load dynamic credentials on page load
         document.addEventListener('DOMContentLoaded', async () => {
-            await loadDynamicHQCredentials();
+            console.log('🔄 Loading all dynamic credentials...');
+            await Promise.all([
+                loadDynamicHQCredentials(),
+                loadDynamicOutletCredentials()
+            ]);
+            console.log('✅ All credential loading complete');
+            console.log('📊 Final credential summary:');
+            console.log(`   - HQ users: ${Object.keys(hqCredentials).length}`);
+            console.log(`   - Outlet users: ${Object.keys(outletCredentials).length}`);
         });
     </script>
     

@@ -1375,36 +1375,68 @@
         }
 
         function setupUserPermissions() {
+            console.log('🔐 Setting up user permissions for:', currentUser);
+            
             if (currentUser.type === 'outlet') {
+                // OUTLET USERS: Only see their own outlet's OKR card
                 userPermissions = {
                     canViewAllOutlets: false,
                     canAddOutlets: false,
                     allowedOutlets: [currentUser.username.toUpperCase()],
                     canAssignOKR: false,
-                    canEditOKR: true,
+                    canEditOKR: true, // Outlets can edit their own OKR
                     canDeleteOKR: false,
                     canRewardMedals: false,
+                    canComment: true, // Outlets can comment on their own OKR
+                    canLike: true, // Outlets can like actions on their own OKR
                     role: 'Outlet'
                 };
-            } else if (currentUser.type === 'hq') {
-                // HQ user with role-based permissions
-                const isAdmin = currentUser.role === 'ADMIN';
-                const isAM = currentUser.role === 'AM' || currentUser.role === 'AREA_MANAGER';
+                console.log('🏪 Outlet permissions set - can only access:', userPermissions.allowedOutlets);
                 
-                userPermissions = {
-                    canViewAllOutlets: isAdmin || currentUser.accessibleOutlets === 'ALL',
-                    canAddOutlets: isAdmin || isAM,
-                    allowedOutlets: isAdmin || currentUser.accessibleOutlets === 'ALL' 
+            } else if (currentUser.type === 'hq') {
+                // HQ USERS: Based on role from Google Sheets
+                const isAdmin = currentUser.role === 'ADMIN';
+                const isHQ = !isAdmin; // Anyone who is not Admin is regular HQ
+                
+                if (isAdmin) {
+                    // ADMIN USERS: All functions including delete and reward
+                    userPermissions = {
+                        canViewAllOutlets: true,
+                        canAddOutlets: true,
+                        allowedOutlets: allOutlets.length > 0 ? allOutlets.map(outlet => outlet.code) : ['DEMO01', 'DEMO02', 'DEMO03'],
+                        canAssignOKR: true,
+                        canEditOKR: true,
+                        canDeleteOKR: true, // ADMIN ONLY: Can delete OKR cards
+                        canRewardMedals: true, // ADMIN ONLY: Can reward outlets with medals
+                        canComment: true,
+                        canLike: true,
+                        role: 'Admin'
+                    };
+                    console.log('👑 Admin permissions set - full access to all functions');
+                } else {
+                    // HQ USERS (AM, SUPERVISOR, etc.): All functions EXCEPT delete and reward
+                    const hqOutlets = currentUser.accessibleOutlets === 'ALL' || !currentUser.accessibleOutlets || currentUser.accessibleOutlets.length === 0
                         ? (allOutlets.length > 0 ? allOutlets.map(outlet => outlet.code) : ['DEMO01', 'DEMO02', 'DEMO03'])
-                        : (currentUser.accessibleOutlets || []),
-                    canAssignOKR: isAdmin || isAM,
-                    canEditOKR: isAdmin || isAM,
-                    canDeleteOKR: isAdmin, // Only Admin can delete OKR cards
-                    canRewardMedals: isAdmin, // Only Admin can reward medals
-                    role: currentUser.role || 'HQ'
-                };
+                        : currentUser.accessibleOutlets;
+                        
+                    userPermissions = {
+                        canViewAllOutlets: true, // HQ can see all outlets
+                        canAddOutlets: true, // HQ can add new outlets to Phoenix
+                        allowedOutlets: hqOutlets,
+                        canAssignOKR: true, // HQ can assign OKRs
+                        canEditOKR: true, // HQ can edit OKRs
+                        canDeleteOKR: false, // HQ CANNOT delete OKR cards (Admin only)
+                        canRewardMedals: false, // HQ CANNOT reward medals (Admin only)
+                        canComment: true, // HQ can comment
+                        canLike: true, // HQ can like
+                        role: currentUser.role || 'HQ'
+                    };
+                    console.log('🏢 HQ permissions set - can access all outlets but no delete/reward');
+                    console.log('📋 HQ accessible outlets:', hqOutlets.length, 'outlets');
+                }
+                
             } else if (currentUser.type === 'am') {
-                // Legacy AM support
+                // Legacy AM support - treat as HQ user
                 userPermissions = {
                     canViewAllOutlets: false,
                     canAddOutlets: true,
@@ -1413,12 +1445,15 @@
                     ).map(outlet => outlet.code),
                     canAssignOKR: true,
                     canEditOKR: true,
-                    canDeleteOKR: false,
-                    canRewardMedals: false,
+                    canDeleteOKR: false, // Legacy AM cannot delete
+                    canRewardMedals: false, // Legacy AM cannot reward
+                    canComment: true,
+                    canLike: true,
                     role: 'AM'
                 };
+                console.log('📊 Legacy AM permissions set');
             } else {
-                // Fallback/default permissions (assumed admin)
+                // Fallback/default permissions (assumed admin for safety)
                 userPermissions = {
                     canViewAllOutlets: true,
                     canAddOutlets: true,
@@ -1427,8 +1462,11 @@
                     canEditOKR: true,
                     canDeleteOKR: true,
                     canRewardMedals: true,
+                    canComment: true,
+                    canLike: true,
                     role: 'Admin'
                 };
+                console.log('⚠️ Fallback admin permissions set');
             }
             
             // Update UI based on permissions
