@@ -1093,6 +1093,7 @@
     <!-- Include required scripts -->
     <script src="config.js"></script>
     <script src="google-sheets-api.js"></script>
+    <script src="github-api.js"></script>
     <script src="auth-service.js"></script>
 
     <script>
@@ -1310,9 +1311,9 @@
                 // Setup user permissions
                 setupUserPermissions();
                 
-                // Load Phoenix data from Google Sheets (cross-device access)
-                console.log('🔄 Loading Phoenix data from Google Sheets...');
-                await loadPhoenixDataFromSheets();
+                // Load Phoenix data from GitHub (cross-device access)
+                console.log('🔄 Loading Phoenix data from GitHub...');
+                await loadPhoenixDataFromGitHub();
                 
                 // Load Phoenix outlets from loaded data
                 console.log('🔄 Starting Phoenix outlet loading sequence...');
@@ -1494,45 +1495,54 @@
             }
         }
 
-        // Load Phoenix data from Google Sheets for cross-device access
-        async function loadPhoenixDataFromSheets() {
+        // Load Phoenix data from GitHub for cross-device access
+        async function loadPhoenixDataFromGitHub() {
             try {
-                console.log('🔥 Loading Phoenix data from Google Sheets for cross-device access...');
+                console.log('🐙 Loading Phoenix data from GitHub for cross-device access...');
                 
-                if (typeof GoogleSheetsAPI !== 'undefined') {
-                    const googleSheetsAPI = new GoogleSheetsAPI();
-                    const loadedPhoenixData = await googleSheetsAPI.loadPhoenixData();
+                if (typeof GitHubAPI !== 'undefined') {
+                    const gitHubAPI = new GitHubAPI();
+                    const loadedPhoenixData = await gitHubAPI.loadPhoenixData();
                     
                     // Merge with any existing localStorage data
                     const localData = JSON.parse(localStorage.getItem('phoenixProjectData')) || { outlets: {} };
                     
-                    // Prioritize Google Sheets data, but preserve local data if Sheets is empty
+                    // Prioritize GitHub data, but preserve local data if GitHub is empty
                     if (Object.keys(loadedPhoenixData.outlets).length > 0) {
                         phoenixData = loadedPhoenixData;
-                        console.log('✅ Loaded Phoenix data from Google Sheets (primary source)');
-                        console.log('📊 Outlets from Google Sheets:', Object.keys(phoenixData.outlets).length);
+                        console.log('✅ Loaded Phoenix data from GitHub (primary source)');
+                        console.log('📊 Outlets from GitHub:', Object.keys(phoenixData.outlets).length);
                         
-                        // Update localStorage with Google Sheets data for offline access
+                        // Update localStorage with GitHub data for offline access
                         localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
                     } else if (Object.keys(localData.outlets).length > 0) {
                         phoenixData = localData;
-                        console.log('⚠️ No data in Google Sheets, using localStorage data');
+                        console.log('⚠️ No data in GitHub, using localStorage data');
                         console.log('📊 Outlets from localStorage:', Object.keys(phoenixData.outlets).length);
                         
-                        // Offer to export local data to Google Sheets format
-                        console.log('💡 Tip: Use exportPhoenixData() to get data for Google Sheets import');
-                        window.exportPhoenixData = () => {
-                            const csvData = googleSheetsAPI.exportPhoenixDataForSheets(phoenixData);
-                            console.log('📤 Phoenix data export for Google Sheets:');
-                            console.log(csvData);
-                            return csvData;
+                        // Offer to export local data to GitHub
+                        console.log('💡 Tip: Use exportPhoenixDataToGitHub() to sync local data to GitHub');
+                        window.exportPhoenixDataToGitHub = async () => {
+                            try {
+                                const success = await gitHubAPI.savePhoenixData(phoenixData);
+                                if (success) {
+                                    console.log('✅ Local data successfully uploaded to GitHub');
+                                    showNotification('✅ Data synced to GitHub successfully!', 'success');
+                                } else {
+                                    console.error('❌ Failed to upload data to GitHub');
+                                    showNotification('❌ Failed to sync data to GitHub', 'error');
+                                }
+                            } catch (error) {
+                                console.error('❌ Export to GitHub failed:', error);
+                                showNotification('❌ Failed to sync data to GitHub', 'error');
+                            }
                         };
                     } else {
                         phoenixData = { outlets: {} };
-                        console.log('ℹ️ No Phoenix data found in Google Sheets or localStorage');
+                        console.log('ℹ️ No Phoenix data found in GitHub or localStorage');
                     }
                 } else {
-                    console.warn('⚠️ GoogleSheetsAPI not available, falling back to localStorage only');
+                    console.warn('⚠️ GitHubAPI not available, falling back to localStorage only');
                     phoenixData = JSON.parse(localStorage.getItem('phoenixProjectData')) || { outlets: {} };
                 }
                 
@@ -1543,7 +1553,7 @@
                 });
                 
             } catch (error) {
-                console.error('❌ Failed to load Phoenix data from Google Sheets:', error);
+                console.error('❌ Failed to load Phoenix data from GitHub:', error);
                 
                 // Fallback to localStorage
                 phoenixData = JSON.parse(localStorage.getItem('phoenixProjectData')) || { outlets: {} };
@@ -1560,18 +1570,22 @@
                 localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
                 console.log('✅ Phoenix data saved to localStorage');
                 
-                // Save to Google Sheets for cross-device access (background operation)
-                if (typeof GoogleSheetsAPI !== 'undefined') {
-                    const googleSheetsAPI = new GoogleSheetsAPI();
-                    googleSheetsAPI.savePhoenixData(phoenixData)
-                        .then(() => {
-                            console.log('✅ Phoenix data synced to Google Sheets');
+                // Save to GitHub for cross-device access (background operation)
+                if (typeof GitHubAPI !== 'undefined') {
+                    const gitHubAPI = new GitHubAPI();
+                    gitHubAPI.savePhoenixData(phoenixData)
+                        .then((success) => {
+                            if (success) {
+                                console.log('✅ Phoenix data synced to GitHub successfully');
+                            } else {
+                                console.warn('⚠️ Failed to sync Phoenix data to GitHub');
+                            }
                         })
                         .catch(error => {
-                            console.warn('⚠️ Failed to sync Phoenix data to Google Sheets:', error);
+                            console.warn('⚠️ GitHub sync error:', error);
                         });
                 } else {
-                    console.log('ℹ️ Google Sheets sync not available - data saved locally only');
+                    console.log('ℹ️ GitHub sync not available - data saved locally only');
                 }
                 
                 return true;
@@ -4109,30 +4123,53 @@
             });
         });
 
-        // Cross-device data management utilities
-        window.exportPhoenixDataForSheets = function() {
+        // Cross-device data management utilities with GitHub
+        window.exportPhoenixDataToGitHub = async function() {
             try {
-                if (typeof GoogleSheetsAPI !== 'undefined') {
-                    const googleSheetsAPI = new GoogleSheetsAPI();
-                    const csvData = googleSheetsAPI.exportPhoenixDataForSheets(phoenixData);
+                if (typeof GitHubAPI !== 'undefined') {
+                    const gitHubAPI = new GitHubAPI();
+                    const success = await gitHubAPI.savePhoenixData(phoenixData);
                     
-                    // Create downloadable file
-                    const blob = new Blob([csvData], { type: 'text/csv' });
+                    if (success) {
+                        console.log('✅ Phoenix data exported to GitHub successfully');
+                        showNotification('✅ Phoenix data synced to GitHub! Available on all devices.', 'success');
+                    } else {
+                        console.error('❌ Failed to export to GitHub');
+                        showNotification('❌ Failed to sync data to GitHub', 'error');
+                    }
+                } else {
+                    console.error('❌ GitHubAPI not available');
+                    showNotification('❌ GitHub API not available', 'error');
+                }
+            } catch (error) {
+                console.error('❌ GitHub export failed:', error);
+                showNotification('❌ Failed to export Phoenix data to GitHub', 'error');
+            }
+        };
+
+        window.exportPhoenixDataAsJSON = function() {
+            try {
+                if (typeof GitHubAPI !== 'undefined') {
+                    const gitHubAPI = new GitHubAPI();
+                    gitHubAPI.exportPhoenixData(phoenixData);
+                    
+                    console.log('📤 Phoenix data exported as JSON file');
+                    showNotification('✅ Phoenix data downloaded as JSON file', 'success');
+                } else {
+                    // Fallback manual export
+                    const content = JSON.stringify(phoenixData, null, 2);
+                    const blob = new Blob([content], { type: 'application/json' });
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `phoenix-data-export-${new Date().toISOString().substring(0, 10)}.csv`;
+                    a.download = `phoenix-data-export-${new Date().toISOString().substring(0, 10)}.json`;
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
                     window.URL.revokeObjectURL(url);
                     
-                    console.log('📤 Phoenix data exported successfully');
-                    console.log('📋 Instructions: Upload this CSV to the "Phoenix Data" sheet in Google Sheets');
-                    showNotification('✅ Phoenix data exported! Upload the CSV to Google Sheets for cross-device access.', 'success');
-                } else {
-                    console.error('❌ GoogleSheetsAPI not available');
-                    showNotification('❌ Export functionality not available', 'error');
+                    console.log('📤 Phoenix data exported as JSON (manual fallback)');
+                    showNotification('✅ Phoenix data downloaded as JSON file', 'success');
                 }
             } catch (error) {
                 console.error('❌ Export failed:', error);
@@ -4140,40 +4177,87 @@
             }
         };
 
-        window.importPhoenixDataFromSheets = async function() {
+        window.importPhoenixDataFromGitHub = async function() {
             try {
-                console.log('📥 Importing Phoenix data from Google Sheets...');
-                await loadPhoenixDataFromSheets();
+                console.log('📥 Importing Phoenix data from GitHub...');
+                await loadPhoenixDataFromGitHub();
                 
                 // Reload outlets and refresh dashboard
                 loadPhoenixOutlets();
                 renderPhoenixDashboard();
                 
-                showNotification('✅ Phoenix data imported successfully from Google Sheets!', 'success');
+                showNotification('✅ Phoenix data imported successfully from GitHub!', 'success');
             } catch (error) {
                 console.error('❌ Import failed:', error);
-                showNotification('❌ Failed to import Phoenix data from Google Sheets', 'error');
+                showNotification('❌ Failed to import Phoenix data from GitHub', 'error');
             }
         };
 
-        window.showDataSyncInfo = function() {
+        window.showGitHubDataHistory = async function() {
+            try {
+                if (typeof GitHubAPI !== 'undefined') {
+                    const gitHubAPI = new GitHubAPI();
+                    const history = await gitHubAPI.getDataHistory();
+                    
+                    if (history.length > 0) {
+                        console.log('📚 Phoenix Data Version History:');
+                        history.forEach((commit, index) => {
+                            console.log(`${index + 1}. ${commit.message} (${commit.date}) by ${commit.author}`);
+                        });
+                        
+                        const historyText = history.map((commit, index) => 
+                            `${index + 1}. ${commit.message}\n   Date: ${new Date(commit.date).toLocaleString()}\n   Author: ${commit.author}`
+                        ).join('\n\n');
+                        
+                        alert(`📚 Phoenix Data Version History:\n\n${historyText}`);
+                    } else {
+                        alert('📚 No version history found');
+                    }
+                } else {
+                    alert('❌ GitHub API not available');
+                }
+            } catch (error) {
+                console.error('❌ Failed to get history:', error);
+                alert('❌ Failed to get version history');
+            }
+        };
+
+        window.showDataSyncInfo = async function() {
             const totalOutlets = Object.keys(phoenixData.outlets).length;
             const localBackup = localStorage.getItem('phoenixProjectDataBackup');
+            
+            let rateLimit = '';
+            try {
+                if (typeof GitHubAPI !== 'undefined') {
+                    const gitHubAPI = new GitHubAPI();
+                    const rate = await gitHubAPI.checkRateLimit();
+                    if (rate) {
+                        rateLimit = `\n🔄 GitHub API: ${rate.remaining}/${rate.limit} requests remaining`;
+                    }
+                }
+            } catch (error) {
+                rateLimit = '\n⚠️ GitHub API: Status unknown';
+            }
             
             alert(`📊 Phoenix Data Sync Status:
 
 ✅ Local Storage: ${totalOutlets} outlets
 ${localBackup ? '✅ Local Backup: Available' : '⚠️ Local Backup: Not found'}
+🐙 GitHub Storage: Enabled${rateLimit}
 
 🔧 Available Functions:
-• exportPhoenixDataForSheets() - Export data for Google Sheets
-• importPhoenixDataFromSheets() - Import from Google Sheets  
+• exportPhoenixDataToGitHub() - Sync current data to GitHub
+• importPhoenixDataFromGitHub() - Import fresh data from GitHub
+• exportPhoenixDataAsJSON() - Download data as JSON file
+• showGitHubDataHistory() - View version history
 • showDataSyncInfo() - Show this status
 
-📋 To enable cross-device access:
-1. Run exportPhoenixDataForSheets() in console
-2. Upload the downloaded CSV to 'Phoenix Data' sheet in Google Sheets
-3. Use importPhoenixDataFromSheets() on other devices`);
+🚀 GitHub Advantages:
+✅ Automatic cross-device sync
+✅ Complete version history  
+✅ Enterprise-grade reliability
+✅ Built-in access control
+✅ No additional API keys needed`);
         };
 
         // Utility function to preserve Phoenix data during logout
