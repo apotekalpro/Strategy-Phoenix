@@ -362,6 +362,133 @@ class GoogleSheetsAPI {
     }
 
     /**
+     * Load Phoenix project data from Google Sheets for cross-device access
+     * This replaces localStorage for persistent, shared data storage
+     */
+    async loadPhoenixData() {
+        try {
+            console.log('🔥 Loading Phoenix data from Google Sheets...');
+            
+            const rows = await this.fetchSheetData(
+                CONFIG.GOOGLE_SHEETS.PHOENIX_DATA_SHEET_ID,
+                CONFIG.GOOGLE_SHEETS.PHOENIX_DATA_RANGE
+            );
+            
+            const phoenixData = this.parsePhoenixData(rows);
+            console.log(`✅ Loaded Phoenix data for ${Object.keys(phoenixData.outlets).length} outlets`);
+            return phoenixData;
+            
+        } catch (error) {
+            console.error('❌ Failed to load Phoenix data from Google Sheets:', error);
+            
+            // Fallback to localStorage if Google Sheets fails
+            console.log('📋 Falling back to localStorage Phoenix data');
+            return JSON.parse(localStorage.getItem('phoenixProjectData')) || { outlets: {} };
+        }
+    }
+
+    /**
+     * Save Phoenix project data to Google Sheets
+     * NOTE: This requires write permissions to Google Sheets
+     * For now, we'll sync with localStorage and provide export functionality
+     */
+    async savePhoenixData(phoenixData) {
+        try {
+            console.log('💾 Saving Phoenix data...');
+            
+            // For immediate implementation, save to localStorage
+            // TODO: Implement Google Sheets write API when write permissions are available
+            localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+            
+            // Also save a backup with timestamp for export
+            const backup = {
+                timestamp: new Date().toISOString(),
+                data: phoenixData
+            };
+            localStorage.setItem('phoenixProjectDataBackup', JSON.stringify(backup));
+            
+            console.log('✅ Phoenix data saved locally with backup');
+            
+            // TODO: Future implementation - save to Google Sheets
+            // await this.writeToGoogleSheets(phoenixData);
+            
+            return true;
+            
+        } catch (error) {
+            console.error('❌ Failed to save Phoenix data:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Parse Phoenix data from Google Sheets format
+     * Expected format: Column A=OutletCode, Column B=DataType, Column C=DataValue (JSON)
+     */
+    parsePhoenixData(rows) {
+        const phoenixData = { outlets: {} };
+        
+        console.log(`📋 Parsing Phoenix data from ${rows.length} rows...`);
+        
+        // Skip header row (index 0)
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (row && row.length >= 3) {
+                const outletCode = row[0]?.toString().trim();
+                const dataType = row[1]?.toString().trim(); // 'okr', 'performance', 'medals', etc.
+                const dataValue = row[2]?.toString().trim(); // JSON string
+                
+                if (outletCode && dataType && dataValue) {
+                    try {
+                        const parsedData = JSON.parse(dataValue);
+                        
+                        if (!phoenixData.outlets[outletCode]) {
+                            phoenixData.outlets[outletCode] = {};
+                        }
+                        
+                        phoenixData.outlets[outletCode][dataType] = parsedData;
+                        
+                    } catch (parseError) {
+                        console.warn(`⚠️ Failed to parse data for ${outletCode}:${dataType}`, parseError);
+                    }
+                }
+            }
+        }
+        
+        console.log(`✅ Parsed Phoenix data for ${Object.keys(phoenixData.outlets).length} outlets`);
+        return phoenixData;
+    }
+
+    /**
+     * Export Phoenix data for manual Google Sheets import
+     * Generates CSV format that can be copied to Google Sheets
+     */
+    exportPhoenixDataForSheets(phoenixData) {
+        console.log('📤 Exporting Phoenix data for Google Sheets...');
+        
+        const exportRows = [
+            ['OutletCode', 'DataType', 'DataValue'] // Header row
+        ];
+        
+        Object.keys(phoenixData.outlets).forEach(outletCode => {
+            const outletData = phoenixData.outlets[outletCode];
+            
+            // Export each data type as a separate row
+            Object.keys(outletData).forEach(dataType => {
+                const dataValue = JSON.stringify(outletData[dataType]);
+                exportRows.push([outletCode, dataType, dataValue]);
+            });
+        });
+        
+        // Convert to CSV format
+        const csvContent = exportRows.map(row => 
+            row.map(cell => `"${cell.toString().replace(/"/g, '""')}"`).join(',')
+        ).join('\n');
+        
+        console.log(`✅ Exported ${exportRows.length - 1} data rows for ${Object.keys(phoenixData.outlets).length} outlets`);
+        return csvContent;
+    }
+
+    /**
      * Refresh all cached data
      */
     refreshCache() {

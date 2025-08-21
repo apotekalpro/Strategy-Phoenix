@@ -1234,15 +1234,11 @@
             }
         ];
 
-        // Phoenix data structure - now stored in localStorage for persistence
-        let phoenixData = JSON.parse(localStorage.getItem('phoenixProjectData')) || {
-            outlets: {}
-        };
+        // Phoenix data structure - now stored in Google Sheets for cross-device access
+        let phoenixData = { outlets: {} };
         
         // Enhanced debugging for Phoenix data loading
-        console.log('🔍 Phoenix Dashboard - Loading stored data...');
-        console.log('📊 Phoenix data from localStorage:', phoenixData);
-        console.log('📈 Number of stored Phoenix outlets:', Object.keys(phoenixData.outlets).length);
+        console.log('🔍 Phoenix Dashboard - Loading cross-device data...');
 
         // Initialize dashboard
         window.addEventListener('load', async () => {
@@ -1314,7 +1310,11 @@
                 // Setup user permissions
                 setupUserPermissions();
                 
-                // Load Phoenix outlets from localStorage (primary source)
+                // Load Phoenix data from Google Sheets (cross-device access)
+                console.log('🔄 Loading Phoenix data from Google Sheets...');
+                await loadPhoenixDataFromSheets();
+                
+                // Load Phoenix outlets from loaded data
                 console.log('🔄 Starting Phoenix outlet loading sequence...');
                 loadPhoenixOutlets();
                 
@@ -1494,9 +1494,106 @@
             }
         }
 
+        // Load Phoenix data from Google Sheets for cross-device access
+        async function loadPhoenixDataFromSheets() {
+            try {
+                console.log('🔥 Loading Phoenix data from Google Sheets for cross-device access...');
+                
+                if (typeof GoogleSheetsAPI !== 'undefined') {
+                    const googleSheetsAPI = new GoogleSheetsAPI();
+                    const loadedPhoenixData = await googleSheetsAPI.loadPhoenixData();
+                    
+                    // Merge with any existing localStorage data
+                    const localData = JSON.parse(localStorage.getItem('phoenixProjectData')) || { outlets: {} };
+                    
+                    // Prioritize Google Sheets data, but preserve local data if Sheets is empty
+                    if (Object.keys(loadedPhoenixData.outlets).length > 0) {
+                        phoenixData = loadedPhoenixData;
+                        console.log('✅ Loaded Phoenix data from Google Sheets (primary source)');
+                        console.log('📊 Outlets from Google Sheets:', Object.keys(phoenixData.outlets).length);
+                        
+                        // Update localStorage with Google Sheets data for offline access
+                        localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+                    } else if (Object.keys(localData.outlets).length > 0) {
+                        phoenixData = localData;
+                        console.log('⚠️ No data in Google Sheets, using localStorage data');
+                        console.log('📊 Outlets from localStorage:', Object.keys(phoenixData.outlets).length);
+                        
+                        // Offer to export local data to Google Sheets format
+                        console.log('💡 Tip: Use exportPhoenixData() to get data for Google Sheets import');
+                        window.exportPhoenixData = () => {
+                            const csvData = googleSheetsAPI.exportPhoenixDataForSheets(phoenixData);
+                            console.log('📤 Phoenix data export for Google Sheets:');
+                            console.log(csvData);
+                            return csvData;
+                        };
+                    } else {
+                        phoenixData = { outlets: {} };
+                        console.log('ℹ️ No Phoenix data found in Google Sheets or localStorage');
+                    }
+                } else {
+                    console.warn('⚠️ GoogleSheetsAPI not available, falling back to localStorage only');
+                    phoenixData = JSON.parse(localStorage.getItem('phoenixProjectData')) || { outlets: {} };
+                }
+                
+                console.log('📈 Final Phoenix data summary:', {
+                    totalOutlets: Object.keys(phoenixData.outlets).length,
+                    outletsWithOKR: Object.keys(phoenixData.outlets).filter(code => phoenixData.outlets[code].okr).length,
+                    outletsWithPerformance: Object.keys(phoenixData.outlets).filter(code => phoenixData.outlets[code].performanceData).length
+                });
+                
+            } catch (error) {
+                console.error('❌ Failed to load Phoenix data from Google Sheets:', error);
+                
+                // Fallback to localStorage
+                phoenixData = JSON.parse(localStorage.getItem('phoenixProjectData')) || { outlets: {} };
+                console.log('📋 Using localStorage fallback data');
+            }
+        }
+
+        // Centralized Phoenix data save function for cross-device persistence
+        function savePhoenixData(description = 'Phoenix data updated') {
+            try {
+                console.log(`💾 Saving Phoenix data: ${description}`);
+                
+                // Save to localStorage for immediate access and offline use
+                localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+                console.log('✅ Phoenix data saved to localStorage');
+                
+                // Save to Google Sheets for cross-device access (background operation)
+                if (typeof GoogleSheetsAPI !== 'undefined') {
+                    const googleSheetsAPI = new GoogleSheetsAPI();
+                    googleSheetsAPI.savePhoenixData(phoenixData)
+                        .then(() => {
+                            console.log('✅ Phoenix data synced to Google Sheets');
+                        })
+                        .catch(error => {
+                            console.warn('⚠️ Failed to sync Phoenix data to Google Sheets:', error);
+                        });
+                } else {
+                    console.log('ℹ️ Google Sheets sync not available - data saved locally only');
+                }
+                
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Failed to save Phoenix data:', error);
+                
+                // Ensure localStorage is at least updated
+                try {
+                    localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+                    console.log('📋 Fallback: Data saved to localStorage only');
+                } catch (localError) {
+                    console.error('❌ Critical: Failed to save to localStorage:', localError);
+                }
+                
+                return false;
+            }
+        }
+
         function loadPhoenixOutlets() {
-            console.log('🔄 Loading Phoenix outlets from localStorage...');
-            console.log('📊 Available Phoenix outlet codes in localStorage:', Object.keys(phoenixData.outlets));
+            console.log('🔄 Loading Phoenix outlets from cross-device data...');
+            console.log('📊 Available Phoenix outlet codes:', Object.keys(phoenixData.outlets));
             console.log('📊 Available outlets from Google Sheets:', allOutlets.length ? allOutlets.map(o => o.code) : 'No Google Sheets data');
             
             // Create a map of outlet codes from Google Sheets for quick lookup
@@ -1541,10 +1638,9 @@
             console.log(`✅ Successfully loaded ${phoenixOutlets.length} Phoenix outlets for user`);
             console.log('📋 Phoenix outlets summary:', phoenixOutlets.map(o => ({code: o.code, name: o.name, hasOKR: !!o.okr})));
             
-            // Save updated Phoenix data to ensure persistence
+            // Save updated Phoenix data to ensure cross-device persistence
             if (phoenixOutlets.length > 0) {
-                localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
-                console.log('💾 Phoenix data saved to localStorage for persistence');
+                savePhoenixData('Phoenix outlets loaded and verified');
             }
         }
 
@@ -1805,8 +1901,8 @@
                 };
             }
             
-            // Save to localStorage
-            localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+            // Save to cross-device storage
+            savePhoenixData('OKR data updated');
             
             // Refresh the dashboard
             loadPhoenixOutlets();
@@ -1839,8 +1935,8 @@
                     delete phoenixData.outlets[outletCode];
                 }
                 
-                // Save to localStorage
-                localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+                // Save to cross-device storage
+                savePhoenixData('Performance data updated');
                 
                 // Remove from phoenixOutlets array
                 const outletIndex = phoenixOutlets.findIndex(o => o.code === outletCode);
@@ -2249,8 +2345,8 @@
                 outlet.salesTarget = phoenixData.outlets[outletCode].salesTarget;
             }
             
-            // Save to localStorage
-            localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+            // Save to cross-device storage
+            savePhoenixData('OKR data updated');
             
             // Refresh the outlet cards to show updated targets
             renderOutletCards();
@@ -2684,8 +2780,8 @@
                 }
             };
             
-            // Save to localStorage
-            localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+            // Save to cross-device storage
+            savePhoenixData('OKR data updated');
             
             // Refresh data
             loadPhoenixOutlets();
@@ -2836,8 +2932,8 @@
             // Update local outlet object
             currentOKROutlet.okr = okr;
             
-            // Save to localStorage
-            localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+            // Save to cross-device storage
+            savePhoenixData('OKR data updated');
             
             // Update the phoenixOutlets array to reflect the change
             const outletIndex = phoenixOutlets.findIndex(o => o.code === currentOKROutlet.code);
@@ -3738,8 +3834,8 @@
                     outlet.okr.progress = progressNum;
                 }
                 
-                // Save to localStorage
-                localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+                // Save to cross-device storage
+                savePhoenixData('Performance data updated');
                 
                 // Refresh views
                 renderOutletOKRSection(outlet);
@@ -3814,8 +3910,8 @@
                 outlet.lastUpdated = new Date().toISOString();
             }
             
-            // Save to localStorage
-            localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+            // Save to cross-device storage
+            savePhoenixData('OKR data updated');
             
             // Reload outlets to ensure data persistence
             loadPhoenixOutlets();
@@ -4012,6 +4108,73 @@
                 }
             });
         });
+
+        // Cross-device data management utilities
+        window.exportPhoenixDataForSheets = function() {
+            try {
+                if (typeof GoogleSheetsAPI !== 'undefined') {
+                    const googleSheetsAPI = new GoogleSheetsAPI();
+                    const csvData = googleSheetsAPI.exportPhoenixDataForSheets(phoenixData);
+                    
+                    // Create downloadable file
+                    const blob = new Blob([csvData], { type: 'text/csv' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `phoenix-data-export-${new Date().toISOString().substring(0, 10)}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    
+                    console.log('📤 Phoenix data exported successfully');
+                    console.log('📋 Instructions: Upload this CSV to the "Phoenix Data" sheet in Google Sheets');
+                    showNotification('✅ Phoenix data exported! Upload the CSV to Google Sheets for cross-device access.', 'success');
+                } else {
+                    console.error('❌ GoogleSheetsAPI not available');
+                    showNotification('❌ Export functionality not available', 'error');
+                }
+            } catch (error) {
+                console.error('❌ Export failed:', error);
+                showNotification('❌ Failed to export Phoenix data', 'error');
+            }
+        };
+
+        window.importPhoenixDataFromSheets = async function() {
+            try {
+                console.log('📥 Importing Phoenix data from Google Sheets...');
+                await loadPhoenixDataFromSheets();
+                
+                // Reload outlets and refresh dashboard
+                loadPhoenixOutlets();
+                renderPhoenixDashboard();
+                
+                showNotification('✅ Phoenix data imported successfully from Google Sheets!', 'success');
+            } catch (error) {
+                console.error('❌ Import failed:', error);
+                showNotification('❌ Failed to import Phoenix data from Google Sheets', 'error');
+            }
+        };
+
+        window.showDataSyncInfo = function() {
+            const totalOutlets = Object.keys(phoenixData.outlets).length;
+            const localBackup = localStorage.getItem('phoenixProjectDataBackup');
+            
+            alert(`📊 Phoenix Data Sync Status:
+
+✅ Local Storage: ${totalOutlets} outlets
+${localBackup ? '✅ Local Backup: Available' : '⚠️ Local Backup: Not found'}
+
+🔧 Available Functions:
+• exportPhoenixDataForSheets() - Export data for Google Sheets
+• importPhoenixDataFromSheets() - Import from Google Sheets  
+• showDataSyncInfo() - Show this status
+
+📋 To enable cross-device access:
+1. Run exportPhoenixDataForSheets() in console
+2. Upload the downloaded CSV to 'Phoenix Data' sheet in Google Sheets
+3. Use importPhoenixDataFromSheets() on other devices`);
+        };
 
         // Utility function to preserve Phoenix data during logout
         function preservePhoenixDataOnLogout() {

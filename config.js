@@ -10,6 +10,10 @@ const CONFIG = {
         HQ_LOGIN_SHEET_ID: '1wCvZ1WAlHAn-B8UPP5AUEPzQ5Auf84BJFeG48Hlo9wE',
         HQ_LOGIN_RANGE: 'HQ Login!A1:H50', // Column A=name, B=email, D=role, H=password (rows 1-50 to capture all data)
         
+        // Phoenix Project Data Storage (NEW: For cross-device access)
+        PHOENIX_DATA_SHEET_ID: '1wCvZ1WAlHAn-B8UPP5AUEPzQ5Auf84BJFeG48Hlo9wE', // Same workbook, different sheet
+        PHOENIX_DATA_RANGE: 'Phoenix Data!A1:Z1000', // Large range to accommodate all Phoenix data
+        
         // API key for Google Sheets API (public read-only)
         // IMPORTANT: Replace 'YOUR_GOOGLE_SHEETS_API_KEY_HERE' with your actual Google Sheets API key
         // to enable live data integration. Get it from: https://console.cloud.google.com/
