@@ -667,6 +667,7 @@
                     <div class="user-info">
                         <span id="user-name">Loading...</span>
                         <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+                        <button class="debug-btn" onclick="toggleDebugPanel()" style="background: #f56565; color: white; border: none; padding: 8px 12px; border-radius: 5px; margin-left: 10px; cursor: pointer; font-size: 0.8rem;">🐛 Debug</button>
                     </div>
                 </div>
                 
@@ -689,6 +690,34 @@
                 <div id="medal-showcase" style="margin-top: 20px;"></div>
                 
 
+            </div>
+
+            <!-- Debug Panel (Hidden by default) -->
+            <div id="debug-panel" class="debug-panel" style="display: none; background: #2d2d2d; color: #fff; padding: 20px; border-radius: 10px; margin-bottom: 25px; font-family: monospace;">
+                <h3 style="color: #f56565; margin-bottom: 15px;">🐛 Cross-Device Debug Panel</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h4 style="color: #68d391; margin-bottom: 10px;">User & Permissions</h4>
+                        <div id="debug-user-info" style="font-size: 0.85rem; line-height: 1.5;"></div>
+                    </div>
+                    
+                    <div>
+                        <h4 style="color: #63b3ed; margin-bottom: 10px;">Phoenix Data</h4>
+                        <div id="debug-phoenix-data" style="font-size: 0.85rem; line-height: 1.5;"></div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <h4 style="color: #f6ad55; margin-bottom: 10px;">Storage Status</h4>
+                    <div id="debug-storage-info" style="font-size: 0.85rem; line-height: 1.5;"></div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <button onclick="refreshDebugInfo()" style="background: #4299e1; color: white; border: none; padding: 10px 15px; border-radius: 5px; margin-right: 10px; cursor: pointer;">🔄 Refresh</button>
+                    <button onclick="forceLoadAllOutlets()" style="background: #ed8936; color: white; border: none; padding: 10px 15px; border-radius: 5px; margin-right: 10px; cursor: pointer;">🔓 Force Load All</button>
+                    <button onclick="exportDebugInfo()" style="background: #38b2ac; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">📤 Export Debug</button>
+                </div>
             </div>
 
             <div class="dashboard-content">
@@ -4315,6 +4344,154 @@ ${localBackup ? '✅ Local Backup: Available' : '⚠️ Local Backup: Not found'
             // Step 5: Redirect to login
             console.log('🚪 Redirecting to login page...');
             window.location.href = 'okr-login.html';
+        }
+
+        // Debug Panel Functions
+        function toggleDebugPanel() {
+            const debugPanel = document.getElementById('debug-panel');
+            const isVisible = debugPanel.style.display !== 'none';
+            debugPanel.style.display = isVisible ? 'none' : 'block';
+            
+            if (!isVisible) {
+                refreshDebugInfo();
+            }
+        }
+
+        function refreshDebugInfo() {
+            try {
+                // User & Permissions Info
+                const userInfo = document.getElementById('debug-user-info');
+                userInfo.innerHTML = `
+                    <strong>Current User:</strong><br>
+                    • Name: ${currentUser?.name || currentUser?.username || 'Not set'}<br>
+                    • Type: ${currentUser?.type || 'Unknown'}<br>
+                    • Role: ${currentUser?.role || 'Unknown'}<br>
+                    • Username: ${currentUser?.username || 'Not set'}<br><br>
+                    
+                    <strong>Permissions:</strong><br>
+                    • View All Outlets: ${userPermissions?.canViewAllOutlets || 'false'}<br>
+                    • Allowed Outlets: ${userPermissions?.allowedOutlets?.length || 0} outlets<br>
+                    • Allowed List: [${userPermissions?.allowedOutlets?.slice(0, 5).join(', ')}${userPermissions?.allowedOutlets?.length > 5 ? '...' : ''}]<br>
+                    • Can Add Outlets: ${userPermissions?.canAddOutlets || 'false'}<br>
+                    • Role: ${userPermissions?.role || 'Unknown'}
+                `;
+
+                // Phoenix Data Info
+                const phoenixInfo = document.getElementById('debug-phoenix-data');
+                const outletCount = Object.keys(phoenixData?.outlets || {}).length;
+                const phoenixOutletsList = Object.keys(phoenixData?.outlets || {}).slice(0, 10);
+                
+                phoenixInfo.innerHTML = `
+                    <strong>Phoenix Data:</strong><br>
+                    • Total Outlets in Data: ${outletCount}<br>
+                    • Outlets: [${phoenixOutletsList.join(', ')}${outletCount > 10 ? '...' : ''}]<br>
+                    • Displayed Phoenix Outlets: ${phoenixOutlets?.length || 0}<br>
+                    • All Available Outlets: ${allOutlets?.length || 0}<br><br>
+                    
+                    <strong>Data Timestamp:</strong><br>
+                    • Last Updated: ${phoenixData?.metadata?.lastUpdated || 'Unknown'}<br>
+                    • Version: ${phoenixData?.metadata?.version || 'Unknown'}
+                `;
+
+                // Storage Info
+                const storageInfo = document.getElementById('debug-storage-info');
+                const storageStats = simpleCloudStorage ? 'Available' : 'Not Available';
+                
+                storageInfo.innerHTML = `
+                    <strong>Storage:</strong><br>
+                    • Cloud Storage: ${storageStats}<br>
+                    • LocalStorage phoenixProjectData: ${localStorage.getItem('phoenixProjectData') ? 'Available' : 'Empty'}<br>
+                    • LocalStorage Size: ${localStorage.getItem('phoenixProjectData')?.length || 0} chars<br>
+                    • SessionStorage userAuth: ${sessionStorage.getItem('userAuth') ? 'Available' : 'Empty'}<br><br>
+                    
+                    <strong>Filtering Check:</strong><br>
+                    ${checkOutletFiltering()}
+                `;
+
+                console.log('🔄 Debug info refreshed');
+            } catch (error) {
+                console.error('❌ Error refreshing debug info:', error);
+            }
+        }
+
+        function checkOutletFiltering() {
+            if (!phoenixData?.outlets || !userPermissions) {
+                return '• Cannot check - missing data';
+            }
+
+            let filterResults = '';
+            Object.keys(phoenixData.outlets).forEach(outletCode => {
+                const canView = userPermissions.canViewAllOutlets || userPermissions.allowedOutlets.includes(outletCode);
+                filterResults += `• ${outletCode}: ${canView ? '✅ Visible' : '❌ Filtered'}<br>`;
+            });
+
+            return filterResults || '• No outlets to check';
+        }
+
+        function forceLoadAllOutlets() {
+            try {
+                console.log('🔓 Force loading all outlets (bypassing permissions)...');
+                
+                // Temporarily override permissions to load all outlets
+                const originalPermissions = { ...userPermissions };
+                userPermissions.canViewAllOutlets = true;
+                userPermissions.allowedOutlets = allOutlets.map(outlet => outlet.code);
+                
+                // Reload Phoenix outlets with bypassed permissions
+                loadPhoenixOutlets();
+                renderPhoenixDashboard();
+                
+                // Show notification
+                showNotification('🔓 Force loaded all outlets (permissions temporarily bypassed)', 'warning');
+                
+                // Restore original permissions after 5 seconds
+                setTimeout(() => {
+                    userPermissions = originalPermissions;
+                    console.log('🔒 Original permissions restored');
+                    refreshDebugInfo();
+                }, 5000);
+                
+            } catch (error) {
+                console.error('❌ Error force loading outlets:', error);
+                showNotification('❌ Failed to force load outlets', 'error');
+            }
+        }
+
+        function exportDebugInfo() {
+            try {
+                const debugData = {
+                    timestamp: new Date().toISOString(),
+                    currentUser: currentUser,
+                    userPermissions: userPermissions,
+                    phoenixData: phoenixData,
+                    phoenixOutlets: phoenixOutlets.map(outlet => ({ code: outlet.code, name: outlet.name })),
+                    allOutlets: allOutlets.map(outlet => ({ code: outlet.code, name: outlet.name })),
+                    localStorage: {
+                        phoenixProjectData: !!localStorage.getItem('phoenixProjectData'),
+                        phoenixProjectDataSize: localStorage.getItem('phoenixProjectData')?.length || 0
+                    },
+                    sessionStorage: {
+                        userAuth: !!sessionStorage.getItem('userAuth')
+                    }
+                };
+
+                const content = JSON.stringify(debugData, null, 2);
+                const blob = new Blob([content], { type: 'application/json' });
+                const url = window.URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `phoenix-debug-${new Date().toISOString().substring(0, 16).replace(':', '-')}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                showNotification('📤 Debug info exported successfully', 'success');
+            } catch (error) {
+                console.error('❌ Error exporting debug info:', error);
+                showNotification('❌ Failed to export debug info', 'error');
+            }
         }
     </script>
 </body>
