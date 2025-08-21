@@ -1130,7 +1130,7 @@
     <script src="google-sheets-api.js"></script>
     <script src="github-api.js"></script>
     <script src="auth-service.js"></script>
-    <script src="real-cloud-storage.js"></script>
+    <script src="login-based-cloud-storage.js"></script>
 
     <script>
         // Global variables
@@ -1534,12 +1534,13 @@
         // Load Phoenix data from cloud storage for cross-device access
         async function loadPhoenixDataFromCloud() {
             try {
-                console.log('☁️ Loading Phoenix data from cloud storage for cross-device access...');
+                console.log('🔐 Loading Phoenix data from login-based cloud storage...');
+                console.log('👤 Current user:', currentUser?.username, currentUser?.type);
                 
-                // Try cloud storage first (JSONBin - immediate cross-device functionality)
-                if (typeof RealCloudStorage !== 'undefined') {
-                    const cloudStorage = new RealCloudStorage();
-                    const loadedPhoenixData = await cloudStorage.loadPhoenixData();
+                // Use login-based cloud storage for automatic cross-device sync
+                if (typeof LoginBasedCloudStorage !== 'undefined' && currentUser) {
+                    const cloudStorage = new LoginBasedCloudStorage();
+                    const loadedPhoenixData = await cloudStorage.loadPhoenixDataForUser(currentUser);
                     
                     // Merge with any existing localStorage data
                     const localData = JSON.parse(localStorage.getItem('phoenixProjectData')) || { outlets: {} };
@@ -1601,10 +1602,10 @@
                 localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
                 console.log('✅ Phoenix data saved to localStorage');
                 
-                // Save to cloud storage for cross-device access (background operation)
-                if (typeof RealCloudStorage !== 'undefined') {
-                    const cloudStorage = new RealCloudStorage();
-                    cloudStorage.savePhoenixData(phoenixData)
+                // Save to login-based cloud storage for automatic cross-device access
+                if (typeof LoginBasedCloudStorage !== 'undefined' && currentUser) {
+                    const cloudStorage = new LoginBasedCloudStorage();
+                    cloudStorage.savePhoenixDataForUser(phoenixData, currentUser)
                         .then((success) => {
                             if (success) {
                                 console.log('✅ Phoenix data synced to cloud successfully');
@@ -4401,11 +4402,36 @@ ${localBackup ? '✅ Local Backup: Available' : '⚠️ Local Backup: Not found'
 
                 // Storage Info
                 const storageInfo = document.getElementById('debug-storage-info');
-                const storageStats = realCloudStorage ? 'Available' : 'Not Available';
+                const storageStats = loginBasedCloudStorage ? 'Available' : 'Not Available';
+                
+                // Get login-based storage info
+                let cloudStorageInfo = 'Loading...';
+                if (loginBasedCloudStorage && currentUser) {
+                    loginBasedCloudStorage.getStorageInfoForUser(currentUser).then(info => {
+                        document.getElementById('debug-storage-info').innerHTML = `
+                            <strong>Login-Based Storage:</strong><br>
+                            • Cloud Storage: ${storageStats}<br>
+                            • User Key: ${info.userKey}<br>
+                            • Cloud Status: ${info.cloudStatus}<br>
+                            • Cloud Data Size: ${info.cloudDataSize} chars<br>
+                            • Local Data: ${info.hasLocalData ? 'Available' : 'Empty'}<br>
+                            • Storage Method: ${info.storageMethod}<br><br>
+                            
+                            <strong>User Info:</strong><br>
+                            • Username: ${info.userName}<br>
+                            • Type: ${info.userType}<br>
+                            • Cross-Device: ${info.supportsCrossDevice ? '✅ Enabled' : '❌ Disabled'}<br><br>
+                            
+                            <strong>Filtering Check:</strong><br>
+                            ${checkOutletFiltering()}
+                        `;
+                    });
+                }
                 
                 storageInfo.innerHTML = `
-                    <strong>Storage:</strong><br>
+                    <strong>Login-Based Storage:</strong><br>
                     • Cloud Storage: ${storageStats}<br>
+                    • Current User: ${currentUser?.username || 'Not logged in'}<br>
                     • LocalStorage phoenixProjectData: ${localStorage.getItem('phoenixProjectData') ? 'Available' : 'Empty'}<br>
                     • LocalStorage Size: ${localStorage.getItem('phoenixProjectData')?.length || 0} chars<br>
                     • SessionStorage userAuth: ${sessionStorage.getItem('userAuth') ? 'Available' : 'Empty'}<br><br>
@@ -4470,14 +4496,19 @@ ${localBackup ? '✅ Local Backup: Available' : '⚠️ Local Backup: Not found'
                     return;
                 }
 
-                if (typeof RealCloudStorage !== 'undefined' && realCloudStorage) {
-                    realCloudStorage.showSharingInstructions(phoenixData);
-                } else {
-                    showNotification('❌ Cloud storage not available', 'error');
+                if (!currentUser) {
+                    showNotification('❌ No user logged in. Data is automatically shared based on login credentials.', 'warning');
+                    return;
                 }
+
+                // With login-based storage, data is automatically shared across devices
+                const message = `✅ DATA AUTOMATICALLY SYNCED!\n\nYour Phoenix data is automatically available on any device when you login with:\n\n👤 Username: ${currentUser.username}\n🏷️ User Type: ${currentUser.type}\n🎯 Role: ${currentUser.role}\n\nJust login with the same credentials on any device and your data will appear automatically!`;
+                
+                showNotification('✅ Data is automatically synced across devices!', 'success');
+                alert(message);
             } catch (error) {
                 console.error('❌ Error sharing data:', error);
-                showNotification('❌ Failed to generate sharing URL', 'error');
+                showNotification('❌ Failed to show sharing info', 'error');
             }
         }
 
