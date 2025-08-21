@@ -3975,9 +3975,64 @@
             });
         });
 
+        // Utility function to preserve Phoenix data during logout
+        function preservePhoenixDataOnLogout() {
+            const dataKeys = ['phoenixProjectData', 'userMedals', 'outletPerformanceData'];
+            const preservedData = {};
+            
+            // Save all Phoenix-related data
+            dataKeys.forEach(key => {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    preservedData[key] = data;
+                    console.log(`📦 Preserving ${key}: ${data.length} characters`);
+                }
+            });
+            
+            return preservedData;
+        }
+        
+        // Utility function to restore Phoenix data after logout
+        function restorePhoenixDataAfterLogout(preservedData) {
+            Object.keys(preservedData).forEach(key => {
+                localStorage.setItem(key, preservedData[key]);
+                console.log(`✅ Restored ${key}: ${preservedData[key].length} characters`);
+            });
+        }
+
         function logout() {
+            console.log('🔄 Starting logout process...');
+            
+            // Step 1: Preserve Phoenix data before clearing localStorage
+            const preservedPhoenixData = preservePhoenixDataOnLogout();
+            
+            console.log('🔄 Preserved Phoenix data summary:', {
+                phoenixProjectData: !!preservedPhoenixData.phoenixProjectData,
+                userMedals: !!preservedPhoenixData.userMedals,
+                outletPerformanceData: !!preservedPhoenixData.outletPerformanceData,
+                totalKeys: Object.keys(preservedPhoenixData).length
+            });
+            
+            // Step 2: Clear all authentication and session data
             sessionStorage.clear();
             localStorage.clear();
+            console.log('🧹 Cleared all sessionStorage and localStorage data');
+            
+            // Step 3: Restore Phoenix project data after clearing
+            restorePhoenixDataAfterLogout(preservedPhoenixData);
+            
+            // Step 4: Verify restoration
+            const phoenixDataCheck = localStorage.getItem('phoenixProjectData');
+            if (phoenixDataCheck && preservedPhoenixData.phoenixProjectData) {
+                console.log('✅ Phoenix data restoration verified - data persisted through logout');
+            } else if (preservedPhoenixData.phoenixProjectData) {
+                console.error('❌ Phoenix data restoration FAILED - data lost during logout');
+            } else {
+                console.log('ℹ️ No Phoenix data to preserve (user had no Phoenix outlets)');
+            }
+            
+            // Step 5: Redirect to login
+            console.log('🚪 Redirecting to login page...');
             window.location.href = 'okr-login.html';
         }
     </script>

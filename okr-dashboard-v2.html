@@ -660,8 +660,36 @@
         }
 
         function logout() {
+            // Preserve Phoenix data before clearing localStorage
+            const phoenixProjectData = localStorage.getItem('phoenixProjectData');
+            const userMedals = localStorage.getItem('userMedals');
+            const outletPerformanceData = localStorage.getItem('outletPerformanceData');
+            
+            console.log('🔄 Logging out - preserving Phoenix data:', {
+                phoenixProjectData: !!phoenixProjectData,
+                userMedals: !!userMedals,
+                outletPerformanceData: !!outletPerformanceData
+            });
+            
+            // Clear all authentication and session data
             sessionStorage.clear();
             localStorage.clear();
+            
+            // Restore Phoenix project data after clearing
+            if (phoenixProjectData) {
+                localStorage.setItem('phoenixProjectData', phoenixProjectData);
+                console.log('✅ Phoenix project data preserved through logout');
+            }
+            if (userMedals) {
+                localStorage.setItem('userMedals', userMedals);
+                console.log('✅ User medals data preserved through logout');
+            }
+            if (outletPerformanceData) {
+                localStorage.setItem('outletPerformanceData', outletPerformanceData);
+                console.log('✅ Outlet performance data preserved through logout');
+            }
+            
+            // Redirect to login
             window.location.href = 'okr-login.html';
         }
     </script>
