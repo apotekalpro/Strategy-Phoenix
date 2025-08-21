@@ -716,6 +716,7 @@
                 <div style="margin-top: 20px;">
                     <button onclick="refreshDebugInfo()" style="background: #4299e1; color: white; border: none; padding: 10px 15px; border-radius: 5px; margin-right: 10px; cursor: pointer;">🔄 Refresh</button>
                     <button onclick="forceLoadAllOutlets()" style="background: #ed8936; color: white; border: none; padding: 10px 15px; border-radius: 5px; margin-right: 10px; cursor: pointer;">🔓 Force Load All</button>
+                    <button onclick="sharePhoenixData()" style="background: #9f7aea; color: white; border: none; padding: 10px 15px; border-radius: 5px; margin-right: 10px; cursor: pointer;">🔗 Share Data</button>
                     <button onclick="exportDebugInfo()" style="background: #38b2ac; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">📤 Export Debug</button>
                 </div>
             </div>
@@ -725,9 +726,14 @@
                     <h2 class="section-title">
                         🏪 Phoenix Project Outlets
                     </h2>
-                    <button class="add-outlet-btn" onclick="openAddOutletModal()">
-                        ➕ Add Outlet to Phoenix Program
-                    </button>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="add-outlet-btn" onclick="openAddOutletModal()">
+                            ➕ Add Outlet to Phoenix Program
+                        </button>
+                        <button class="share-data-btn" onclick="sharePhoenixData()" style="background: linear-gradient(135deg, #9f7aea 0%, #667eea 100%); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600; box-shadow: 0 2px 8px rgba(159, 122, 234, 0.3); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+                            🔗 Share Data Cross-Device
+                        </button>
+                    </div>
                 </div>
                 
                 <div id="outlets-grid" class="outlets-grid">
@@ -1124,7 +1130,7 @@
     <script src="google-sheets-api.js"></script>
     <script src="github-api.js"></script>
     <script src="auth-service.js"></script>
-    <script src="simple-cloud-storage-v2.js"></script>
+    <script src="real-cloud-storage.js"></script>
 
     <script>
         // Global variables
@@ -1531,8 +1537,8 @@
                 console.log('☁️ Loading Phoenix data from cloud storage for cross-device access...');
                 
                 // Try cloud storage first (JSONBin - immediate cross-device functionality)
-                if (typeof SimpleCloudStorage !== 'undefined') {
-                    const cloudStorage = new SimpleCloudStorage();
+                if (typeof RealCloudStorage !== 'undefined') {
+                    const cloudStorage = new RealCloudStorage();
                     const loadedPhoenixData = await cloudStorage.loadPhoenixData();
                     
                     // Merge with any existing localStorage data
@@ -1596,8 +1602,8 @@
                 console.log('✅ Phoenix data saved to localStorage');
                 
                 // Save to cloud storage for cross-device access (background operation)
-                if (typeof SimpleCloudStorage !== 'undefined') {
-                    const cloudStorage = new SimpleCloudStorage();
+                if (typeof RealCloudStorage !== 'undefined') {
+                    const cloudStorage = new RealCloudStorage();
                     cloudStorage.savePhoenixData(phoenixData)
                         .then((success) => {
                             if (success) {
@@ -4395,7 +4401,7 @@ ${localBackup ? '✅ Local Backup: Available' : '⚠️ Local Backup: Not found'
 
                 // Storage Info
                 const storageInfo = document.getElementById('debug-storage-info');
-                const storageStats = simpleCloudStorage ? 'Available' : 'Not Available';
+                const storageStats = realCloudStorage ? 'Available' : 'Not Available';
                 
                 storageInfo.innerHTML = `
                     <strong>Storage:</strong><br>
@@ -4454,6 +4460,24 @@ ${localBackup ? '✅ Local Backup: Available' : '⚠️ Local Backup: Not found'
             } catch (error) {
                 console.error('❌ Error force loading outlets:', error);
                 showNotification('❌ Failed to force load outlets', 'error');
+            }
+        }
+
+        function sharePhoenixData() {
+            try {
+                if (!phoenixData || Object.keys(phoenixData.outlets || {}).length === 0) {
+                    showNotification('❌ No Phoenix data to share. Create some outlets first!', 'warning');
+                    return;
+                }
+
+                if (typeof RealCloudStorage !== 'undefined' && realCloudStorage) {
+                    realCloudStorage.showSharingInstructions(phoenixData);
+                } else {
+                    showNotification('❌ Cloud storage not available', 'error');
+                }
+            } catch (error) {
+                console.error('❌ Error sharing data:', error);
+                showNotification('❌ Failed to generate sharing URL', 'error');
             }
         }
 
