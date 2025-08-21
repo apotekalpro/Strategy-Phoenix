@@ -7,9 +7,13 @@ class GitHubAPI {
     constructor() {
         this.cache = new Map();
         this.cacheTimeout = 5 * 60 * 1000; // 5 minutes cache
-        this.repo = CONFIG.GOOGLE_SHEETS.GITHUB_DATA_REPO || 'apotekalpro/phoenix-data-storage';
+        this.repo = CONFIG.GOOGLE_SHEETS.GITHUB_DATA_REPO || 'apotekalpro/Strategy-Phoenix';
         this.branch = CONFIG.GOOGLE_SHEETS.GITHUB_DATA_BRANCH || 'main';
         this.baseURL = CONFIG.GOOGLE_SHEETS.GITHUB_API_URL || 'https://api.github.com';
+        
+        // Use the existing Strategy-Phoenix repository for immediate functionality
+        this.dataFileName = 'phoenix-data.json';
+        this.rawURL = `https://raw.githubusercontent.com/${this.repo}/${this.branch}/${this.dataFileName}`;
     }
 
     /**
@@ -30,11 +34,11 @@ class GitHubAPI {
     }
 
     /**
-     * Load Phoenix data from GitHub repository
+     * Load Phoenix data from GitHub repository using raw URL (no auth required)
      */
     async loadPhoenixData() {
         try {
-            console.log('🐙 Loading Phoenix data from GitHub...');
+            console.log('🐙 Loading Phoenix data from GitHub (raw URL)...');
             
             const cacheKey = 'phoenix-data';
             
@@ -47,33 +51,28 @@ class GitHubAPI {
                 }
             }
 
-            const url = `${this.baseURL}/repos/${this.repo}/contents/phoenix-data.json?ref=${this.branch}`;
-            
-            const response = await fetch(url, {
+            // Try to load from raw GitHub URL (no authentication required)
+            console.log('🔗 Fetching from:', this.rawURL);
+            const response = await fetch(this.rawURL, {
                 method: 'GET',
-                headers: this.getHeaders()
+                cache: 'no-cache'  // Always get fresh data
             });
 
             if (response.status === 404) {
-                console.log('📝 No Phoenix data file found in GitHub, starting fresh');
+                console.log('📝 No Phoenix data file found in GitHub repository, starting fresh');
                 return { outlets: {} };
             }
 
             if (!response.ok) {
-                throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+                throw new Error(`GitHub raw file error: ${response.status} ${response.statusText}`);
             }
 
-            const fileData = await response.json();
-            
-            // Decode base64 content
-            const content = atob(fileData.content.replace(/\s/g, ''));
-            const phoenixData = JSON.parse(content);
+            const phoenixData = await response.json();
             
             // Cache the result
             this.cache.set(cacheKey, {
                 data: phoenixData,
-                timestamp: Date.now(),
-                sha: fileData.sha // Store SHA for updates
+                timestamp: Date.now()
             });
             
             console.log(`✅ Loaded Phoenix data from GitHub: ${Object.keys(phoenixData.outlets).length} outlets`);
@@ -81,10 +80,11 @@ class GitHubAPI {
 
         } catch (error) {
             console.error('❌ Failed to load Phoenix data from GitHub:', error);
+            console.log('📋 Falling back to localStorage...');
             
             // Fallback to localStorage
             const localData = JSON.parse(localStorage.getItem('phoenixProjectData')) || { outlets: {} };
-            console.log('📋 Using localStorage fallback data');
+            console.log(`📊 LocalStorage fallback: ${Object.keys(localData.outlets).length} outlets`);
             return localData;
         }
     }
