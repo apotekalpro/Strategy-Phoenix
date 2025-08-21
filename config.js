@@ -11,7 +11,7 @@ const CONFIG = {
         HQ_LOGIN_RANGE: 'HQ Login!A1:H50', // Column A=name, B=email, D=role, H=password (rows 1-50 to capture all data)
         
         // GitHub Data Storage (NEW: For cross-device access using GitHub API)
-        GITHUB_DATA_REPO: 'apotekalpro/phoenix-data-storage', // Repository for Phoenix data
+        GITHUB_DATA_REPO: 'apotekalpro/Strategy-Phoenix', // Use existing repository for immediate functionality
         GITHUB_DATA_BRANCH: 'main', // Branch to store data
         GITHUB_API_URL: 'https://api.github.com', // GitHub API base URL
         
