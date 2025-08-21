@@ -1238,6 +1238,11 @@
         let phoenixData = JSON.parse(localStorage.getItem('phoenixProjectData')) || {
             outlets: {}
         };
+        
+        // Enhanced debugging for Phoenix data loading
+        console.log('🔍 Phoenix Dashboard - Loading stored data...');
+        console.log('📊 Phoenix data from localStorage:', phoenixData);
+        console.log('📈 Number of stored Phoenix outlets:', Object.keys(phoenixData.outlets).length);
 
         // Initialize dashboard
         window.addEventListener('load', async () => {
@@ -1309,11 +1314,18 @@
                 // Setup user permissions
                 setupUserPermissions();
                 
-                // Load Phoenix outlets
+                // Load Phoenix outlets from localStorage (primary source)
+                console.log('🔄 Starting Phoenix outlet loading sequence...');
                 loadPhoenixOutlets();
                 
-                // Render dashboard
+                // Render dashboard with loaded data
+                console.log('🎨 Rendering Phoenix dashboard...');
                 renderPhoenixDashboard();
+                
+                // Double-check data persistence
+                console.log('🔍 Final Phoenix data verification:');
+                console.log('📊 Phoenix outlets loaded:', phoenixOutlets.length);
+                console.log('💾 Phoenix data in localStorage:', Object.keys(phoenixData.outlets).length, 'outlets');
                 
                 console.log('✅ Phoenix Real Dashboard initialized successfully');
                 
@@ -1445,33 +1457,57 @@
         }
 
         function loadPhoenixOutlets() {
-            if (userPermissions.canViewAllOutlets) {
-                phoenixOutlets = allOutlets
-                    .filter(outlet => phoenixData.outlets[outlet.code])
-                    .map(outlet => {
-                        const phoenixOutletData = phoenixData.outlets[outlet.code];
-                        return {
-                            ...outlet,
-                            ...phoenixOutletData
-                        };
-                    });
-            } else {
-                phoenixOutlets = allOutlets
-                    .filter(outlet => 
-                        userPermissions.allowedOutlets.includes(outlet.code) && 
-                        phoenixData.outlets[outlet.code]
-                    )
-                    .map(outlet => {
-                        const phoenixOutletData = phoenixData.outlets[outlet.code];
-                        return {
-                            ...outlet,
-                            ...phoenixOutletData
-                        };
-                    });
-            }
+            console.log('🔄 Loading Phoenix outlets from localStorage...');
+            console.log('📊 Available Phoenix outlet codes in localStorage:', Object.keys(phoenixData.outlets));
+            console.log('📊 Available outlets from Google Sheets:', allOutlets.length ? allOutlets.map(o => o.code) : 'No Google Sheets data');
             
-            console.log(`✅ Loaded ${phoenixOutlets.length} Phoenix outlets for user`);
-            console.log('✅ Phoenix outlets data:', phoenixOutlets);
+            // Create a map of outlet codes from Google Sheets for quick lookup
+            const googleSheetsOutletMap = {};
+            allOutlets.forEach(outlet => {
+                googleSheetsOutletMap[outlet.code] = outlet;
+            });
+            
+            // Build Phoenix outlets from localStorage data
+            phoenixOutlets = [];
+            
+            // Iterate through all Phoenix outlets stored in localStorage
+            Object.keys(phoenixData.outlets).forEach(outletCode => {
+                const phoenixOutletData = phoenixData.outlets[outletCode];
+                
+                // Check if user has permission to view this outlet
+                const canViewOutlet = userPermissions.canViewAllOutlets || 
+                                    userPermissions.allowedOutlets.includes(outletCode);
+                
+                if (canViewOutlet) {
+                    // Use Google Sheets data if available, otherwise create synthetic outlet data
+                    const baseOutletData = googleSheetsOutletMap[outletCode] || {
+                        id: Math.floor(Math.random() * 10000), // Generate random ID
+                        code: outletCode,
+                        name: `APOTEK ALPRO ${outletCode}`, // Generate name from code
+                        am: currentUser?.username || 'Phoenix AM' // Use current user or default
+                    };
+                    
+                    // Combine base outlet data with Phoenix-specific data
+                    const combinedOutlet = {
+                        ...baseOutletData,
+                        ...phoenixOutletData
+                    };
+                    
+                    phoenixOutlets.push(combinedOutlet);
+                    console.log(`✅ Loaded Phoenix outlet: ${outletCode} (${combinedOutlet.name})`);
+                } else {
+                    console.log(`⚠️ Skipping Phoenix outlet ${outletCode} - user has no permission`);
+                }
+            });
+            
+            console.log(`✅ Successfully loaded ${phoenixOutlets.length} Phoenix outlets for user`);
+            console.log('📋 Phoenix outlets summary:', phoenixOutlets.map(o => ({code: o.code, name: o.name, hasOKR: !!o.okr})));
+            
+            // Save updated Phoenix data to ensure persistence
+            if (phoenixOutlets.length > 0) {
+                localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+                console.log('💾 Phoenix data saved to localStorage for persistence');
+            }
         }
 
         function renderPhoenixDashboard() {
@@ -2777,6 +2813,9 @@
             // Close modal and refresh
             closeOKRModal();
             
+            // Reload Phoenix outlets to ensure data persistence
+            loadPhoenixOutlets();
+            
             // Refresh both dashboard and detail view if we're in detail view
             renderPhoenixDashboard();
             
@@ -3740,8 +3779,14 @@
             // Save to localStorage
             localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
             
+            // Reload outlets to ensure data persistence
+            loadPhoenixOutlets();
+            
             // Calculate and update progress tracking
             calculateProportionalProgress(data);
+            
+            // Refresh dashboard to show updated data
+            renderPhoenixDashboard();
             
             // Show success notification
             showNotification('✅ Performance data saved successfully!', 'success');
