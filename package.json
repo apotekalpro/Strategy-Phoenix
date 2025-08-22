@@ -1,0 +1,22 @@
+{
+  "name": "webapp",
+  "version": "1.0.0",
+  "description": "A comprehensive OKR (Objectives and Key Results) tracking system for Apotek Alpro's Phoenix Project, focused on transaction improvement across all pharmacy outlets.",
+  "main": "api-server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node api-server.js",
+    "dev": "node api-server.js",
+    "pm2-start": "pm2 start ecosystem.config.js",
+    "pm2-stop": "pm2 stop ecosystem.config.js",
+    "pm2-restart": "pm2 restart ecosystem.config.js",
+    "pm2-logs": "pm2 logs --nostream"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  }
+}
