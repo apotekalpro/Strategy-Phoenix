@@ -654,6 +654,11 @@
             }
         }
     </style>
+    
+    <!-- Live Backend Integration -->
+    <script src="live-backend-api.js"></script>
+    <script src="github-api.js"></script>
+    <script src="config.js"></script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -1291,6 +1296,23 @@
                 currentUser = JSON.parse(userAuth);
                 console.log('✅ Phoenix Real Dashboard - User authenticated:', currentUser.username);
                 
+                // Initialize Live Backend API first
+                try {
+                    if (typeof liveBackendAPI !== 'undefined') {
+                        console.log('🔥 Initializing Live Backend API connection...');
+                        const backendStatus = await liveBackendAPI.checkServerStatus();
+                        if (backendStatus) {
+                            console.log('✅ Live Backend API initialized successfully');
+                        } else {
+                            console.log('⚠️ Live Backend API offline, will use localStorage fallback');
+                        }
+                    } else {
+                        console.log('⚠️ Live Backend API not available, using legacy storage methods');
+                    }
+                } catch (backendError) {
+                    console.warn('⚠️ Live Backend API initialization failed:', backendError.message);
+                }
+                
                 // Initialize services (optional - don't fail if unavailable)
                 try {
                     const googleSheetsAPI = new GoogleSheetsAPI();
@@ -1534,49 +1556,82 @@
         // Load Phoenix data from cloud storage for cross-device access
         async function loadPhoenixDataFromCloud() {
             try {
-                console.log('🔐 Loading Phoenix data from login-based cloud storage...');
+                console.log('🔥 Loading Phoenix data from LIVE BACKEND first...');
                 console.log('👤 Current user:', currentUser?.username, currentUser?.type);
                 
-                // Use login-based cloud storage for automatic cross-device sync
+                // PRIORITY 1: Try to load from Live Backend API
+                if (typeof liveBackendAPI !== 'undefined') {
+                    try {
+                        console.log('🌐 Attempting to load from Live Backend API...');
+                        const liveBackendData = await liveBackendAPI.loadPhoenixData();
+                        
+                        if (liveBackendData && Object.keys(liveBackendData.outlets || {}).length > 0) {
+                            phoenixData = liveBackendData;
+                            console.log('✅ Loaded Phoenix data from LIVE BACKEND (primary source)');
+                            console.log('📊 Outlets from live backend:', Object.keys(phoenixData.outlets).length);
+                            
+                            // Update localStorage with live backend data for offline access
+                            localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+                            return; // Exit early - we have live backend data
+                        } else {
+                            console.log('⚠️ Live backend has no data, checking localStorage for migration...');
+                        }
+                    } catch (liveBackendError) {
+                        console.warn('⚠️ Live backend not available:', liveBackendError.message);
+                    }
+                }
+                
+                // FALLBACK 1: Check localStorage for existing data to migrate
+                const localData = JSON.parse(localStorage.getItem('phoenixProjectData')) || { outlets: {} };
+                if (Object.keys(localData.outlets).length > 0) {
+                    phoenixData = localData;
+                    console.log('📋 Found existing data in localStorage:', Object.keys(phoenixData.outlets).length, 'outlets');
+                    
+                    // Automatically migrate local data to live backend
+                    if (typeof liveBackendAPI !== 'undefined') {
+                        console.log('🔄 Migrating localStorage data to live backend...');
+                        try {
+                            const migrationResult = await liveBackendAPI.savePhoenixData(phoenixData);
+                            if (migrationResult.success && !migrationResult.offline) {
+                                console.log('✅ Successfully migrated localStorage data to live backend!');
+                                showNotification('✅ Data migrated to live backend for cross-device access!', 'success');
+                            }
+                        } catch (migrationError) {
+                            console.warn('⚠️ Could not migrate to live backend:', migrationError);
+                        }
+                    }
+                    return; // We have local data to use
+                }
+                
+                // FALLBACK 2: Try legacy cloud storage
                 if (typeof LoginBasedCloudStorage !== 'undefined' && currentUser) {
+                    console.log('🔐 Trying legacy cloud storage as final fallback...');
                     const cloudStorage = new LoginBasedCloudStorage();
                     const loadedPhoenixData = await cloudStorage.loadPhoenixDataForUser(currentUser);
                     
-                    // Merge with any existing localStorage data
-                    const localData = JSON.parse(localStorage.getItem('phoenixProjectData')) || { outlets: {} };
-                    
-                    // Prioritize cloud data, but preserve local data if cloud is empty
                     if (Object.keys(loadedPhoenixData.outlets).length > 0) {
                         phoenixData = loadedPhoenixData;
-                        console.log('✅ Loaded Phoenix data from cloud storage (primary source)');
-                        console.log('📊 Outlets from cloud:', Object.keys(phoenixData.outlets).length);
+                        console.log('✅ Loaded Phoenix data from legacy cloud storage');
+                        console.log('📊 Outlets from legacy cloud:', Object.keys(phoenixData.outlets).length);
                         
-                        // Update localStorage with cloud data for offline access
+                        // Update localStorage and try to migrate to live backend
                         localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
-                    } else if (Object.keys(localData.outlets).length > 0) {
-                        phoenixData = localData;
-                        console.log('⚠️ No data in cloud, using localStorage data');
-                        console.log('📊 Outlets from localStorage:', Object.keys(phoenixData.outlets).length);
                         
-                        // Automatically sync local data to cloud
-                        console.log('🔄 Syncing local data to cloud storage...');
-                        try {
-                            const success = await cloudStorage.savePhoenixData(phoenixData);
-                            if (success) {
-                                console.log('✅ Local data automatically synced to cloud');
-                                showNotification('✅ Data synced to cloud for cross-device access!', 'success');
+                        if (typeof liveBackendAPI !== 'undefined') {
+                            try {
+                                await liveBackendAPI.savePhoenixData(phoenixData);
+                                console.log('✅ Migrated legacy cloud data to live backend');
+                            } catch (error) {
+                                console.warn('⚠️ Could not migrate legacy data to live backend:', error);
                             }
-                        } catch (syncError) {
-                            console.warn('⚠️ Could not sync to cloud:', syncError);
                         }
-                    } else {
-                        phoenixData = { outlets: {} };
-                        console.log('ℹ️ No Phoenix data found in cloud or localStorage - starting fresh');
+                        return;
                     }
-                } else {
-                    console.warn('⚠️ Cloud storage API not available, falling back to localStorage only');
-                    phoenixData = JSON.parse(localStorage.getItem('phoenixProjectData')) || { outlets: {} };
                 }
+                
+                // No data found anywhere
+                phoenixData = { outlets: {} };
+                console.log('ℹ️ No Phoenix data found anywhere - starting fresh');
                 
                 console.log('📈 Final Phoenix data summary:', {
                     totalOutlets: Object.keys(phoenixData.outlets).length,
@@ -1585,11 +1640,11 @@
                 });
                 
             } catch (error) {
-                console.error('❌ Failed to load Phoenix data from cloud:', error);
+                console.error('❌ Failed to load Phoenix data from all sources:', error);
                 
-                // Fallback to localStorage
+                // Final fallback to localStorage
                 phoenixData = JSON.parse(localStorage.getItem('phoenixProjectData')) || { outlets: {} };
-                console.log('📋 Using localStorage fallback data');
+                console.log('📋 Using localStorage as final fallback data');
             }
         }
 
@@ -1602,22 +1657,43 @@
                 localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
                 console.log('✅ Phoenix data saved to localStorage');
                 
-                // Save to login-based cloud storage for automatic cross-device access
-                if (typeof LoginBasedCloudStorage !== 'undefined' && currentUser) {
-                    const cloudStorage = new LoginBasedCloudStorage();
-                    cloudStorage.savePhoenixDataForUser(phoenixData, currentUser)
-                        .then((success) => {
-                            if (success) {
-                                console.log('✅ Phoenix data synced to cloud successfully');
+                // PRIORITY 1: Save to Live Backend API
+                if (typeof liveBackendAPI !== 'undefined') {
+                    liveBackendAPI.savePhoenixData(phoenixData)
+                        .then((result) => {
+                            if (result.success) {
+                                if (result.offline) {
+                                    console.log('⚠️ Phoenix data saved locally (live backend offline)');
+                                } else {
+                                    console.log('✅ Phoenix data synced to LIVE BACKEND successfully');
+                                }
                             } else {
-                                console.warn('⚠️ Failed to sync Phoenix data to cloud');
+                                console.warn('⚠️ Failed to sync Phoenix data to live backend');
                             }
                         })
                         .catch(error => {
-                            console.warn('⚠️ Cloud sync error:', error);
+                            console.warn('⚠️ Live backend sync error:', error);
                         });
                 } else {
-                    console.log('ℹ️ Cloud storage not available - data saved locally only');
+                    console.log('ℹ️ Live Backend API not available, trying legacy cloud storage...');
+                    
+                    // FALLBACK: Save to login-based cloud storage for automatic cross-device access
+                    if (typeof LoginBasedCloudStorage !== 'undefined' && currentUser) {
+                        const cloudStorage = new LoginBasedCloudStorage();
+                        cloudStorage.savePhoenixDataForUser(phoenixData, currentUser)
+                            .then((success) => {
+                                if (success) {
+                                    console.log('✅ Phoenix data synced to legacy cloud successfully');
+                                } else {
+                                    console.warn('⚠️ Failed to sync Phoenix data to legacy cloud');
+                                }
+                            })
+                            .catch(error => {
+                                console.warn('⚠️ Legacy cloud sync error:', error);
+                            });
+                    } else {
+                        console.log('ℹ️ No cloud storage available - data saved locally only');
+                    }
                 }
                 
                 return true;
