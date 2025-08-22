@@ -1,8 +1,146 @@
 {
-  "outlets": {},
+  "outlets": {
+    "BTTGPR1": {
+      "dateAdded": "2025-08-22T07:36:47.698Z",
+      "performanceData": {
+        "baseline": {
+          "revenue": 41194983,
+          "trano": 476
+        },
+        "term1": {
+          "revenue": 25700643,
+          "trano": 291
+        },
+        "term2": {
+          "revenue": 22304104,
+          "trano": 295
+        },
+        "term3": {
+          "revenue": 0,
+          "trano": 0
+        }
+      },
+      "okr": {
+        "objective": "🔥 OKR PHOENIX PROJECT – PENINGKATAN TRANSAKSI (TRAFIK BARU & RETURN RATE)",
+        "description": "Meningkatkan volume transaksi harian sebanyak 10%/mth melalui peningkatan trafik masuk (walk-in), pendaftaran member baru, dan kunjungan ulang pelanggan dengan strategi booth & flyering.",
+        "keyResults": [
+          "KR1 – Melakukan 15 Tes Kesehatan/Hari melalui Booth Campaign (Setiap Selasa, Kamis, Minggu)",
+          "KR2 – Capai >90% Tingkat Rekrutmen Member VIP dari Pelanggan Non-Member + Picu Kunjungan Ulang melalui Reminder & Voucher",
+          "KR3 – Sebar 1.000 Flyer AJH di Hotzone dengan Hook Membership + Voucher (Dalam 30 Hari)",
+          "KR4 – Gunakan Menit Konsult (MK) untuk Tingkatkan Kunjungan Unik Kasus Penyakit Ringan"
+        ],
+        "actionPlans": {
+          "kr1": [
+            "Pasang tripod banner bertuliskan \"Diskon 50% Cek Kesehatan\" dan putar lagu Apotek Alpro dengan speaker",
+            "Ajak pelanggan sekitar atau yang lewat untuk cek tekanan darah secara gratis (tanpa form registrasi)",
+            "Setelah tes, arahkan pelanggan masuk ke outlet untuk daftar sebagai member VIP gratis dan mendapatkan paket voucher senilai Rp40rb",
+            "Kirim hasil tes ke pelanggan melalui WhatsApp via sistem Octopus",
+            "Catat jumlah tester harian ke dalam Tracking GS"
+          ],
+          "kr2": [
+            "Ajak semua pelanggan non-member untuk daftar sebagai member VIP (berlaku 3 bulan)",
+            "Jelaskan dengan jelas keuntungan member VIP — terutama 4x voucher Rp10rb",
+            "Ingatkan pelanggan agar kembali sebelum voucher kedaluwarsa",
+            "Kirim reminder bulanan via WA kepada member baru terkait voucher yang belum digunakan"
+          ],
+          "kr3": [
+            "Jadwalkan pembagian flyer saat jam sibuk di hotzone (radius maksimal 500 meter)",
+            "Promosikan: \"Gratis Tes + Member + Voucher Rp40rb – Datang & Klaim di Outlet!\"",
+            "Ajak penerima flyer langsung datang dan klaim, tidak perlu potong/stempel",
+            "Catat sisa flyer harian dalam GS"
+          ],
+          "kr4": [
+            "Siapkan paket MK terlebih dahulu & lakukan pelatihan kepada staf (oleh AM/BM)",
+            "Gunakan MK sebagai strategi upsell untuk keluhan ringan (misalnya masuk angin, pusing ringan, maag)",
+            "Catat jumlah MK yang keluar setiap hari di GS",
+            "Tim Strategi akan memantau tren kenaikan MK bulanan"
+          ]
+        },
+        "progress": 0,
+        "dateAssigned": "2025-08-22T07:36:50.903Z",
+        "krProgress": {
+          "kr1": {
+            "completedActions": [],
+            "comments": {},
+            "likes": {
+              "action_0": true
+            },
+            "priorities": {},
+            "chatMessages": {}
+          }
+        }
+      },
+      "salesTargets": {
+        "monthlyTarget": 100000000
+      },
+      "lastUpdated": "2025-08-22T07:38:34.011Z"
+    },
+    "JKJSMP1": {
+      "dateAdded": "2025-08-22T07:38:46.846Z",
+      "performanceData": {
+        "baseline": {
+          "revenue": 0,
+          "trano": 0
+        },
+        "term1": {
+          "revenue": 0,
+          "trano": 0
+        },
+        "term2": {
+          "revenue": 0,
+          "trano": 0
+        },
+        "term3": {
+          "revenue": 0,
+          "trano": 0
+        }
+      },
+      "okr": {
+        "objective": "🔥 OKR PHOENIX PROJECT – PENINGKATAN TRANSAKSI (TRAFIK BARU & RETURN RATE)",
+        "description": "Meningkatkan volume transaksi harian sebanyak 10%/mth melalui peningkatan trafik masuk (walk-in), pendaftaran member baru, dan kunjungan ulang pelanggan dengan strategi booth & flyering.",
+        "keyResults": [
+          "KR1 – Melakukan 15 Tes Kesehatan/Hari melalui Booth Campaign (Setiap Selasa, Kamis, Minggu)",
+          "KR2 – Capai >90% Tingkat Rekrutmen Member VIP dari Pelanggan Non-Member + Picu Kunjungan Ulang melalui Reminder & Voucher",
+          "KR3 – Sebar 1.000 Flyer AJH di Hotzone dengan Hook Membership + Voucher (Dalam 30 Hari)",
+          "KR4 – Gunakan Menit Konsult (MK) untuk Tingkatkan Kunjungan Unik Kasus Penyakit Ringan"
+        ],
+        "actionPlans": {
+          "kr1": [
+            "Pasang tripod banner bertuliskan \"Diskon 50% Cek Kesehatan\" dan putar lagu Apotek Alpro dengan speaker",
+            "Ajak pelanggan sekitar atau yang lewat untuk cek tekanan darah secara gratis (tanpa form registrasi)",
+            "Setelah tes, arahkan pelanggan masuk ke outlet untuk daftar sebagai member VIP gratis dan mendapatkan paket voucher senilai Rp40rb",
+            "Kirim hasil tes ke pelanggan melalui WhatsApp via sistem Octopus",
+            "Catat jumlah tester harian ke dalam Tracking GS"
+          ],
+          "kr2": [
+            "Ajak semua pelanggan non-member untuk daftar sebagai member VIP (berlaku 3 bulan)",
+            "Jelaskan dengan jelas keuntungan member VIP — terutama 4x voucher Rp10rb",
+            "Ingatkan pelanggan agar kembali sebelum voucher kedaluwarsa",
+            "Kirim reminder bulanan via WA kepada member baru terkait voucher yang belum digunakan"
+          ],
+          "kr3": [
+            "Jadwalkan pembagian flyer saat jam sibuk di hotzone (radius maksimal 500 meter)",
+            "Promosikan: \"Gratis Tes + Member + Voucher Rp40rb – Datang & Klaim di Outlet!\"",
+            "Ajak penerima flyer langsung datang dan klaim, tidak perlu potong/stempel",
+            "Catat sisa flyer harian dalam GS"
+          ],
+          "kr4": [
+            "Siapkan paket MK terlebih dahulu & lakukan pelatihan kepada staf (oleh AM/BM)",
+            "Gunakan MK sebagai strategi upsell untuk keluhan ringan (misalnya masuk angin, pusing ringan, maag)",
+            "Catat jumlah MK yang keluar setiap hari di GS",
+            "Tim Strategi akan memantau tren kenaikan MK bulanan"
+          ]
+        },
+        "progress": 0,
+        "dateAssigned": "2025-08-22T07:38:51.939Z"
+      }
+    }
+  },
   "metadata": {
-    "version": "1.0.0",
-    "lastUpdated": "2024-08-21T00:00:00Z",
-    "description": "Phoenix Project OKR data storage for cross-device access"
+    "lastUpdated": "2025-08-22T09:45:48.995Z",
+    "version": "2.0.0",
+    "totalOutlets": 2,
+    "totalOKRs": 2,
+    "localBackup": true
   }
 }

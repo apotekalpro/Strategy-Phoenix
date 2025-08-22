@@ -653,15 +653,73 @@
                 grid-template-columns: 1fr;
             }
         }
+        
+        /* Live Backend status banner */
+        .github-pages-banner {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            animation: slideIn 0.5s ease;
+        }
+        
+        .github-pages-banner .banner-title {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        
+        .github-pages-banner .banner-text {
+            font-size: 0.9rem;
+            opacity: 0.95;
+            line-height: 1.4;
+        }
+        
+        .github-pages-banner .live-backend-link {
+            color: #fef3c7;
+            text-decoration: underline;
+            font-weight: 700;
+        }
+        
+        .github-pages-banner .live-backend-link:hover {
+            color: white;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
     </style>
     
     <!-- Live Backend Integration -->
     <script src="live-backend-api.js"></script>
     <script src="github-api.js"></script>
     <script src="config.js"></script>
+    
+    <!-- GitHub Pages Storage (for static deployment) -->
+    <script src="simple-github-storage.js"></script>
 </head>
 <body>
     <div class="dashboard-container">
+        <!-- Status Banner (shows connection status) -->
+        <div id="github-pages-banner" class="github-pages-banner" style="display: none;">
+            <div class="banner-title">🔥 Connected to Cloudflare Live Backend</div>
+            <div class="banner-text">
+                Your OKR data is now synchronized across all devices in real-time!<br>
+                ✅ Full cross-device sync • ✅ Automatic backups • ✅ Real-time updates
+            </div>
+        </div>
+        
         <!-- Dashboard View -->
         <div id="dashboard-view">
             <div class="dashboard-header">
@@ -1296,21 +1354,64 @@
                 currentUser = JSON.parse(userAuth);
                 console.log('✅ Phoenix Real Dashboard - User authenticated:', currentUser.username);
                 
-                // Initialize Live Backend API first
+                // Force Live Backend Connection - Always use Cloudflare backend
+                const isGitHubPages = window.location.hostname.includes('github.io');
+                let storageMethod = 'unknown';
+                
+                console.log('🔥 Forcing Live Backend environment (Cloudflare Workers)');
+                
+                // Initialize Live Backend API - Force connection regardless of hostname
                 try {
                     if (typeof liveBackendAPI !== 'undefined') {
-                        console.log('🔥 Initializing Live Backend API connection...');
+                        console.log('🔥 Initializing Live Backend API connection to Cloudflare...');
                         const backendStatus = await liveBackendAPI.checkServerStatus();
                         if (backendStatus) {
-                            console.log('✅ Live Backend API initialized successfully');
+                            console.log('✅ Live Backend API connected to Cloudflare successfully');
+                            storageMethod = 'live-backend';
                         } else {
-                            console.log('⚠️ Live Backend API offline, will use localStorage fallback');
+                            console.log('⚠️ Cloudflare Backend API offline, will use localStorage fallback');
+                            storageMethod = 'local-storage';
                         }
                     } else {
-                        console.log('⚠️ Live Backend API not available, using legacy storage methods');
+                        console.log('⚠️ Live Backend API not available, using localStorage fallback');
+                        storageMethod = 'local-storage';
                     }
                 } catch (backendError) {
-                    console.warn('⚠️ Live Backend API initialization failed:', backendError.message);
+                    console.warn('⚠️ Cloudflare Backend API initialization failed:', backendError.message);
+                    console.log('📱 Falling back to localStorage for offline functionality');
+                    storageMethod = 'local-storage';
+                }
+                
+                // Store storage method globally for use in save/load functions
+                window.phoenixStorageMethod = storageMethod;
+                console.log(`💾 Storage method selected: ${storageMethod}`);
+                console.log(`🌐 Backend URL: https://phoenix-okr-api.apotekalpro-digital.workers.dev`);
+                
+                // Show live backend status
+                if (storageMethod === 'live-backend') {
+                    console.log('\n🔥 CLOUDFLARE LIVE BACKEND MODE:');
+                    console.log('- ✅ Full OKR functionality enabled');
+                    console.log('- ✅ Real-time cross-device synchronization');
+                    console.log('- ✅ Data persists across all devices');
+                    console.log('- ✅ Automatic backups enabled\n');
+                    
+                    // Show success banner for live backend connection
+                    const banner = document.getElementById('github-pages-banner');
+                    if (banner) {
+                        banner.style.display = 'block';
+                    }
+                } else {
+                    console.log('\n📱 OFFLINE/FALLBACK MODE:');
+                    console.log('- ✅ Basic OKR functionality works');
+                    console.log('- ✅ Data persists in browser only');
+                    console.log('- ⚠️ LIMITED cross-device sync');
+                    console.log('- 🔄 Will sync when backend reconnects\n');
+                    
+                    // Hide banner in fallback mode
+                    const banner = document.getElementById('github-pages-banner');
+                    if (banner) {
+                        banner.style.display = 'none';
+                    }
                 }
                 
                 // Initialize services (optional - don't fail if unavailable)
@@ -1556,28 +1657,50 @@
         // Load Phoenix data from cloud storage for cross-device access
         async function loadPhoenixDataFromCloud() {
             try {
-                console.log('🔥 Loading Phoenix data from LIVE BACKEND first...');
+                console.log('📥 Loading Phoenix data using appropriate storage method...');
                 console.log('👤 Current user:', currentUser?.username, currentUser?.type);
                 
-                // PRIORITY 1: Try to load from Live Backend API
-                if (typeof liveBackendAPI !== 'undefined') {
-                    try {
-                        console.log('🌐 Attempting to load from Live Backend API...');
-                        const liveBackendData = await liveBackendAPI.loadPhoenixData();
-                        
-                        if (liveBackendData && Object.keys(liveBackendData.outlets || {}).length > 0) {
-                            phoenixData = liveBackendData;
-                            console.log('✅ Loaded Phoenix data from LIVE BACKEND (primary source)');
-                            console.log('📊 Outlets from live backend:', Object.keys(phoenixData.outlets).length);
+                const storageMethod = window.phoenixStorageMethod || 'local-storage';
+                console.log(`💾 Using storage method: ${storageMethod}`);
+                
+                if (storageMethod === 'github-pages') {
+                    // GitHub Pages mode - load from simple storage
+                    if (typeof simpleGitHubStorage !== 'undefined') {
+                        try {
+                            console.log('🌐 Loading from GitHub Pages storage...');
+                            const githubPagesData = await simpleGitHubStorage.loadPhoenixData();
                             
-                            // Update localStorage with live backend data for offline access
-                            localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
-                            return; // Exit early - we have live backend data
-                        } else {
-                            console.log('⚠️ Live backend has no data, checking localStorage for migration...');
+                            if (githubPagesData && Object.keys(githubPagesData.outlets || {}).length > 0) {
+                                phoenixData = githubPagesData;
+                                console.log('✅ Loaded Phoenix data from GitHub Pages storage');
+                                console.log('📊 Outlets loaded:', Object.keys(phoenixData.outlets).length);
+                                return;
+                            }
+                        } catch (githubError) {
+                            console.warn('⚠️ GitHub Pages storage error:', githubError.message);
                         }
-                    } catch (liveBackendError) {
-                        console.warn('⚠️ Live backend not available:', liveBackendError.message);
+                    }
+                } else if (storageMethod === 'live-backend') {
+                    // Live Backend mode - full functionality
+                    if (typeof liveBackendAPI !== 'undefined') {
+                        try {
+                            console.log('🌐 Loading from Live Backend API...');
+                            const liveBackendData = await liveBackendAPI.loadPhoenixData();
+                            
+                            if (liveBackendData && Object.keys(liveBackendData.outlets || {}).length > 0) {
+                                phoenixData = liveBackendData;
+                                console.log('✅ Loaded Phoenix data from LIVE BACKEND (primary source)');
+                                console.log('📊 Outlets from live backend:', Object.keys(phoenixData.outlets).length);
+                                
+                                // Update localStorage with live backend data for offline access
+                                localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+                                return; // Exit early - we have live backend data
+                            } else {
+                                console.log('⚠️ Live backend has no data, checking localStorage for migration...');
+                            }
+                        } catch (liveBackendError) {
+                            console.warn('⚠️ Live backend not available:', liveBackendError.message);
+                        }
                     }
                 }
                 
@@ -1653,31 +1776,47 @@
             try {
                 console.log(`💾 Saving Phoenix data: ${description}`);
                 
-                // Save to localStorage for immediate access and offline use
-                localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
-                console.log('✅ Phoenix data saved to localStorage');
+                // Use appropriate storage method based on environment
+                const storageMethod = window.phoenixStorageMethod || 'local-storage';
                 
-                // PRIORITY 1: Save to Live Backend API
-                if (typeof liveBackendAPI !== 'undefined') {
-                    liveBackendAPI.savePhoenixData(phoenixData)
-                        .then((result) => {
-                            if (result.success) {
-                                if (result.offline) {
-                                    console.log('⚠️ Phoenix data saved locally (live backend offline)');
+                if (storageMethod === 'github-pages') {
+                    // GitHub Pages mode - use simple storage
+                    if (typeof simpleGitHubStorage !== 'undefined') {
+                        simpleGitHubStorage.savePhoenixData(phoenixData)
+                            .then((result) => {
+                                if (result.success) {
+                                    console.log('✅ Phoenix data saved in GitHub Pages mode');
                                 } else {
-                                    console.log('✅ Phoenix data synced to LIVE BACKEND successfully');
+                                    console.warn('⚠️ Failed to save in GitHub Pages mode');
                                 }
-                            } else {
-                                console.warn('⚠️ Failed to sync Phoenix data to live backend');
-                            }
-                        })
-                        .catch(error => {
-                            console.warn('⚠️ Live backend sync error:', error);
-                        });
+                            })
+                            .catch(error => {
+                                console.warn('⚠️ GitHub Pages save error:', error);
+                            });
+                    }
+                } else if (storageMethod === 'live-backend') {
+                    // Live Backend mode - full functionality
+                    if (typeof liveBackendAPI !== 'undefined') {
+                        liveBackendAPI.savePhoenixData(phoenixData)
+                            .then((result) => {
+                                if (result.success) {
+                                    if (result.offline) {
+                                        console.log('⚠️ Phoenix data saved locally (live backend offline)');
+                                    } else {
+                                        console.log('✅ Phoenix data synced to LIVE BACKEND successfully');
+                                    }
+                                } else {
+                                    console.warn('⚠️ Failed to sync Phoenix data to live backend');
+                                }
+                            })
+                            .catch(error => {
+                                console.warn('⚠️ Live backend sync error:', error);
+                            });
+                    }
                 } else {
-                    console.log('ℹ️ Live Backend API not available, trying legacy cloud storage...');
+                    // Legacy/fallback mode
+                    console.log('ℹ️ Using legacy storage mode...');
                     
-                    // FALLBACK: Save to login-based cloud storage for automatic cross-device access
                     if (typeof LoginBasedCloudStorage !== 'undefined' && currentUser) {
                         const cloudStorage = new LoginBasedCloudStorage();
                         cloudStorage.savePhoenixDataForUser(phoenixData, currentUser)
@@ -1691,10 +1830,12 @@
                             .catch(error => {
                                 console.warn('⚠️ Legacy cloud sync error:', error);
                             });
-                    } else {
-                        console.log('ℹ️ No cloud storage available - data saved locally only');
                     }
                 }
+                
+                // Always save to localStorage as backup
+                localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
+                console.log('✅ Phoenix data saved to localStorage (backup)');
                 
                 return true;
                 
