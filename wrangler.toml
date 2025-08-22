@@ -1,0 +1,20 @@
+name = "phoenix-okr-api"
+main = "src/worker.js"
+compatibility_date = "2024-08-22"
+
+# D1 Database Configuration
+[[d1_databases]]
+binding = "PHOENIX_DB"
+database_name = "phoenix-okr-database"
+database_id = "your-database-id-here"
+
+# Environment Variables
+[vars]
+NODE_ENV = "production"
+API_VERSION = "v1"
+
+[build]
+command = "npm run build"
+
+[dev]
+port = 3000

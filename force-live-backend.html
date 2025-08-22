@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phoenix OKR - Force Live Backend</title>
+    <style>
+        body {
+            font-family: -apple-system, sans-serif;
+            background: #667eea;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #48bb78;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin: 10px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+        .btn-force {
+            background: #f56565;
+        }
+        .btn-force:hover {
+            background: #e53e3e;
+        }
+        code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Phoenix OKR - Force Live Backend Connection</h1>
+        
+        <div class="card">
+            <h2>🔧 Force Cloudflare Backend Connection</h2>
+            <p>Your dashboard is defaulting to GitHub Pages storage. Use these links to force connection to your Cloudflare backend:</p>
+            
+            <a href="https://apotekalpro.github.io/Strategy-Phoenix/okr-phoenix-real.html?storage=live-backend&force=true" 
+               class="btn btn-force" target="_blank">
+                🔥 Force Live Backend Dashboard
+            </a>
+            
+            <a href="https://apotekalpro.github.io/Strategy-Phoenix/okr-phoenix-cloudflare.html" 
+               class="btn" target="_blank">
+                🧪 Test Cloudflare Connection
+            </a>
+        </div>
+        
+        <div class="card">
+            <h2>📊 Your Data Status</h2>
+            <p><strong>Cloudflare Backend:</strong> ✅ Working (2 outlets: BTTGPR1, JKJSMP1)</p>
+            <p><strong>GitHub Pages:</strong> ⚠️ Local storage (4 outlets - old data)</p>
+            <p><strong>Issue:</strong> Dashboard auto-detecting GitHub Pages environment</p>
+        </div>
+        
+        <div class="card">
+            <h2>🎯 Manual Override Options</h2>
+            
+            <h3>Option 1: URL Parameters</h3>
+            <p>Add these parameters to force live backend:</p>
+            <code>?storage=live-backend&api=https://phoenix-okr-api.apotekalpro-digital.workers.dev</code>
+            
+            <h3>Option 2: Browser Console Override</h3>
+            <p>Open browser console (F12) and run:</p>
+            <code>localStorage.setItem('forceStorageMethod', 'live-backend');</code>
+            
+            <h3>Option 3: Clear Local Storage</h3>
+            <p>Open browser console (F12) and run:</p>
+            <code>localStorage.clear(); location.reload();</code>
+        </div>
+        
+        <div class="card">
+            <h2>🔍 Debug Information</h2>
+            <div id="debug-info">
+                <p>Loading debug info...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Test Cloudflare connection and show debug info
+        async function testConnection() {
+            const debugEl = document.getElementById('debug-info');
+            let debugHtml = '';
+            
+            try {
+                // Test Cloudflare API
+                const response = await fetch('https://phoenix-okr-api.apotekalpro-digital.workers.dev/api/phoenix-data');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const outlets = Object.keys(data.data.outlets || {});
+                    debugHtml += `<p>✅ <strong>Cloudflare API:</strong> Connected</p>`;
+                    debugHtml += `<p>📊 <strong>Outlets in Cloudflare:</strong> ${outlets.length} (${outlets.join(', ')})</p>`;
+                    debugHtml += `<p>🕒 <strong>Last Updated:</strong> ${data.timestamp}</p>`;
+                } else {
+                    debugHtml += `<p>❌ <strong>Cloudflare API:</strong> Error - ${data.error}</p>`;
+                }
+            } catch (error) {
+                debugHtml += `<p>❌ <strong>Cloudflare API:</strong> Connection failed - ${error.message}</p>`;
+            }
+            
+            // Check localStorage
+            const localData = localStorage.getItem('phoenix-okr-data');
+            if (localData) {
+                try {
+                    const parsed = JSON.parse(localData);
+                    const localOutlets = Object.keys(parsed.outlets || {});
+                    debugHtml += `<p>💾 <strong>Local Storage:</strong> ${localOutlets.length} outlets (${localOutlets.join(', ')})</p>`;
+                } catch (e) {
+                    debugHtml += `<p>💾 <strong>Local Storage:</strong> Invalid data</p>`;
+                }
+            } else {
+                debugHtml += `<p>💾 <strong>Local Storage:</strong> Empty</p>`;
+            }
+            
+            // Environment detection
+            debugHtml += `<p>🌐 <strong>Current Domain:</strong> ${window.location.hostname}</p>`;
+            debugHtml += `<p>🔗 <strong>Current URL:</strong> ${window.location.href}</p>`;
+            
+            debugEl.innerHTML = debugHtml;
+        }
+        
+        // Run test on page load
+        testConnection();
+    </script>
+</body>
+</html>
