@@ -936,8 +936,8 @@ async function handlePhoenixFrontend(request, env) {
     </style>
 </head>
 <body>
-    <!-- Status indicator -->
-    <div id="status" class="status online">🔥 Live Backend Connected</div>
+    <!-- Status indicator (hidden) -->
+    <div id="status" class="status online" style="display: none;">🔥 Live Backend Connected</div>
     
     <!-- Main Dashboard View -->
     <div id="dashboard-view">
@@ -950,7 +950,6 @@ async function handlePhoenixFrontend(request, env) {
                     <div class="user-info">
                         <span id="user-name">👑 Loading...</span>
                         <button class="logout-btn" onclick="logout()">Logout</button>
-                        <button class="btn btn-secondary" onclick="debugActions()">Debug</button>
                     </div>
                 </div>
                 
@@ -1006,7 +1005,6 @@ async function handlePhoenixFrontend(request, env) {
                     <h3>🏪 Phoenix Project Outlets</h3>
                     <div class="section-controls">
                         <button class="btn btn-primary" onclick="showAddOutletModal()">➕ Add Outlet to Phoenix Program</button>
-                        <button class="btn btn-secondary" onclick="shareDataCrossDevice()">🔄 Share Data Cross-Device</button>
                     </div>
                 </div>
                 
