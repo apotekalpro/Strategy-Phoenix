@@ -3,49 +3,64 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-// Read the worker.js file to extract the HTML
-const workerCode = fs.readFileSync('./src/worker.js', 'utf8');
-
-// Extract the HTML from the handlePhoenixFrontend function (more precise regex)
-const phoenixFunctionStart = workerCode.indexOf('async function handlePhoenixFrontend');
-const htmlStartIndex = workerCode.indexOf('const html = `', phoenixFunctionStart);
-
-// Find the correct ending - look for the pattern that ends the handlePhoenixFrontend function
-let htmlEndIndex = -1;
-if (htmlStartIndex !== -1) {
-  // Look for the end pattern: `;\n\n  return new Response(html
-  const returnPattern = ';\n\n  return new Response(html';
-  htmlEndIndex = workerCode.indexOf(returnPattern, htmlStartIndex);
-  if (htmlEndIndex !== -1) {
-    // Adjust to find the actual end of the template literal
-    htmlEndIndex = workerCode.lastIndexOf('`', htmlEndIndex);
+// Function to extract HTML from worker.js (reads fresh on each call)
+function extractHtmlFromWorker() {
+  // Read the worker.js file to extract the HTML
+  const workerCode = fs.readFileSync('./src/worker.js', 'utf8');
+  
+  // Extract the HTML from the handlePhoenixFrontend function (more precise regex)
+  const phoenixFunctionStart = workerCode.indexOf('async function handlePhoenixFrontend');
+  const htmlStartIndex = workerCode.indexOf('const html = `', phoenixFunctionStart);
+  
+  // Find the correct ending - look for the pattern that ends the handlePhoenixFrontend function
+  let htmlEndIndex = -1;
+  if (htmlStartIndex !== -1) {
+    // Look for the end pattern: `;\n\n  return new Response(html
+    const returnPattern = ';\n\n  return new Response(html';
+    htmlEndIndex = workerCode.indexOf(returnPattern, htmlStartIndex);
+    if (htmlEndIndex !== -1) {
+      // Adjust to find the actual end of the template literal
+      htmlEndIndex = workerCode.lastIndexOf('`', htmlEndIndex);
+    }
   }
+  
+  let html = '<h1>HTML not found</h1>';
+  
+  if (htmlStartIndex !== -1 && htmlEndIndex !== -1) {
+    const rawHtml = workerCode.substring(htmlStartIndex + 14, htmlEndIndex); // Skip 'const html = `'
+    // Process escaped characters in the template literal
+    html = rawHtml
+      .replace(/\\`/g, '`')
+      .replace(/\\\$/g, '$')
+      .replace(/\\n/g, '\n')
+      .replace(/\\t/g, '\t');
+    console.log('✅ Successfully extracted HTML from worker.js');
+    console.log(`📏 Extracted ${html.length} characters of HTML`);
+  } else {
+    console.error('❌ Failed to extract HTML from worker.js');
+    console.log('📍 htmlStartIndex:', htmlStartIndex, 'htmlEndIndex:', htmlEndIndex);
+  }
+  
+  return html;
 }
 
-let html = '<h1>HTML not found</h1>';
-
-if (htmlStartIndex !== -1 && htmlEndIndex !== -1) {
-  const rawHtml = workerCode.substring(htmlStartIndex + 14, htmlEndIndex); // Skip 'const html = `'
-  // Process escaped characters in the template literal
-  html = rawHtml
-    .replace(/\\`/g, '`')
-    .replace(/\\\$/g, '$')
-    .replace(/\\n/g, '\n')
-    .replace(/\\t/g, '\t');
-  console.log('✅ Successfully extracted HTML from worker.js');
-  console.log(`📏 Extracted ${html.length} characters of HTML`);
-} else {
-  console.error('❌ Failed to extract HTML from worker.js');
-  console.log('📍 htmlStartIndex:', htmlStartIndex, 'htmlEndIndex:', htmlEndIndex);
-}
+// Extract initial HTML
+let html = extractHtmlFromWorker();
 
 const server = http.createServer((req, res) => {
   const url = req.url;
   
   // Handle Phoenix frontend
   if (url === '/' || url === '/okr-phoenix-live.html') {
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end(html);
+    res.writeHead(200, { 
+      'Content-Type': 'text/html',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+    // Extract fresh HTML on each request for development
+    const freshHtml = extractHtmlFromWorker();
+    res.end(freshHtml);
     return;
   }
   
