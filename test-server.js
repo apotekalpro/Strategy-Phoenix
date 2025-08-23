@@ -8,8 +8,13 @@ function extractHtmlFromWorker() {
   // Read the worker.js file to extract the HTML
   const workerCode = fs.readFileSync('./src/worker.js', 'utf8');
   
-  // Extract the HTML from the handlePhoenixFrontend function (more precise regex)
+  // Extract the HTML specifically from the handlePhoenixFrontend function (NOT handleIndex)
   const phoenixFunctionStart = workerCode.indexOf('async function handlePhoenixFrontend');
+  if (phoenixFunctionStart === -1) {
+    console.error('❌ handlePhoenixFrontend function not found');
+    return '<h1>Phoenix Frontend function not found</h1>';
+  }
+  
   const htmlStartIndex = workerCode.indexOf('const html = `', phoenixFunctionStart);
   
   // Find the correct ending - look for the pattern that ends the handlePhoenixFrontend function
@@ -34,11 +39,19 @@ function extractHtmlFromWorker() {
       .replace(/\\\$/g, '$')
       .replace(/\\n/g, '\n')
       .replace(/\\t/g, '\t');
-    console.log('✅ Successfully extracted HTML from worker.js');
-    console.log(`📏 Extracted ${html.length} characters of HTML`);
+    
+    // Validate we got the right HTML (Phoenix dashboard, not index page)
+    if (html.includes('Phoenix Project Dashboard') && html.includes('outlets-grid')) {
+      console.log('✅ Successfully extracted Phoenix Frontend HTML');
+      console.log(`📏 Extracted ${html.length} characters of HTML`);
+    } else {
+      console.error('❌ Wrong HTML extracted - got index page instead of Phoenix frontend');
+      console.log('🔍 HTML preview:', html.substring(0, 200));
+      html = '<h1>Wrong HTML template extracted</h1>';
+    }
   } else {
     console.error('❌ Failed to extract HTML from worker.js');
-    console.log('📍 htmlStartIndex:', htmlStartIndex, 'htmlEndIndex:', htmlEndIndex);
+    console.log('📍 phoenixFunctionStart:', phoenixFunctionStart, 'htmlStartIndex:', htmlStartIndex, 'htmlEndIndex:', htmlEndIndex);
   }
   
   return html;
