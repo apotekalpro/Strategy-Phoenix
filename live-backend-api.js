@@ -7,7 +7,7 @@ class LiveBackendAPI {
     constructor() {
         // Always use Cloudflare Workers URL, never GitHub Pages
         this.baseURL = 'https://phoenix-okr-api.apotekalpro-digital.workers.dev';
-        this.apiPrefix = '';
+        this.apiPrefix = '/api';
         this.isOnline = true;
         this.localStorageKey = 'phoenix-local-backup';
         this.syncInProgress = false;
