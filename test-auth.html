@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Authentication</title>
+</head>
+<body>
+    <h1>Test Authentication Flow</h1>
+    <div id="status">Testing...</div>
+    
+    <script>
+        // Test what happens when we login programmatically
+        const testAuth = () => {
+            const userData = {
+                username: 'testuser',
+                type: 'hq',
+                role: 'ADMIN',
+                name: 'TEST USER',
+                email: 'test@example.com'
+            };
+            
+            sessionStorage.setItem('userAuth', JSON.stringify(userData));
+            document.getElementById('status').innerHTML = 'Authentication set. Checking...';
+            
+            // Check if it's stored
+            const stored = sessionStorage.getItem('userAuth');
+            if (stored) {
+                document.getElementById('status').innerHTML = 'Auth stored successfully: ' + stored;
+            } else {
+                document.getElementById('status').innerHTML = 'Failed to store auth';
+            }
+        };
+        
+        testAuth();
+    </script>
+</body>
+</html>

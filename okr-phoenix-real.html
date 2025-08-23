@@ -1360,11 +1360,15 @@
                 
                 console.log('🔥 Forcing Live Backend environment (Cloudflare Workers)');
                 
-                // Initialize Live Backend API - Force connection regardless of hostname
+                // Create and Initialize Live Backend API instance - Force connection regardless of hostname
                 try {
-                    if (typeof liveBackendAPI !== 'undefined') {
+                    // Create the LiveBackendAPI instance and make it globally accessible
+                    window.liveBackendAPI = new LiveBackendAPI();
+                    console.log('🔥 LiveBackendAPI instance created and available globally');
+                    
+                    if (window.liveBackendAPI) {
                         console.log('🔥 Initializing Live Backend API connection to Cloudflare...');
-                        const backendStatus = await liveBackendAPI.checkServerStatus();
+                        const backendStatus = await window.liveBackendAPI.checkServerStatus();
                         if (backendStatus) {
                             console.log('✅ Live Backend API connected to Cloudflare successfully');
                             storageMethod = 'live-backend';
@@ -1682,10 +1686,10 @@
                     }
                 } else if (storageMethod === 'live-backend') {
                     // Live Backend mode - full functionality
-                    if (typeof liveBackendAPI !== 'undefined') {
+                    if (window.liveBackendAPI) {
                         try {
                             console.log('🌐 Loading from Live Backend API...');
-                            const liveBackendData = await liveBackendAPI.loadPhoenixData();
+                            const liveBackendData = await window.liveBackendAPI.loadPhoenixData();
                             
                             if (liveBackendData && Object.keys(liveBackendData.outlets || {}).length > 0) {
                                 phoenixData = liveBackendData;
@@ -1711,10 +1715,10 @@
                     console.log('📋 Found existing data in localStorage:', Object.keys(phoenixData.outlets).length, 'outlets');
                     
                     // Automatically migrate local data to live backend
-                    if (typeof liveBackendAPI !== 'undefined') {
+                    if (window.liveBackendAPI) {
                         console.log('🔄 Migrating localStorage data to live backend...');
                         try {
-                            const migrationResult = await liveBackendAPI.savePhoenixData(phoenixData);
+                            const migrationResult = await window.liveBackendAPI.savePhoenixData(phoenixData);
                             if (migrationResult.success && !migrationResult.offline) {
                                 console.log('✅ Successfully migrated localStorage data to live backend!');
                                 showNotification('✅ Data migrated to live backend for cross-device access!', 'success');
@@ -1740,9 +1744,9 @@
                         // Update localStorage and try to migrate to live backend
                         localStorage.setItem('phoenixProjectData', JSON.stringify(phoenixData));
                         
-                        if (typeof liveBackendAPI !== 'undefined') {
+                        if (window.liveBackendAPI) {
                             try {
-                                await liveBackendAPI.savePhoenixData(phoenixData);
+                                await window.liveBackendAPI.savePhoenixData(phoenixData);
                                 console.log('✅ Migrated legacy cloud data to live backend');
                             } catch (error) {
                                 console.warn('⚠️ Could not migrate legacy data to live backend:', error);
@@ -1796,8 +1800,8 @@
                     }
                 } else if (storageMethod === 'live-backend') {
                     // Live Backend mode - full functionality
-                    if (typeof liveBackendAPI !== 'undefined') {
-                        liveBackendAPI.savePhoenixData(phoenixData)
+                    if (window.liveBackendAPI) {
+                        window.liveBackendAPI.savePhoenixData(phoenixData)
                             .then((result) => {
                                 if (result.success) {
                                     if (result.offline) {
