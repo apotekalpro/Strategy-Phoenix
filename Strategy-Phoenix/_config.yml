@@ -32,6 +32,7 @@ plugins:
 # Site settings
 lang: en
 encoding: utf-8
+# Force rebuild timestamp: 1727065892
 
 # Navigation
 header_pages:
