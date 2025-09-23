@@ -798,9 +798,20 @@
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
             border-radius: 4px;
             transition: width 0.8s ease;
+        }
+
+        .progress-fill.green {
+            background: linear-gradient(90deg, #48bb78, #38a169);
+        }
+
+        .progress-fill.orange {
+            background: linear-gradient(90deg, #ed8936, #dd6b20);
+        }
+
+        .progress-fill.red {
+            background: linear-gradient(90deg, #f56565, #e53e3e);
         }
 
         .metric-values {
@@ -4881,6 +4892,13 @@ ${localBackup ? '✅ Local Backup: Available' : '⚠️ Local Backup: Not found'
             }
         }
 
+        // Get progress bar color class based on percentage
+        function getProgressColorClass(percentage) {
+            if (percentage >= 110) return 'green';
+            if (percentage >= 100) return 'orange';
+            return 'red';
+        }
+
         // Tab switching functionality
         function switchTab(tabName) {
             // Hide all tab contents
@@ -4908,38 +4926,60 @@ ${localBackup ? '✅ Local Backup: Available' : '⚠️ Local Backup: Not found'
         // Progress summary functionality
         function loadProgressSummaryData() {
             try {
-                if (!phoenixOutlets || phoenixOutlets.length === 0) {
-                    document.getElementById('total-progress-metrics').innerHTML = '<p style="color: #718096; font-style: italic;">No Phoenix outlets data available</p>';
+                console.log('🔍 Loading progress summary data...');
+                console.log('phoenixData:', phoenixData);
+                console.log('phoenixOutlets array:', phoenixOutlets);
+                console.log('allOutlets:', allOutlets);
+                
+                // Check if phoenixData exists and has outlets
+                if (!phoenixData || !phoenixData.outlets || Object.keys(phoenixData.outlets).length === 0) {
+                    const debugInfo = `
+                        <div style="background: #f7fafc; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                            <strong>Debug Info:</strong><br>
+                            • phoenixData exists: ${!!phoenixData}<br>
+                            • phoenixData.outlets exists: ${!!(phoenixData && phoenixData.outlets)}<br>
+                            • phoenixData.outlets count: ${phoenixData && phoenixData.outlets ? Object.keys(phoenixData.outlets).length : 0}<br>
+                            • phoenixOutlets array length: ${phoenixOutlets ? phoenixOutlets.length : 0}<br>
+                            • allOutlets length: ${allOutlets ? allOutlets.length : 0}
+                        </div>
+                        <p style="color: #718096; font-style: italic;">No Phoenix outlets data available. Please ensure outlets are loaded in the main dashboard.</p>
+                    `;
+                    document.getElementById('total-progress-metrics').innerHTML = debugInfo;
                     document.getElementById('outlet-progress-list').innerHTML = '<p style="color: #718096; font-style: italic;">No outlet data available</p>';
                     return;
                 }
 
                 // Calculate total metrics
-                let totalBaseline = { revenue: 0, transactions: 0 };
-                let totalTerm1 = { revenue: 0, transactions: 0 };
-                let totalTerm2 = { revenue: 0, transactions: 0 };
-                let totalTerm3 = { revenue: 0, transactions: 0 };
+                let totalBaseline = { revenue: 0, trano: 0 };
+                let totalTerm1 = { revenue: 0, trano: 0 };
+                let totalTerm2 = { revenue: 0, trano: 0 };
+                let totalTerm3 = { revenue: 0, trano: 0 };
 
                 const outletsWithProgress = [];
 
-                phoenixOutlets.forEach(outlet => {
-                    if (outlet.data && outlet.data.terms) {
-                        const baseline = outlet.data.terms.baseline || { revenue: 0, transactions: 0 };
-                        const term1 = outlet.data.terms.term1 || { revenue: 0, transactions: 0 };
-                        const term2 = outlet.data.terms.term2 || { revenue: 0, transactions: 0 };
-                        const term3 = outlet.data.terms.term3 || { revenue: 0, transactions: 0 };
+                // Iterate through phoenixData.outlets instead of phoenixOutlets array
+                Object.keys(phoenixData.outlets).forEach(outletCode => {
+                    const outlet = phoenixData.outlets[outletCode];
+                    if (outlet && outlet.performanceData) {
+                        const baseline = outlet.performanceData.baseline || { revenue: 0, trano: 0 };
+                        const term1 = outlet.performanceData.term1 || { revenue: 0, trano: 0 };
+                        const term2 = outlet.performanceData.term2 || { revenue: 0, trano: 0 };
+                        const term3 = outlet.performanceData.term3 || { revenue: 0, trano: 0 };
 
                         totalBaseline.revenue += parseFloat(baseline.revenue) || 0;
-                        totalBaseline.transactions += parseFloat(baseline.transactions) || 0;
+                        totalBaseline.trano += parseFloat(baseline.trano) || 0;
                         totalTerm1.revenue += parseFloat(term1.revenue) || 0;
-                        totalTerm1.transactions += parseFloat(term1.transactions) || 0;
+                        totalTerm1.trano += parseFloat(term1.trano) || 0;
                         totalTerm2.revenue += parseFloat(term2.revenue) || 0;
-                        totalTerm2.transactions += parseFloat(term2.transactions) || 0;
+                        totalTerm2.trano += parseFloat(term2.trano) || 0;
                         totalTerm3.revenue += parseFloat(term3.revenue) || 0;
-                        totalTerm3.transactions += parseFloat(term3.transactions) || 0;
+                        totalTerm3.trano += parseFloat(term3.trano) || 0;
 
+                        // Find outlet name from allOutlets or use code as fallback
+                        const outletInfo = allOutlets.find(o => o.code === outletCode) || { name: outletCode, code: outletCode };
+                        
                         outletsWithProgress.push({
-                            outlet,
+                            outlet: outletInfo,
                             baseline,
                             term1,
                             term2,
@@ -4948,32 +4988,69 @@ ${localBackup ? '✅ Local Backup: Available' : '⚠️ Local Backup: Not found'
                     }
                 });
 
-                // Display total metrics
+                // Calculate forecasted totals based on available term data
+                let totalForecastRevenue = 0;
+                let totalForecastTrano = 0;
+                let forecastLabel = '';
+
+                if (totalTerm3.revenue > 0 || totalTerm3.trano > 0) {
+                    // Full month data available (Term 1 + Term 2 + Term 3)
+                    totalForecastRevenue = totalTerm1.revenue + totalTerm2.revenue + totalTerm3.revenue;
+                    totalForecastTrano = totalTerm1.trano + totalTerm2.trano + totalTerm3.trano;
+                    forecastLabel = 'Actual Full Month';
+                } else if (totalTerm2.revenue > 0 || totalTerm2.trano > 0) {
+                    // 20-day data available, forecast to full month (Term 1 + Term 2) × 1.5
+                    totalForecastRevenue = (totalTerm1.revenue + totalTerm2.revenue) * 1.5;
+                    totalForecastTrano = (totalTerm1.trano + totalTerm2.trano) * 1.5;
+                    forecastLabel = 'Forecasted from 20 days';
+                } else if (totalTerm1.revenue > 0 || totalTerm1.trano > 0) {
+                    // 10-day data available, forecast to full month (Term 1 × 3)
+                    totalForecastRevenue = totalTerm1.revenue * 3;
+                    totalForecastTrano = totalTerm1.trano * 3;
+                    forecastLabel = 'Forecasted from 10 days';
+                } else {
+                    // No data available
+                    totalForecastRevenue = 0;
+                    totalForecastTrano = 0;
+                    forecastLabel = 'No data available';
+                }
+
+                // Calculate progress percentages
+                const revenueProgressPct = totalBaseline.revenue > 0 ? ((totalForecastRevenue / totalBaseline.revenue) * 100) : 0;
+                const tranoProgressPct = totalBaseline.trano > 0 ? ((totalForecastTrano / totalBaseline.trano) * 100) : 0;
+
+                // Display total metrics with forecasted values and color coding
                 const totalMetricsHtml = `
                     <div class="metric-progress">
                         <div class="metric-label">
-                            <span>💰 Total Revenue Progress</span>
-                            <span>Rp ${(totalTerm3.revenue || 0).toLocaleString()}</span>
+                            <span>💰 Total Revenue Progress (${forecastLabel})</span>
+                            <span>Rp ${Math.round(totalForecastRevenue).toLocaleString()}</span>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${totalBaseline.revenue > 0 ? Math.min((totalTerm3.revenue / totalBaseline.revenue) * 100, 100) : 0}%"></div>
+                            <div class="progress-fill ${getProgressColorClass(revenueProgressPct)}" style="width: ${Math.min(revenueProgressPct, 100)}%"></div>
                         </div>
                         <div class="metric-values">
                             <span>Baseline: Rp ${totalBaseline.revenue.toLocaleString()}</span>
-                            <span>Current: ${totalBaseline.revenue > 0 ? ((totalTerm3.revenue / totalBaseline.revenue) * 100).toFixed(1) : 0}%</span>
+                            <span style="color: ${revenueProgressPct >= 110 ? '#38a169' : revenueProgressPct >= 100 ? '#dd6b20' : '#e53e3e'}; font-weight: 600;">Progress: ${revenueProgressPct.toFixed(1)}%</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: #718096; margin-top: 5px;">
+                            Actual - Term 1: Rp ${totalTerm1.revenue.toLocaleString()} | Term 2: Rp ${totalTerm2.revenue.toLocaleString()} | Term 3: Rp ${totalTerm3.revenue.toLocaleString()}
                         </div>
                     </div>
                     <div class="metric-progress">
                         <div class="metric-label">
-                            <span>📊 Total Transactions Progress</span>
-                            <span>${totalTerm3.transactions.toLocaleString()}</span>
+                            <span>📊 Total Transactions Progress (${forecastLabel})</span>
+                            <span>${Math.round(totalForecastTrano).toLocaleString()}</span>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${totalBaseline.transactions > 0 ? Math.min((totalTerm3.transactions / totalBaseline.transactions) * 100, 100) : 0}%"></div>
+                            <div class="progress-fill ${getProgressColorClass(tranoProgressPct)}" style="width: ${Math.min(tranoProgressPct, 100)}%"></div>
                         </div>
                         <div class="metric-values">
-                            <span>Baseline: ${totalBaseline.transactions.toLocaleString()}</span>
-                            <span>Current: ${totalBaseline.transactions > 0 ? ((totalTerm3.transactions / totalBaseline.transactions) * 100).toFixed(1) : 0}%</span>
+                            <span>Baseline: ${totalBaseline.trano.toLocaleString()}</span>
+                            <span style="color: ${tranoProgressPct >= 110 ? '#38a169' : tranoProgressPct >= 100 ? '#dd6b20' : '#e53e3e'}; font-weight: 600;">Progress: ${tranoProgressPct.toFixed(1)}%</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: #718096; margin-top: 5px;">
+                            Actual - Term 1: ${totalTerm1.trano.toLocaleString()} | Term 2: ${totalTerm2.trano.toLocaleString()} | Term 3: ${totalTerm3.trano.toLocaleString()}
                         </div>
                     </div>
                 `;
@@ -4981,37 +5058,73 @@ ${localBackup ? '✅ Local Backup: Available' : '⚠️ Local Backup: Not found'
 
                 // Display individual outlet progress
                 const outletProgressHtml = outletsWithProgress.map(item => {
-                    const revenueProgress = item.baseline.revenue > 0 ? ((item.term3.revenue / item.baseline.revenue) * 100) : 0;
-                    const transactionProgress = item.baseline.transactions > 0 ? ((item.term3.transactions / item.baseline.transactions) * 100) : 0;
+                    // Calculate forecasted performance based on available term data
+                    let forecastRevenue = 0;
+                    let forecastTrano = 0;
+                    let outletForecastLabel = '';
+
+                    if (item.term3.revenue > 0 || item.term3.trano > 0) {
+                        // Full month data available (Term 1 + Term 2 + Term 3)
+                        forecastRevenue = item.term1.revenue + item.term2.revenue + item.term3.revenue;
+                        forecastTrano = item.term1.trano + item.term2.trano + item.term3.trano;
+                        outletForecastLabel = 'Actual Full Month';
+                    } else if (item.term2.revenue > 0 || item.term2.trano > 0) {
+                        // 20-day data available, forecast to full month (Term 1 + Term 2) × 1.5
+                        forecastRevenue = (item.term1.revenue + item.term2.revenue) * 1.5;
+                        forecastTrano = (item.term1.trano + item.term2.trano) * 1.5;
+                        outletForecastLabel = 'Forecasted (20d→30d)';
+                    } else if (item.term1.revenue > 0 || item.term1.trano > 0) {
+                        // 10-day data available, forecast to full month (Term 1 × 3)
+                        forecastRevenue = item.term1.revenue * 3;
+                        forecastTrano = item.term1.trano * 3;
+                        outletForecastLabel = 'Forecasted (10d→30d)';
+                    } else {
+                        // No data available
+                        forecastRevenue = 0;
+                        forecastTrano = 0;
+                        outletForecastLabel = 'No Data';
+                    }
+                    
+                    const revenueProgress = item.baseline.revenue > 0 ? ((forecastRevenue / item.baseline.revenue) * 100) : 0;
+                    const tranoProgress = item.baseline.trano > 0 ? ((forecastTrano / item.baseline.trano) * 100) : 0;
                     
                     return `
                         <div class="progress-card" style="margin-bottom: 20px;">
-                            <h4 style="color: #4a5568; margin-bottom: 15px;">${item.outlet.name} (${item.outlet.code})</h4>
+                            <h4 style="color: #4a5568; margin-bottom: 15px;">
+                                ${item.outlet.name} (${item.outlet.code})
+                                <span style="font-size: 0.75rem; color: #9ca3af; font-weight: normal;"> - ${outletForecastLabel}</span>
+                            </h4>
                             <div class="progress-metrics">
                                 <div class="metric-progress">
                                     <div class="metric-label">
-                                        <span>💰 Revenue</span>
-                                        <span>Rp ${(item.term3.revenue || 0).toLocaleString()}</span>
+                                        <span>💰 Revenue (Forecasted)</span>
+                                        <span>Rp ${Math.round(forecastRevenue).toLocaleString()}</span>
                                     </div>
                                     <div class="progress-bar">
-                                        <div class="progress-fill" style="width: ${Math.min(revenueProgress, 100)}%"></div>
+                                        <div class="progress-fill ${getProgressColorClass(revenueProgress)}" style="width: ${Math.min(revenueProgress, 100)}%"></div>
                                     </div>
                                     <div class="metric-values">
                                         <span>Baseline: Rp ${item.baseline.revenue.toLocaleString()}</span>
-                                        <span>${revenueProgress.toFixed(1)}%</span>
+                                        <span style="color: ${revenueProgress >= 110 ? '#38a169' : revenueProgress >= 100 ? '#dd6b20' : '#e53e3e'}; font-weight: 600;">${revenueProgress.toFixed(1)}%</span>
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: #718096; margin-top: 3px;">
+                                        Actual - T1: Rp ${item.term1.revenue.toLocaleString()} | T2: Rp ${item.term2.revenue.toLocaleString()} | T3: Rp ${item.term3.revenue.toLocaleString()}
                                     </div>
                                 </div>
                                 <div class="metric-progress">
                                     <div class="metric-label">
-                                        <span>📊 Transactions</span>
-                                        <span>${item.term3.transactions.toLocaleString()}</span>
+                                        <span>📊 Transactions (Forecasted)</span>
+                                        <span>${Math.round(forecastTrano).toLocaleString()}</span>
                                     </div>
                                     <div class="progress-bar">
-                                        <div class="progress-fill" style="width: ${Math.min(transactionProgress, 100)}%"></div>
+                                        <div class="progress-fill ${getProgressColorClass(tranoProgress)}" style="width: ${Math.min(tranoProgress, 100)}%"></div>
                                     </div>
                                     <div class="metric-values">
-                                        <span>Baseline: ${item.baseline.transactions.toLocaleString()}</span>
-                                        <span>${transactionProgress.toFixed(1)}%</span>
+                                        <span>Baseline: ${item.baseline.trano.toLocaleString()}</span>
+                                        <span style="color: ${tranoProgress >= 110 ? '#38a169' : tranoProgress >= 100 ? '#dd6b20' : '#e53e3e'}; font-weight: 600;">${tranoProgress.toFixed(1)}%</span>
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: #718096; margin-top: 3px;">
+                                        Actual - T1: ${item.term1.trano.toLocaleString()} | T2: ${item.term2.trano.toLocaleString()} | T3: ${item.term3.trano.toLocaleString()}
                                     </div>
                                 </div>
                             </div>
