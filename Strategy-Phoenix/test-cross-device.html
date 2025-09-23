@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cross-Device Sync Test - Phoenix OKR</title>
+    <script src="live-backend-api.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .status.online {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        
+        .status.offline {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+        
+        .data-section {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .outlet-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+            transition: transform 0.2s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        .btn.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        
+        .btn.warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+        
+        .log {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 Phoenix OKR - Cross-Device Sync Test</h1>
+            <p>Test real-time data synchronization across devices</p>
+        </div>
+        
+        <div id="connection-status" class="status offline">
+            🔍 Checking live backend connection...
+        </div>
+        
+        <div class="data-section">
+            <h3>📋 Current Phoenix Data</h3>
+            <div id="data-display">
+                <p>Loading data...</p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" onclick="loadData()">🔄 Reload Data</button>
+                <button class="btn success" onclick="addTestOutlet()">➕ Add Test Outlet</button>
+                <button class="btn warning" onclick="clearAllData()">🗑️ Clear All Data</button>
+            </div>
+        </div>
+        
+        <div class="data-section">
+            <h3>🧪 Test Instructions</h3>
+            <ol>
+                <li><strong>Open this page on Device A</strong> - You should see Phoenix data loaded from live backend</li>
+                <li><strong>Add a test outlet</strong> - Click "Add Test Outlet" to create new data</li>
+                <li><strong>Open this same URL on Device B</strong> - Data should automatically appear</li>
+                <li><strong>Modify data on either device</strong> - Changes should sync automatically</li>
+                <li><strong>Verify cross-device sync</strong> - Both devices should show identical data</li>
+            </ol>
+        </div>
+        
+        <div class="log" id="log-output">
+            <div>📋 Console Log:</div>
+        </div>
+    </div>
+    
+    <script>
+        let phoenixData = { outlets: {} };
+        
+        // Override console.log to show in page
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const logElement = document.getElementById('log-output');
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `${new Date().toLocaleTimeString()} - ${args.join(' ')}`;
+            logElement.appendChild(logEntry);
+            logElement.scrollTop = logElement.scrollHeight;
+        };
+        
+        // Initialize
+        async function initialize() {
+            console.log('🚀 Initializing cross-device sync test...');
+            
+            try {
+                // Check live backend status
+                const status = await liveBackendAPI.checkServerStatus();
+                updateConnectionStatus(liveBackendAPI.isOnline);
+                
+                if (liveBackendAPI.isOnline) {
+                    console.log('✅ Live backend is online');
+                } else {
+                    console.log('⚠️ Live backend is offline, using localStorage');
+                }
+                
+                // Load data
+                await loadData();
+                
+            } catch (error) {
+                console.error('❌ Initialization failed:', error);
+                updateConnectionStatus(false);
+            }
+        }
+        
+        // Update connection status
+        function updateConnectionStatus(isOnline) {
+            const statusElement = document.getElementById('connection-status');
+            
+            if (isOnline) {
+                statusElement.className = 'status online';
+                statusElement.innerHTML = '🟢 Live Backend Connected - Cross-device sync active';
+            } else {
+                statusElement.className = 'status offline';
+                statusElement.innerHTML = '🔴 Offline Mode - Using local storage only';
+            }
+        }
+        
+        // Load data from live backend
+        async function loadData() {
+            try {
+                console.log('📥 Loading Phoenix data from live backend...');
+                phoenixData = await liveBackendAPI.loadPhoenixData();
+                displayData();
+                console.log(`✅ Loaded ${Object.keys(phoenixData.outlets).length} outlets`);
+            } catch (error) {
+                console.error('❌ Failed to load data:', error);
+                displayData();
+            }
+        }
+        
+        // Display data on page
+        function displayData() {
+            const displayElement = document.getElementById('data-display');
+            const outlets = Object.keys(phoenixData.outlets);
+            
+            if (outlets.length === 0) {
+                displayElement.innerHTML = '<p style="color: #666; font-style: italic;">No Phoenix outlets found. Add a test outlet to begin.</p>';
+                return;
+            }
+            
+            let html = `<div style="margin-bottom: 10px; font-weight: 600;">Total outlets: ${outlets.length}</div>`;
+            
+            outlets.forEach(outletCode => {
+                const outlet = phoenixData.outlets[outletCode];
+                const lastUpdated = outlet.lastUpdated ? new Date(outlet.lastUpdated).toLocaleString() : 'Never';
+                
+                html += `
+                    <div class="outlet-card">
+                        <h4>🏪 ${outletCode}</h4>
+                        ${outlet.okr ? `
+                            <p><strong>Objective:</strong> ${outlet.okr.objective}</p>
+                            <p><strong>Progress:</strong> ${outlet.okr.progress || 0}%</p>
+                        ` : '<p><em>No OKR data</em></p>'}
+                        <p><small><strong>Last updated:</strong> ${lastUpdated}</small></p>
+                    </div>
+                `;
+            });
+            
+            displayElement.innerHTML = html;
+        }
+        
+        // Add test outlet
+        async function addTestOutlet() {
+            try {
+                const timestamp = new Date().toISOString();
+                const testCode = `TEST${Date.now().toString().slice(-4)}`; // Last 4 digits of timestamp
+                
+                console.log(`➕ Adding test outlet: ${testCode}`);
+                
+                phoenixData.outlets[testCode] = {
+                    lastUpdated: timestamp,
+                    okr: {
+                        objective: `Test Objective ${testCode}`,
+                        keyResults: [
+                            'Test Key Result 1',
+                            'Test Key Result 2',
+                            'Test Key Result 3'
+                        ],
+                        progress: Math.floor(Math.random() * 100),
+                        actionPlans: {
+                            kr1: [
+                                { description: 'Test action plan item 1', completed: false },
+                                { description: 'Test action plan item 2', completed: true }
+                            ]
+                        }
+                    }
+                };
+                
+                // Save to live backend
+                const result = await liveBackendAPI.savePhoenixData(phoenixData);
+                
+                if (result.success) {
+                    console.log(`✅ Test outlet ${testCode} saved successfully`);
+                    displayData(); // Update display
+                } else {
+                    console.error('❌ Failed to save test outlet');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error adding test outlet:', error);
+            }
+        }
+        
+        // Clear all data
+        async function clearAllData() {
+            if (confirm('⚠️ Are you sure you want to clear ALL Phoenix data? This will affect all devices!')) {
+                try {
+                    console.log('🗑️ Clearing all Phoenix data...');
+                    
+                    phoenixData = { outlets: {} };
+                    const result = await liveBackendAPI.savePhoenixData(phoenixData);
+                    
+                    if (result.success) {
+                        console.log('✅ All data cleared successfully');
+                        displayData();
+                    } else {
+                        console.error('❌ Failed to clear data');
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Error clearing data:', error);
+                }
+            }
+        }
+        
+        // Auto-refresh every 10 seconds to show real-time sync
+        setInterval(async () => {
+            try {
+                const newData = await liveBackendAPI.loadPhoenixData();
+                const currentOutletCount = Object.keys(phoenixData.outlets).length;
+                const newOutletCount = Object.keys(newData.outlets).length;
+                
+                if (newOutletCount !== currentOutletCount) {
+                    console.log(`🔄 Data changed detected: ${currentOutletCount} → ${newOutletCount} outlets`);
+                    phoenixData = newData;
+                    displayData();
+                }
+            } catch (error) {
+                // Silently fail for auto-refresh
+            }
+        }, 10000);
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initialize);
+    </script>
+</body>
+</html>

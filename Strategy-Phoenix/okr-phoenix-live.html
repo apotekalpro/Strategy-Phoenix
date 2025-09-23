@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phoenix Project Dashboard - Live Backend Version</title>
+    
+    <!-- Include Live Backend API -->
+    <script src="live-backend-api.js"></script>
+    <script src="github-api.js"></script>
+    <script src="config.js"></script>
+    
+    <style>
+        /* Connection Status Indicator */
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .connection-status.online {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+        }
+        
+        .connection-status.offline {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 0 2px 10px rgba(239, 68, 68, 0.3);
+        }
+        
+        .connection-status.syncing {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* Live Backend Features Panel */
+        .live-features-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .live-features-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .feature-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .feature-icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+        
+        .feature-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .feature-desc {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+        
+        /* API Status Panel */
+        .api-status-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .api-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .api-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        
+        .api-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
+        }
+        
+        .api-btn.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        
+        .api-btn.warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+        
+        .api-btn.danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        
+        /* Notification System */
+        .notification {
+            position: fixed;
+            top: 60px;
+            right: 10px;
+            z-index: 1001;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: white;
+            max-width: 300px;
+            animation: slideIn 0.3s ease;
+            transition: all 0.3s ease;
+        }
+        
+        .notification.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        
+        .notification.warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+        
+        .notification.error {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Rest of the original styles would be included here */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .dashboard-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .dashboard-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #4a5568;
+        }
+        
+        .logout-btn {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .logout-btn:hover {
+            background: #c53030;
+            transform: translateY(-1px);
+        }
+        
+        /* Basic card styles */
+        .outlet-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .outlet-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .outlet-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        /* Loading spinner */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            color: #4a5568;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Connection Status Indicator -->
+    <div id="connection-status" class="connection-status online">
+        🔗 Live Backend Connected
+    </div>
+    
+    <div class="dashboard-container">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div class="header-top">
+                <h1 class="dashboard-title">
+                    🔥 Phoenix Project Dashboard - Live Backend
+                </h1>
+                <div class="user-info">
+                    <span id="user-display">Loading...</span>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Live Backend Features Panel -->
+        <div class="live-features-panel">
+            <div class="live-features-title">
+                ⚡ Live Backend Features
+            </div>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <div class="feature-title">Real-time Sync</div>
+                    <div class="feature-desc">Automatic data synchronization across all devices</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <div class="feature-title">Cross-device Access</div>
+                    <div class="feature-desc">Access your data from any browser or device</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💾</div>
+                    <div class="feature-title">Auto Backup</div>
+                    <div class="feature-desc">Automatic backups with version history</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-title">Live API</div>
+                    <div class="feature-desc">RESTful API for all OKR operations</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- API Status Panel -->
+        <div class="api-status-panel">
+            <div class="live-features-title">
+                📡 Live Backend Control Panel
+            </div>
+            <div id="api-status-content">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading backend status...
+                </div>
+            </div>
+            <div class="api-controls">
+                <button class="api-btn" onclick="checkBackendStatus()">🔍 Check Status</button>
+                <button class="api-btn success" onclick="testLiveBackend()">🧪 Test API</button>
+                <button class="api-btn warning" onclick="syncData()">🔄 Sync Data</button>
+                <button class="api-btn" onclick="exportPhoenixData()">📤 Export Data</button>
+                <button class="api-btn danger" onclick="clearAllData()">🗑️ Clear Data</button>
+            </div>
+        </div>
+        
+        <!-- Phoenix Outlets Display -->
+        <div id="phoenix-dashboard">
+            <div class="loading">
+                <div class="spinner"></div>
+                Loading Phoenix OKR data from live backend...
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Global variables
+        let phoenixData = { outlets: {} };
+        let currentUser = null;
+        let userPermissions = {};
+        let connectionCheckInterval = null;
+        
+        // Initialize dashboard
+        async function initializeDashboard() {
+            try {
+                console.log('🚀 Initializing Phoenix Live Backend Dashboard...');
+                
+                // Check authentication
+                const userAuth = sessionStorage.getItem('userAuth');
+                if (!userAuth) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                currentUser = JSON.parse(userAuth);
+                document.getElementById('user-display').textContent = `Welcome, ${currentUser.username || currentUser.outletCode}`;
+                
+                // Initialize live backend API
+                await initializeLiveBackend();
+                
+                // Load Phoenix data from live backend
+                await loadPhoenixDataFromBackend();
+                
+                // Start periodic connection checks
+                startConnectionMonitoring();
+                
+                // Render dashboard
+                renderPhoenixDashboard();
+                
+                console.log('✅ Phoenix Live Backend Dashboard initialized successfully');
+                
+            } catch (error) {
+                console.error('❌ Dashboard initialization failed:', error);
+                showNotification('Failed to initialize dashboard', 'error');
+            }
+        }
+        
+        // Initialize live backend connection
+        async function initializeLiveBackend() {
+            try {
+                console.log('🔌 Initializing live backend connection...');
+                
+                // Check if live backend API is available
+                if (typeof liveBackendAPI === 'undefined') {
+                    throw new Error('Live Backend API not loaded');
+                }
+                
+                // Test connection
+                const status = await liveBackendAPI.checkServerStatus();
+                updateConnectionStatus(liveBackendAPI.isOnline);
+                
+                // Display API status
+                await displayAPIStatus();
+                
+                console.log('✅ Live backend connection established');
+                
+            } catch (error) {
+                console.error('❌ Live backend initialization failed:', error);
+                updateConnectionStatus(false);
+                showNotification('Live backend unavailable, using offline mode', 'warning');
+            }
+        }
+        
+        // Load Phoenix data from live backend
+        async function loadPhoenixDataFromBackend() {
+            try {
+                console.log('📥 Loading Phoenix data from live backend...');
+                updateConnectionStatus('syncing');
+                
+                phoenixData = await liveBackendAPI.loadPhoenixData();
+                
+                console.log(`✅ Loaded Phoenix data: ${Object.keys(phoenixData.outlets).length} outlets`);
+                updateConnectionStatus(liveBackendAPI.isOnline);
+                
+                if (liveBackendAPI.isOnline) {
+                    showNotification(`Loaded ${Object.keys(phoenixData.outlets).length} outlets from live backend`, 'success');
+                } else {
+                    showNotification('Using cached data (offline mode)', 'warning');
+                }
+                
+            } catch (error) {
+                console.error('❌ Failed to load Phoenix data:', error);
+                showNotification('Failed to load data', 'error');
+                phoenixData = { outlets: {} };
+            }
+        }
+        
+        // Save Phoenix data to live backend
+        async function savePhoenixDataToBackend(description = 'Phoenix data updated') {
+            try {
+                console.log(`💾 Saving Phoenix data: ${description}`);
+                updateConnectionStatus('syncing');
+                
+                const result = await liveBackendAPI.savePhoenixData(phoenixData);
+                
+                if (result.success) {
+                    if (result.offline) {
+                        showNotification('Data saved locally (offline)', 'warning');
+                    } else {
+                        showNotification('Data saved to live backend', 'success');
+                    }
+                } else {
+                    showNotification('Failed to save data', 'error');
+                }
+                
+                updateConnectionStatus(liveBackendAPI.isOnline);
+                return result.success;
+                
+            } catch (error) {
+                console.error('❌ Failed to save Phoenix data:', error);
+                showNotification('Save failed', 'error');
+                updateConnectionStatus(liveBackendAPI.isOnline);
+                return false;
+            }
+        }
+        
+        // Render Phoenix dashboard
+        function renderPhoenixDashboard() {
+            const dashboardElement = document.getElementById('phoenix-dashboard');
+            const outlets = Object.keys(phoenixData.outlets);
+            
+            if (outlets.length === 0) {
+                dashboardElement.innerHTML = `
+                    <div class="outlet-card" style="text-align: center; padding: 40px;">
+                        <h3>📋 No Phoenix OKR Data Found</h3>
+                        <p style="margin: 15px 0; color: #666;">Start by creating your first OKR outlet data.</p>
+                        <button class="api-btn" onclick="createSampleData()">🆕 Create Sample Data</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '<div class="outlet-grid">';
+            
+            outlets.forEach(outletCode => {
+                const outlet = phoenixData.outlets[outletCode];
+                html += renderOutletCard(outletCode, outlet);
+            });
+            
+            html += '</div>';
+            dashboardElement.innerHTML = html;
+        }
+        
+        // Render individual outlet card
+        function renderOutletCard(outletCode, outlet) {
+            const hasOKR = outlet.okr && outlet.okr.objective;
+            const lastUpdated = outlet.lastUpdated ? new Date(outlet.lastUpdated).toLocaleDateString() : 'Never';
+            
+            return `
+                <div class="outlet-card">
+                    <div class="outlet-header">
+                        <h3>🏪 ${outletCode}</h3>
+                        <span class="last-updated">Last updated: ${lastUpdated}</span>
+                    </div>
+                    
+                    ${hasOKR ? `
+                        <div class="okr-summary">
+                            <h4>🎯 ${outlet.okr.objective}</h4>
+                            <div class="kr-count">Key Results: ${outlet.okr.keyResults ? outlet.okr.keyResults.length : 0}</div>
+                            <div class="progress-bar" style="background: #e2e8f0; border-radius: 10px; height: 8px; margin: 10px 0;">
+                                <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); height: 100%; border-radius: 10px; width: ${outlet.okr.progress || 0}%;"></div>
+                            </div>
+                            <div class="progress-text">${outlet.okr.progress || 0}% Complete</div>
+                        </div>
+                    ` : `
+                        <div class="no-okr">
+                            <p>📝 No OKR data available</p>
+                            <button class="api-btn" onclick="addOKRData('${outletCode}')">➕ Add OKR</button>
+                        </div>
+                    `}
+                    
+                    <div class="outlet-actions" style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="api-btn" onclick="editOutlet('${outletCode}')">✏️ Edit</button>
+                        <button class="api-btn warning" onclick="viewOutletDetails('${outletCode}')">👁️ View</button>
+                        <button class="api-btn danger" onclick="deleteOutlet('${outletCode}')">🗑️ Delete</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Connection status management
+        function updateConnectionStatus(status) {
+            const statusElement = document.getElementById('connection-status');
+            
+            if (status === 'syncing') {
+                statusElement.className = 'connection-status syncing';
+                statusElement.textContent = '🔄 Syncing...';
+            } else if (status === true) {
+                statusElement.className = 'connection-status online';
+                statusElement.textContent = '🟢 Live Backend Connected';
+            } else {
+                statusElement.className = 'connection-status offline';
+                statusElement.textContent = '🔴 Offline Mode';
+            }
+        }
+        
+        // Start connection monitoring
+        function startConnectionMonitoring() {
+            if (connectionCheckInterval) {
+                clearInterval(connectionCheckInterval);
+            }
+            
+            connectionCheckInterval = setInterval(async () => {
+                try {
+                    await liveBackendAPI.checkServerStatus();
+                    updateConnectionStatus(liveBackendAPI.isOnline);
+                } catch (error) {
+                    updateConnectionStatus(false);
+                }
+            }, 30000); // Check every 30 seconds
+        }
+        
+        // Display API status
+        async function displayAPIStatus() {
+            try {
+                const status = await liveBackendAPI.getSystemStatus();
+                const element = document.getElementById('api-status-content');
+                
+                if (status.success) {
+                    const data = status.data || {};
+                    element.innerHTML = `
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div><strong>📊 Status:</strong> ${status.status}</div>
+                            <div><strong>🏪 Total Outlets:</strong> ${data.totalOutlets || 0}</div>
+                            <div><strong>🎯 Total OKRs:</strong> ${data.totalOKRs || 0}</div>
+                            <div><strong>📦 Backups:</strong> ${data.backups || 0}</div>
+                            <div><strong>🔄 Real-time Sync:</strong> ${status.features?.realTimeSync ? '✅' : '❌'}</div>
+                            <div><strong>🌐 Cross-device:</strong> ${status.features?.crossDeviceAccess ? '✅' : '❌'}</div>
+                        </div>
+                    `;
+                } else {
+                    element.innerHTML = `
+                        <div style="color: #e53e3e; text-align: center;">
+                            <strong>⚠️ Backend Offline</strong><br>
+                            Using local storage fallback
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Failed to display API status:', error);
+            }
+        }
+        
+        // Notification system
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+        
+        // API Control Functions
+        async function checkBackendStatus() {
+            try {
+                showNotification('Checking backend status...', 'warning');
+                await liveBackendAPI.checkServerStatus();
+                await displayAPIStatus();
+                updateConnectionStatus(liveBackendAPI.isOnline);
+                
+                if (liveBackendAPI.isOnline) {
+                    showNotification('Backend is online and healthy', 'success');
+                } else {
+                    showNotification('Backend is offline', 'error');
+                }
+            } catch (error) {
+                showNotification('Status check failed', 'error');
+            }
+        }
+        
+        async function syncData() {
+            try {
+                showNotification('Syncing data...', 'warning');
+                await loadPhoenixDataFromBackend();
+                renderPhoenixDashboard();
+                await displayAPIStatus();
+                showNotification('Data sync completed', 'success');
+            } catch (error) {
+                showNotification('Sync failed', 'error');
+            }
+        }
+        
+        async function createSampleData() {
+            const sampleData = {
+                outlets: {
+                    'SAMPLE001': {
+                        lastUpdated: new Date().toISOString(),
+                        okr: {
+                            objective: 'Increase Monthly Transactions by 20%',
+                            keyResults: [
+                                'Achieve 150 daily transactions',
+                                'Increase average transaction value to Rp 85,000',
+                                'Improve customer retention by 15%'
+                            ],
+                            progress: 35,
+                            actionPlans: {
+                                kr1: [
+                                    { description: 'Implement customer loyalty program', completed: true },
+                                    { description: 'Train staff on upselling techniques', completed: false },
+                                    { description: 'Optimize store layout for better flow', completed: false }
+                                ]
+                            }
+                        }
+                    },
+                    'SAMPLE002': {
+                        lastUpdated: new Date().toISOString(),
+                        okr: {
+                            objective: 'Improve Customer Satisfaction Score',
+                            keyResults: [
+                                'Achieve 4.5+ customer rating',
+                                'Reduce wait time to under 5 minutes',
+                                'Increase positive feedback by 25%'
+                            ],
+                            progress: 60,
+                            actionPlans: {
+                                kr1: [
+                                    { description: 'Implement feedback collection system', completed: true },
+                                    { description: 'Add express checkout counter', completed: true },
+                                    { description: 'Staff customer service training', completed: false }
+                                ]
+                            }
+                        }
+                    }
+                }
+            };
+            
+            phoenixData = sampleData;
+            const saved = await savePhoenixDataToBackend('Sample data created');
+            
+            if (saved) {
+                renderPhoenixDashboard();
+                await displayAPIStatus();
+                showNotification('Sample data created successfully', 'success');
+            }
+        }
+        
+        async function clearAllData() {
+            if (confirm('⚠️ Are you sure you want to clear ALL Phoenix data? This cannot be undone!')) {
+                phoenixData = { outlets: {} };
+                const saved = await savePhoenixDataToBackend('All data cleared');
+                
+                if (saved) {
+                    renderPhoenixDashboard();
+                    await displayAPIStatus();
+                    showNotification('All data cleared', 'warning');
+                }
+            }
+        }
+        
+        // Outlet management functions
+        function editOutlet(outletCode) {
+            showNotification(`Edit function for ${outletCode} - Feature coming soon!`, 'warning');
+        }
+        
+        function viewOutletDetails(outletCode) {
+            showNotification(`View details for ${outletCode} - Feature coming soon!`, 'warning');
+        }
+        
+        async function deleteOutlet(outletCode) {
+            if (confirm(`Delete outlet ${outletCode}? This cannot be undone!`)) {
+                delete phoenixData.outlets[outletCode];
+                const saved = await savePhoenixDataToBackend(`Deleted outlet ${outletCode}`);
+                
+                if (saved) {
+                    renderPhoenixDashboard();
+                    await displayAPIStatus();
+                    showNotification(`Outlet ${outletCode} deleted`, 'warning');
+                }
+            }
+        }
+        
+        function addOKRData(outletCode) {
+            showNotification(`Add OKR for ${outletCode} - Feature coming soon!`, 'warning');
+        }
+        
+        // Logout function
+        function logout() {
+            console.log('🔄 Starting logout process...');
+            
+            // Clear connection monitoring
+            if (connectionCheckInterval) {
+                clearInterval(connectionCheckInterval);
+            }
+            
+            // Clear session data
+            sessionStorage.clear();
+            
+            // Redirect to login
+            window.location.href = 'login.html';
+        }
+        
+        // Event listeners
+        window.addEventListener('phoenixDataSynced', (event) => {
+            console.log('📡 Data synced from server:', event.detail);
+            phoenixData = event.detail;
+            renderPhoenixDashboard();
+            showNotification('Data updated from server', 'success');
+        });
+        
+        // Global function exports for console access
+        window.testLiveBackend = () => liveBackendAPI.testAPI();
+        window.exportPhoenixData = () => liveBackendAPI.exportData();
+        window.showBackendStatus = () => liveBackendAPI.showConnectionStatus();
+        window.loadPhoenixData = () => liveBackendAPI.loadPhoenixData();
+        window.savePhoenixData = (data) => liveBackendAPI.savePhoenixData(data || phoenixData);
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeDashboard);
+    </script>
+</body>
+</html>

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OKR Phoenix Project - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        
+        .login-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        
+        .login-subtitle {
+            color: #718096;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 0.95rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f7fafc;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+        
+        .user-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .user-type-option {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f7fafc;
+            font-weight: 500;
+        }
+        
+        .user-type-option.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+        
+        .login-button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .login-button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .loading-spinner {
+            display: none;
+            margin: 10px auto;
+        }
+        
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .info-section {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .info-title {
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .info-text {
+            font-size: 0.85rem;
+            color: #718096;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">🏪</div>
+        <h1 class="login-title">OKR Phoenix Project</h1>
+        <p class="login-subtitle">Transaction Improvement Dashboard</p>
+        
+        <div class="error-message" id="errorMessage"></div>
+        
+        <form id="loginForm">
+            <div class="user-type-selector">
+                <div class="user-type-option active" data-type="outlet">
+                    <div>🏪 Outlet Access</div>
+                    <small style="opacity: 0.7;">Store Level</small>
+                </div>
+                <div class="user-type-option" data-type="hq">
+                    <div>🏢 HQ Access</div>
+                    <small style="opacity: 0.7;">Management Level</small>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" id="usernameLabel">Outlet Code</label>
+                <input type="text" id="username" class="form-input" placeholder="Enter your outlet code" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
+            </div>
+            
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner"></div>
+                <p style="margin-top: 10px; color: #718096;">Authenticating...</p>
+            </div>
+            
+            <button type="submit" class="login-button" id="loginButton">
+                🔐 Sign In
+            </button>
+        </form>
+        
+        <div class="info-section">
+            <div class="info-title">Access Levels:</div>
+            <div class="info-text">
+                <strong>Outlet Access:</strong> View and manage your outlet's OKRs only<br>
+                <strong>HQ Access:</strong> Area Managers see assigned outlets, Others see all outlets
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock data structure - in production, this would come from Google Sheets API
+        // Complete outlet credentials from Google Sheets - Column A (user) and Column D (password)
+        // All outlets use password: 'Alpro@123'
+        const outletCodes = [
+            'JKJSTT1', 'JKJSVR1', 'JKJBTM1', 'JKJSBZ1', 'BTTSGV1', 'BTTSSU1', 'JKJUSK1', 'BTTSB91', 'BTTSVS1', 'BTTGBI1',
+            'BTTSGR1', 'JKJSTB1', 'JKJSKC1', 'JKJBGV1', 'JKJPMB1', 'BTTGBW1', 'BTTSB21', 'JKJSRR1', 'JKJSGH1', 'JBBSOC1',
+            'JBBGCV1', 'JBDPAU1', 'JBDPMR1', 'JBBSMT1', 'BTTGEK1', 'JBDPSW1', 'JKJTTH1', 'JKJSRD1', 'JKJBRS1', 'JBBGCC1',
+            'JKJBKB1', 'JKJPDA1', 'JBBSJB1', 'BTTSRF1', 'JKJUSI1', 'JBBGRC1', 'JKJSTS1', 'JBBSTR1', 'BTTSRG1', 'BTTGSG1',
+            'JKJPMS1', 'JKJBDK1', 'BTTSRC1', 'JKJUBR1', 'JBBGBR1', 'JKJSPI1', 'JKJTPL1', 'JKJTLB1', 'JKJUTG1', 'JKJSRS1',
+            'BTTGBR1', 'JBBSSR1', 'JBBGWU1', 'JKJSRM1', 'BTTSBB1', 'JBBSKP1', 'JKJBHI1', 'JBBSGI1', 'BTTGPS1', 'JKJUWB1',
+            'JBBSGW1', 'BTTGPP1', 'JKJSKR1', 'JKJPSB1', 'JKJBHL1', 'JKJSBI1', 'JBBGLW1', 'JKJUPI1', 'JKJBCS1', 'JBBSCC1',
+            'BTTGCR1', 'JKJSMP1', 'JKJUGK1', 'JKJPTR1', 'JKJSTM1', 'JKJTPD1', 'JBBGWC1', 'BTTGGB1', 'JKJUGB1', 'JKJUGN1',
+            'JKJPMP1', 'JBBSLH1', 'BTTGKS1', 'JBBGBD1', 'JBBSJM1', 'JKJBSC1', 'JKJBPL1', 'BTTSWS1', 'BTTGPB1', 'JKJSKB1',
+            'JKJSPR1', 'JBBGPS1', 'JBBGTC1', 'JBDPRK1', 'JKJTMM1', 'JBBSKH1', 'BTTGLK1', 'BTTSDL1', 'JKJUMJ1'
+        ];
+
+        // Generate outlet credentials object
+        const outletCredentials = {};
+        outletCodes.forEach(code => {
+            outletCredentials[code] = {
+                password: 'Alpro@123',
+                outletName: `APOTEK ALPRO ${code}`,
+                am: 'SYSTEM AM'
+            };
+        });
+
+        const hqCredentials = {
+            // From Google Sheets - Column B (email) and Column H (password)
+            'khoo.ziyu@apotekalpro.id': { 
+                password: 'Alpro@123', 
+                name: 'KHOO ZI YU', 
+                role: 'ADMIN',
+                outlets: [] // empty means access to all outlets
+            },
+            'jesika.silitonga@alpro.com': { 
+                password: 'HQPass123', 
+                name: 'JESIKA SILITONGA', 
+                role: 'AM',
+                outlets: ['JKJSTT1', 'JKJSVR1', 'JKJSTB1', 'JKJRSP1', 'JKJRSP2'] // outlets they manage
+            },
+            'ade.aidha@alpro.com': { 
+                password: 'HQPass123', 
+                name: 'ADE IRMA SEPTIANI AIDHA', 
+                role: 'AM',
+                outlets: ['JBBSOC1'] // outlets they manage
+            },
+            'hanna.kaban@alpro.com': { 
+                password: 'HQPass123', 
+                name: 'HANNA DOLI KABAN', 
+                role: 'AM',
+                outlets: ['JKJBTM1', 'JKJSBZ1', 'BTTSGV1', 'BTTSSU1', 'JKJUSK1'] // outlets they manage
+            },
+            'desi.ariani@alpro.com': { 
+                password: 'HQPass123', 
+                name: 'DESI ARIANI', 
+                role: 'AM',
+                outlets: ['BTTSB91', 'BTTSVS1', 'BTTGBI1', 'BTTSGR1', 'JKJSKC1'] // outlets they manage
+            },
+            'yuni.astuti@alpro.com': { 
+                password: 'HQPass123', 
+                name: 'YUNI ASTUTI', 
+                role: 'AM',
+                outlets: ['JKJBGV1', 'JKJPMB1', 'JKJBAN1', 'JKJBT21', 'JKJREM1'] // outlets they manage
+            },
+            'dini.marlina@alpro.com': { 
+                password: 'HQPass123', 
+                name: 'DINI MARLINA', 
+                role: 'AM',
+                outlets: ['JKJGED1'] // outlets they manage
+            },
+            'devi.purba@apotekalpro.id': {
+                password: 'Alpro@123',
+                name: 'DEVI', // Using Column A name from Google Sheets
+                role: 'ADMIN',
+                outlets: []
+            },
+            'admin@alpro.com': { 
+                password: 'AdminPass123', 
+                name: 'SYSTEM ADMIN', 
+                role: 'ADMIN',
+                outlets: [] // empty means access to all outlets
+            }
+        };
+
+        // DOM elements
+        const userTypeOptions = document.querySelectorAll('.user-type-option');
+        const usernameLabel = document.getElementById('usernameLabel');
+        const usernameInput = document.getElementById('username');
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const loginButton = document.getElementById('loginButton');
+
+        let currentUserType = 'outlet';
+
+        // User type selection
+        userTypeOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                userTypeOptions.forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+                currentUserType = option.dataset.type;
+                
+                if (currentUserType === 'outlet') {
+                    usernameLabel.textContent = 'Outlet Code';
+                    usernameInput.placeholder = 'Enter your outlet code (e.g., JKJSTT1)';
+                } else {
+                    usernameLabel.textContent = 'Email Address';
+                    usernameInput.placeholder = 'Enter your email address';
+                }
+                
+                hideError();
+            });
+        });
+
+        // Form submission
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = usernameInput.value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                showError('Please enter both username and password');
+                return;
+            }
+            
+            showLoading(true);
+            hideError();
+            
+            // Simulate API call delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            try {
+                const loginResult = authenticateUser(username, password, currentUserType);
+                
+                if (loginResult.success) {
+                    // Store authentication data
+                    sessionStorage.setItem('userAuth', JSON.stringify(loginResult.user));
+                    
+                    // Redirect to Phoenix dashboard
+                    const returnUrl = sessionStorage.getItem('returnUrl') || 'okr-phoenix-real.html';
+                    sessionStorage.removeItem('returnUrl');
+                    window.location.href = returnUrl;
+                } else {
+                    showError(loginResult.message);
+                }
+            } catch (error) {
+                showError('Login failed. Please try again.');
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        function authenticateUser(username, password, userType) {
+            if (userType === 'outlet') {
+                const outlet = outletCredentials[username.toUpperCase()];
+                if (!outlet) {
+                    return { success: false, message: 'Invalid outlet code' };
+                }
+                
+                if (outlet.password !== password) {
+                    return { success: false, message: 'Invalid password' };
+                }
+                
+                return {
+                    success: true,
+                    user: {
+                        type: 'outlet',
+                        username: username.toUpperCase(),
+                        outletName: outlet.outletName,
+                        am: outlet.am,
+                        accessibleOutlets: [username.toUpperCase()] // only their own outlet
+                    }
+                };
+            } else {
+                const hqUser = hqCredentials[username.toLowerCase()];
+                if (!hqUser) {
+                    return { success: false, message: 'Invalid email address' };
+                }
+                
+                if (hqUser.password !== password) {
+                    return { success: false, message: 'Invalid password' };
+                }
+                
+                return {
+                    success: true,
+                    user: {
+                        type: 'hq',
+                        email: username.toLowerCase(),
+                        name: hqUser.name,
+                        role: hqUser.role,
+                        accessibleOutlets: hqUser.role === 'ADMIN' ? 'ALL' : hqUser.outlets
+                    }
+                };
+            }
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+
+        function showLoading(show) {
+            if (show) {
+                loadingSpinner.style.display = 'block';
+                loginButton.disabled = true;
+                loginButton.textContent = 'Signing In...';
+            } else {
+                loadingSpinner.style.display = 'none';
+                loginButton.disabled = false;
+                loginButton.textContent = '🔐 Sign In';
+            }
+        }
+
+        // Check if user is already logged in
+        window.addEventListener('load', () => {
+            const existingAuth = sessionStorage.getItem('userAuth');
+            if (existingAuth) {
+                // User is already logged in, redirect to Phoenix dashboard
+                const returnUrl = sessionStorage.getItem('returnUrl') || 'okr-phoenix-real.html';
+                sessionStorage.removeItem('returnUrl');
+                window.location.href = returnUrl;
+            }
+        });
+        
+        // Enhanced login with Google Sheets integration
+        async function loadDynamicHQCredentials() {
+            try {
+                // Load configuration and Google Sheets API
+                if (typeof CONFIG !== 'undefined' && typeof GoogleSheetsAPI !== 'undefined') {
+                    console.log('🔐 Loading dynamic HQ credentials from Google Sheets...');
+                    
+                    const googleSheetsAPI = new GoogleSheetsAPI();
+                    const dynamicCredentials = await googleSheetsAPI.loadHQCredentials();
+                    
+                    // Merge with existing hardcoded credentials
+                    Object.assign(hqCredentials, dynamicCredentials);
+                    
+                    console.log(`✅ Loaded ${Object.keys(dynamicCredentials).length} HQ users from Google Sheets`);
+                    console.log('📋 Available HQ users:', Object.keys(hqCredentials));
+                } else {
+                    console.log('⚠️ Google Sheets API not available, using hardcoded credentials only');
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not load dynamic credentials:', error.message);
+                console.log('📋 Using hardcoded credentials only');
+            }
+        }
+        
+        // Load dynamic outlet credentials from Google Sheets (all 204+ outlets)
+        async function loadDynamicOutletCredentials() {
+            try {
+                // Load configuration and Google Sheets API
+                if (typeof CONFIG !== 'undefined' && typeof GoogleSheetsAPI !== 'undefined') {
+                    console.log('🏪 Loading dynamic outlet credentials from Google Sheets...');
+                    console.log('📊 Current hardcoded outlets:', Object.keys(outletCredentials).length);
+                    
+                    const googleSheetsAPI = new GoogleSheetsAPI();
+                    const dynamicCredentials = await googleSheetsAPI.loadOutletCredentials();
+                    
+                    // Replace hardcoded credentials with dynamic ones
+                    Object.keys(outletCredentials).forEach(key => delete outletCredentials[key]);
+                    Object.assign(outletCredentials, dynamicCredentials);
+                    
+                    console.log(`✅ Loaded ${Object.keys(dynamicCredentials).length} outlet credentials from Google Sheets`);
+                    console.log('📈 Total outlets now available:', Object.keys(outletCredentials).length);
+                    console.log('🏪 Sample outlets:', Object.keys(dynamicCredentials).slice(0, 10).join(', '));
+                    console.log('🏪 Last 5 outlets:', Object.keys(dynamicCredentials).slice(-5).join(', '));
+                } else {
+                    console.log('⚠️ Google Sheets API not available, using hardcoded outlet credentials only');
+                }
+            } catch (error) {
+                console.error('❌ Failed to load dynamic outlet credentials:', error);
+                console.log('📋 Using hardcoded outlet credentials as fallback');
+            }
+        }
+        
+        // Load dynamic credentials on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🔄 Loading all dynamic credentials...');
+            await Promise.all([
+                loadDynamicHQCredentials(),
+                loadDynamicOutletCredentials()
+            ]);
+            console.log('✅ All credential loading complete');
+            console.log('📊 Final credential summary:');
+            console.log(`   - HQ users: ${Object.keys(hqCredentials).length}`);
+            console.log(`   - Outlet users: ${Object.keys(outletCredentials).length}`);
+        });
+    </script>
+    
+    <!-- Include required scripts for Google Sheets integration -->
+    <script src="config.js"></script>
+    <script src="google-sheets-api.js"></script>
+</body>
+</html>

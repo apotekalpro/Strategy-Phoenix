@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OKR Phoenix Project - Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .header h1 { font-size: 2.5rem; margin-bottom: 10px; font-weight: 700; }
+        .header p { font-size: 1.1rem; opacity: 0.9; margin: 5px 0; }
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            text-align: right;
+            font-size: 0.9rem;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-top: 4px solid #667eea;
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-number { font-size: 3rem; font-weight: 700; color: #667eea; margin-bottom: 10px; }
+        .stat-label { color: #718096; font-weight: 600; text-transform: uppercase; font-size: 0.9rem; }
+        .outlets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .outlet-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-left: 4px solid #48bb78;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .outlet-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .outlet-name { font-size: 1.2rem; font-weight: 700; color: #2d3748; margin-bottom: 10px; }
+        .outlet-code { color: #718096; font-size: 0.9rem; margin-bottom: 15px; }
+        .progress-bar {
+            background: #f0f0f0;
+            height: 12px;
+            border-radius: 6px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+        .okr-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+        .logout-btn {
+            margin-top: 8px;
+            padding: 4px 12px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        .logout-btn:hover { background: rgba(255,255,255,0.3); }
+        .add-okr-btn {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            transition: background 0.3s ease;
+        }
+        .add-okr-btn:hover { background: #38a169; }
+        
+        /* OKR Detail View Styles */
+        .okr-detail-view {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .back-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .okr-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .okr-title { font-size: 1.3rem; font-weight: 700; color: #2d3748; margin-bottom: 10px; }
+        .okr-description { color: #718096; margin-bottom: 15px; }
+        .kr-section { margin-top: 20px; }
+        .kr-title { font-weight: 600; color: #4a5568; margin-bottom: 10px; }
+        .action-plan {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .action-checkbox {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+        .action-text {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+        .action-text.completed {
+            text-decoration: line-through;
+            color: #a0aec0;
+        }
+        .template-selector {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .template-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .template-card:hover { border-color: #667eea; background: #f7fafc; }
+        .template-title { font-weight: 700; color: #2d3748; margin-bottom: 8px; }
+        .template-description { color: #718096; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 OKR Phoenix Project Dashboard</h1>
+            <p><strong>Peningkatan Transaksi - Trafik Baru & Return Rate</strong></p>
+            <p>Apotek Alpro Pharmacy Network Management</p>
+        </div>
+
+        <div id="dashboard-view">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-outlets">-</div>
+                    <div class="stat-label">Total Outlets</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="outlets-with-okrs">-</div>
+                    <div class="stat-label">Outlets with OKRs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="active-okrs">-</div>
+                    <div class="stat-label">Active OKRs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="avg-progress">-</div>
+                    <div class="stat-label">Average Progress</div>
+                </div>
+            </div>
+
+            <div id="outlets-container" class="outlets-grid">
+                <!-- Outlet cards will be rendered here -->
+            </div>
+        </div>
+
+        <div id="outlet-detail-view" style="display: none;">
+            <button class="back-btn" onclick="backToDashboard()">← Back to Dashboard</button>
+            <div id="outlet-detail-content">
+                <!-- Outlet detail content will be rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="google-sheets-api.js"></script>
+    <script src="auth-service.js"></script>
+
+    <script>
+        let currentUser = null;
+        let userPermissions = null;
+        let outlets = [];
+        let allOKRS = {};
+        let selectedOutlet = null;
+        let currentView = 'dashboard';
+
+        // OKR Templates from config
+        const templates = CONFIG.OKR_TEMPLATES || [
+            {
+                id: 1,
+                title: 'Peningkatan Transaksi - Trafik Baru',
+                description: 'Meningkatkan jumlah transaksi melalui penambahan trafik pelanggan baru',
+                keyResults: [
+                    {
+                        id: 1,
+                        title: 'KR1: Peningkatan Jumlah Pelanggan Baru',
+                        description: 'Meningkatkan jumlah pelanggan baru sebesar 20%',
+                        actionPlans: [
+                            'Implementasi program welcome offer untuk pelanggan baru',
+                            'Kampanye digital marketing di media sosial lokal',
+                            'Partnership dengan komunitas sekitar (RT/RW, klinik)',
+                            'Program referral dengan reward untuk pelanggan existing'
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 2,
+                title: 'Peningkatan Transaksi - Return Rate',
+                description: 'Meningkatkan frekuensi kunjungan pelanggan existing',
+                keyResults: [
+                    {
+                        id: 1,
+                        title: 'KR1: Customer Loyalty Program',
+                        description: 'Implementasi program loyalitas pelanggan',
+                        actionPlans: [
+                            'Desain dan implementasi membership card system',
+                            'Setup point reward system untuk repeat purchase',
+                            'Training staff untuk promosi membership',
+                            'Tracking customer visit frequency'
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        // Check authentication and initialize
+        window.addEventListener('load', async () => {
+            try {
+                // Check session
+                const userAuth = sessionStorage.getItem('userAuth');
+                if (!userAuth) {
+                    window.location.href = 'okr-login.html';
+                    return;
+                }
+                
+                currentUser = JSON.parse(userAuth);
+                console.log('✅ User session found:', currentUser.username);
+                
+                // Initialize services
+                const googleSheetsAPI = new GoogleSheetsAPI();
+                const authService = new AuthService();
+                await authService.initialize();
+                console.log('✅ Services initialized');
+                
+                // Load outlets data
+                const credentials = await googleSheetsAPI.loadOutletCredentials();
+                outlets = Object.keys(credentials).map((outletCode, index) => ({
+                    id: index + 1,
+                    code: outletCode,
+                    name: credentials[outletCode].outletName || `APOTEK ALPRO ${outletCode}`,
+                    am: credentials[outletCode].am || 'SYSTEM AM'
+                }));
+                console.log(`✅ Loaded ${outlets.length} outlets`);
+                
+                // Create demo OKRs
+                initializeDemoOKRs();
+                
+                // Setup user permissions
+                setupUserPermissions();
+                
+                // Render dashboard
+                renderDashboard();
+                
+            } catch (error) {
+                console.error('❌ Dashboard initialization failed:', error);
+                sessionStorage.removeItem('userAuth');
+                window.location.href = 'okr-login.html';
+            }
+        });
+
+        function setupUserPermissions() {
+            if (currentUser.type === 'outlet') {
+                userPermissions = {
+                    canViewAllOutlets: false,
+                    accessibleOutlets: currentUser.accessibleOutlets || [currentUser.username],
+                    canManageOKRs: true,
+                    userType: 'outlet',
+                    displayName: currentUser.outletName,
+                    identifier: currentUser.username
+                };
+            } else if (currentUser.type === 'hq') {
+                userPermissions = {
+                    canViewAllOutlets: currentUser.accessibleOutlets === 'ALL',
+                    accessibleOutlets: currentUser.accessibleOutlets === 'ALL' ? [] : currentUser.accessibleOutlets,
+                    canManageOKRs: true,
+                    userType: 'hq',
+                    displayName: currentUser.name,
+                    identifier: currentUser.email,
+                    role: currentUser.role
+                };
+            }
+            
+            // Add user info to header
+            const header = document.querySelector('.header');
+            const userInfo = document.createElement('div');
+            userInfo.className = 'user-info';
+            
+            const roleIcon = currentUser.type === 'outlet' ? '🏪' : '🏢';
+            const roleText = currentUser.type === 'outlet' ? 'Outlet User' : 
+                           (currentUser.role === 'ADMIN' ? 'System Admin' : 'Area Manager');
+            
+            userInfo.innerHTML = `
+                <div style="margin-bottom: 5px;">
+                    <strong>${roleIcon} ${userPermissions.displayName}</strong>
+                </div>
+                <div style="opacity: 0.8; font-size: 0.8rem;">
+                    ${roleText} | <span style="color: #48bb78;">🟢 Connected</span>
+                </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            `;
+            
+            header.appendChild(userInfo);
+        }
+
+        function initializeDemoOKRs() {
+            allOKRS = {};
+            const maxDemoOutlets = Math.min(5, outlets.length);
+            
+            for (let i = 0; i < maxDemoOutlets; i++) {
+                const outlet = outlets[i];
+                if (outlet) {
+                    allOKRS[outlet.id] = [{
+                        id: 1000 + outlet.id,
+                        outlet_id: outlet.id,
+                        title: 'Peningkatan Transaksi - Trafik Baru',
+                        description: 'Meningkatkan jumlah transaksi melalui penambahan trafik pelanggan baru',
+                        keyResults: [{
+                            id: 1,
+                            title: 'KR1: Peningkatan Jumlah Pelanggan Baru',
+                            description: 'Meningkatkan jumlah pelanggan baru sebesar 20%',
+                            actionPlans: [
+                                { text: 'Implementasi program welcome offer', completed: Math.random() > 0.5, comments: [], editing: false, showComments: false },
+                                { text: 'Kampanye digital marketing', completed: Math.random() > 0.5, comments: [], editing: false, showComments: false },
+                                { text: 'Partnership dengan komunitas sekitar', completed: Math.random() > 0.5, comments: [], editing: false, showComments: false },
+                                { text: 'Program referral dengan reward', completed: Math.random() > 0.5, comments: [], editing: false, showComments: false }
+                            ]
+                        }],
+                        progress: 0,
+                        status: 'active'
+                    }];
+                    
+                    // Calculate progress
+                    updateOKRProgress(allOKRS[outlet.id][0]);
+                }
+            }
+            console.log(`✅ Created demo OKRs for ${maxDemoOutlets} outlets`);
+        }
+
+        function updateOKRProgress(okr) {
+            let totalActions = 0;
+            let completedActions = 0;
+            
+            okr.keyResults.forEach(kr => {
+                totalActions += kr.actionPlans.length;
+                completedActions += kr.actionPlans.filter(ap => ap.completed).length;
+            });
+            
+            okr.progress = totalActions > 0 ? Math.round((completedActions / totalActions) * 100) : 0;
+        }
+
+        function renderDashboard() {
+            // Filter outlets based on permissions
+            const allowedOutlets = userPermissions.canViewAllOutlets ? outlets : 
+                outlets.filter(outlet => userPermissions.accessibleOutlets.includes(outlet.code));
+            
+            // Calculate stats
+            const outletsWithOKRs = Object.keys(allOKRS).length;
+            const totalOKRs = Object.values(allOKRS).reduce((sum, okrs) => sum + okrs.length, 0);
+            const avgProgress = totalOKRs > 0 ? 
+                Math.round(Object.values(allOKRS).flat().reduce((sum, okr) => sum + okr.progress, 0) / totalOKRs) : 0;
+            
+            // Update stats cards
+            document.getElementById('total-outlets').textContent = outlets.length;
+            document.getElementById('outlets-with-okrs').textContent = outletsWithOKRs;
+            document.getElementById('active-okrs').textContent = totalOKRs;
+            document.getElementById('avg-progress').textContent = avgProgress + '%';
+            
+            // Render outlet cards
+            const container = document.getElementById('outlets-container');
+            container.innerHTML = '';
+            
+            const displayOutlets = allowedOutlets.slice(0, 12); // Show first 12 outlets
+            
+            displayOutlets.forEach(outlet => {
+                const outletOKRs = allOKRS[outlet.id] || [];
+                const progress = outletOKRs.length > 0 ? outletOKRs[0].progress : 0;
+                const completedActions = outletOKRs.length > 0 ? 
+                    outletOKRs[0].keyResults[0].actionPlans.filter(ap => ap.completed).length : 0;
+                const totalActions = outletOKRs.length > 0 ? 
+                    outletOKRs[0].keyResults[0].actionPlans.length : 0;
+                
+                const card = document.createElement('div');
+                card.className = 'outlet-card';
+                card.onclick = () => selectOutlet(outlet.id);
+                card.innerHTML = `
+                    <div class="outlet-name">${outlet.name}</div>
+                    <div class="outlet-code">Code: ${outlet.code} | AM: ${outlet.am}</div>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${progress}%"></div>
+                    </div>
+                    
+                    <div class="okr-stats">
+                        <span>Progress: ${progress}%</span>
+                        <span>Actions: ${completedActions}/${totalActions}</span>
+                        <span>OKRs: ${outletOKRs.length}</span>
+                    </div>
+                    
+                    ${outletOKRs.length > 0 ? `
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                            <div style="font-weight: 600; color: #4a5568; margin-bottom: 5px;">
+                                ${outletOKRs[0].title}
+                            </div>
+                            <div style="font-size: 0.85rem; color: #718096;">
+                                ${outletOKRs[0].keyResults[0].title}
+                            </div>
+                        </div>
+                    ` : `
+                        <div style="margin-top: 15px; padding: 10px; background: #faf5ff; border-radius: 8px; text-align: center;">
+                            <div style="color: #9f7aea; font-size: 0.9rem;">Click to add OKRs</div>
+                        </div>
+                    `}
+                    
+                    <button class="add-okr-btn" onclick="event.stopPropagation(); showOKRTemplates(${outlet.id})">
+                        ${outletOKRs.length > 0 ? 'Add More OKRs' : 'Add OKR'}
+                    </button>
+                `;
+                
+                container.appendChild(card);
+            });
+            
+            console.log('✅ Dashboard rendered successfully');
+        }
+
+        function selectOutlet(outletId) {
+            selectedOutlet = outlets.find(o => o.id === outletId);
+            if (!selectedOutlet) return;
+            
+            currentView = 'outlet-detail';
+            document.getElementById('dashboard-view').style.display = 'none';
+            document.getElementById('outlet-detail-view').style.display = 'block';
+            
+            renderOutletDetail();
+        }
+
+        function renderOutletDetail() {
+            const outletOKRs = allOKRS[selectedOutlet.id] || [];
+            const content = document.getElementById('outlet-detail-content');
+            
+            content.innerHTML = `
+                <div class="okr-detail-view">
+                    <h2>${selectedOutlet.name}</h2>
+                    <p style="color: #718096; margin-bottom: 20px;">Code: ${selectedOutlet.code} | AM: ${selectedOutlet.am}</p>
+                    
+                    ${outletOKRs.length === 0 ? `
+                        <div style="text-align: center; padding: 40px; color: #718096;">
+                            <h3>No OKRs assigned yet</h3>
+                            <p>Click "Add OKR" to get started with goal setting.</p>
+                            <button class="add-okr-btn" style="margin-top: 20px;" onclick="showOKRTemplates(${selectedOutlet.id})">Add OKR</button>
+                        </div>
+                    ` : outletOKRs.map(okr => `
+                        <div class="okr-card">
+                            <div class="okr-title">${okr.title}</div>
+                            <div class="okr-description">${okr.description}</div>
+                            <div style="margin: 15px 0;">
+                                <strong>Progress: ${okr.progress}%</strong>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${okr.progress}%"></div>
+                                </div>
+                            </div>
+                            
+                            ${okr.keyResults.map(kr => `
+                                <div class="kr-section">
+                                    <div class="kr-title">${kr.title}</div>
+                                    <div style="color: #718096; margin-bottom: 15px;">${kr.description}</div>
+                                    
+                                    <div style="background: white; border-radius: 8px; padding: 15px;">
+                                        <strong style="color: #4a5568;">Action Plans:</strong>
+                                        ${kr.actionPlans.map((action, index) => `
+                                            <div class="action-plan">
+                                                <input type="checkbox" class="action-checkbox" 
+                                                       ${action.completed ? 'checked' : ''} 
+                                                       onchange="toggleActionPlan(${okr.id}, ${kr.id}, ${index}, this.checked)">
+                                                <span class="action-text ${action.completed ? 'completed' : ''}">${action.text}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            `).join('')}
+                            
+                            <button class="add-okr-btn" onclick="showOKRTemplates(${selectedOutlet.id})" style="margin-top: 15px;">
+                                Add Another OKR
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function showOKRTemplates(outletId) {
+            const outlet = outlets.find(o => o.id === outletId);
+            const content = document.getElementById('outlet-detail-content');
+            
+            content.innerHTML = `
+                <div class="template-selector">
+                    <h3>Choose an OKR Template for ${outlet.name}</h3>
+                    <p style="color: #718096; margin-bottom: 20px;">Select a template to get started quickly with proven OKR frameworks.</p>
+                    
+                    ${templates.map(template => `
+                        <div class="template-card" onclick="createOKRFromTemplate(${outletId}, ${template.id})">
+                            <div class="template-title">${template.title}</div>
+                            <div class="template-description">${template.description}</div>
+                            <div style="margin-top: 10px; font-size: 0.85rem; color: #667eea;">
+                                ${template.keyResults.length} Key Result(s) • Click to add
+                            </div>
+                        </div>
+                    `).join('')}
+                    
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="back-btn" onclick="selectOutlet(${outletId})">← Back to Outlet Detail</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createOKRFromTemplate(outletId, templateId) {
+            const template = templates.find(t => t.id === templateId);
+            if (!template) return;
+            
+            if (!allOKRS[outletId]) {
+                allOKRS[outletId] = [];
+            }
+            
+            const newOKR = {
+                id: Date.now(),
+                outlet_id: outletId,
+                title: template.title,
+                description: template.description,
+                keyResults: template.keyResults.map(kr => ({
+                    ...kr,
+                    actionPlans: kr.actionPlans.map(plan => ({
+                        text: typeof plan === 'string' ? plan : plan.text || plan,
+                        completed: false,
+                        comments: [],
+                        editing: false,
+                        showComments: false
+                    }))
+                })),
+                progress: 0,
+                status: 'active'
+            };
+            
+            allOKRS[outletId].push(newOKR);
+            updateOKRProgress(newOKR);
+            
+            // Show success message
+            showNotification(`✅ OKR "${template.title}" added successfully!`, 'success');
+            
+            // Return to outlet detail view
+            selectOutlet(outletId);
+        }
+
+        function toggleActionPlan(okrId, krId, actionIndex, completed) {
+            // Find the OKR
+            let foundOKR = null;
+            for (const outletId in allOKRS) {
+                foundOKR = allOKRS[outletId].find(okr => okr.id === okrId);
+                if (foundOKR) break;
+            }
+            
+            if (foundOKR) {
+                const keyResult = foundOKR.keyResults.find(kr => kr.id === krId);
+                if (keyResult && keyResult.actionPlans[actionIndex]) {
+                    keyResult.actionPlans[actionIndex].completed = completed;
+                    updateOKRProgress(foundOKR);
+                    
+                    // Update the visual state
+                    renderOutletDetail();
+                    renderDashboard();
+                }
+            }
+        }
+
+        function backToDashboard() {
+            currentView = 'dashboard';
+            selectedOutlet = null;
+            document.getElementById('dashboard-view').style.display = 'block';
+            document.getElementById('outlet-detail-view').style.display = 'none';
+            renderDashboard();
+        }
+
+        function showNotification(message, type = 'info') {
+            // Simple notification system
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#48bb78' : '#667eea'};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 1000;
+                font-weight: 500;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function logout() {
+            // Preserve Phoenix data before clearing localStorage
+            const phoenixProjectData = localStorage.getItem('phoenixProjectData');
+            const userMedals = localStorage.getItem('userMedals');
+            const outletPerformanceData = localStorage.getItem('outletPerformanceData');
+            
+            console.log('🔄 Logging out - preserving Phoenix data:', {
+                phoenixProjectData: !!phoenixProjectData,
+                userMedals: !!userMedals,
+                outletPerformanceData: !!outletPerformanceData
+            });
+            
+            // Clear all authentication and session data
+            sessionStorage.clear();
+            localStorage.clear();
+            
+            // Restore Phoenix project data after clearing
+            if (phoenixProjectData) {
+                localStorage.setItem('phoenixProjectData', phoenixProjectData);
+                console.log('✅ Phoenix project data preserved through logout');
+            }
+            if (userMedals) {
+                localStorage.setItem('userMedals', userMedals);
+                console.log('✅ User medals data preserved through logout');
+            }
+            if (outletPerformanceData) {
+                localStorage.setItem('outletPerformanceData', outletPerformanceData);
+                console.log('✅ Outlet performance data preserved through logout');
+            }
+            
+            // Redirect to login
+            window.location.href = 'okr-login.html';
+        }
+    </script>
+</body>
+</html>

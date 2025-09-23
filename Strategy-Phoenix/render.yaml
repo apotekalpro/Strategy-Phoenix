@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: phoenix-okr-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node api-server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+    domains:
+      - phoenix-okr.onrender.com
+    autoDeploy: true
+    branch: main
