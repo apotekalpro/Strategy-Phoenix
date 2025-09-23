@@ -916,10 +916,11 @@
                         📊 Progress Summary
                     </button>
                 </div>
+            </div>
 
-                <!-- Main Dashboard Tab -->
-                <div id="main-dashboard" class="tab-content active">
-                    <div class="dashboard-content">
+            <!-- Main Dashboard Tab -->
+            <div id="main-dashboard" class="tab-content active">
+                <div class="dashboard-content">
                 <div class="section-header">
                     <h2 class="section-title">
                         🏪 Phoenix Project Outlets
@@ -1318,10 +1319,9 @@
                 </div>
             </div>
         </div>
-                </div>
-                </div>
+            </div>
 
-                <!-- Progress Summary Tab -->
+            <!-- Progress Summary Tab -->
                 <div id="progress-summary" class="tab-content">
                     <div class="progress-summary-content">
                         <h2 class="section-title">
@@ -4438,6 +4438,9 @@
             
             currentDetailOutlet = outletCode; // Store outlet code for detail view functions
             
+            // Ensure we're on the main dashboard tab before switching to detail view
+            switchTab('main-dashboard');
+            
             // Hide card view, show detail view
             document.getElementById('dashboard-view').style.display = 'none';
             document.getElementById('detail-view').style.display = 'block';
@@ -4481,6 +4484,9 @@
             // Hide detail view and show dashboard view
             document.getElementById('detail-view').style.display = 'none';
             document.getElementById('dashboard-view').style.display = 'block';
+            
+            // Ensure we return to the main dashboard tab
+            switchTab('main-dashboard');
             
             // Clear current detail outlet
             currentDetailOutlet = null;
@@ -4914,8 +4920,12 @@ ${localBackup ? '✅ Local Backup: Available' : '⚠️ Local Backup: Not found'
             // Show selected tab content
             document.getElementById(tabName).classList.add('active');
             
-            // Add active class to clicked button
-            event.target.classList.add('active');
+            // Add active class to the correct button
+            if (tabName === 'main-dashboard') {
+                document.querySelector('.tab-button:first-child').classList.add('active');
+            } else if (tabName === 'progress-summary') {
+                document.querySelector('.tab-button:last-child').classList.add('active');
+            }
 
             // Load progress summary data when that tab is selected
             if (tabName === 'progress-summary') {
