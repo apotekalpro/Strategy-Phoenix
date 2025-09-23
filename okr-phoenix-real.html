@@ -916,32 +916,61 @@
                         📊 Progress Summary
                     </button>
                 </div>
+            </div>
 
-                <!-- Main Dashboard Tab -->
-                <div id="main-dashboard" class="tab-content active">
-                    <div class="dashboard-content">
-                <div class="section-header">
-                    <h2 class="section-title">
-                        🏪 Phoenix Project Outlets
-                    </h2>
-                    <div style="display: flex; gap: 10px;">
+            <!-- Main Dashboard Tab -->
+            <div id="main-dashboard" class="tab-content active">
+                <div class="dashboard-content">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            🏪 Phoenix Project Outlets
+                        </h2>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="add-outlet-btn" onclick="openAddOutletModal()">
+                                ➕ Add Outlet to Phoenix Program
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="outlets-grid" class="outlets-grid">
+                        <!-- Outlet cards will be rendered here -->
+                    </div>
+                    
+                    <div id="empty-state" class="empty-state" style="display: none;">
+                        <div class="empty-state-icon">🏪</div>
+                        <div class="empty-state-title">No Phoenix Outlets Yet</div>
+                        <div class="empty-state-desc">Start by adding outlets to the Phoenix Program to track their OKR progress</div>
                         <button class="add-outlet-btn" onclick="openAddOutletModal()">
-                            ➕ Add Outlet to Phoenix Program
+                            ➕ Add Your First Outlet
                         </button>
                     </div>
                 </div>
-                
-                <div id="outlets-grid" class="outlets-grid">
-                    <!-- Outlet cards will be rendered here -->
-                </div>
-                
-                <div id="empty-state" class="empty-state" style="display: none;">
-                    <div class="empty-state-icon">🏪</div>
-                    <div class="empty-state-title">No Phoenix Outlets Yet</div>
-                    <div class="empty-state-desc">Start by adding outlets to the Phoenix Program to track their OKR progress</div>
-                    <button class="add-outlet-btn" onclick="openAddOutletModal()">
-                        ➕ Add Your First Outlet
-                    </button>
+            </div>
+
+            <!-- Progress Summary Tab -->
+            <div id="progress-summary" class="tab-content">
+                <div class="progress-summary-content">
+                    <h2 class="section-title">
+                        📊 OKR Progress Summary - Baseline vs Terms Performance
+                    </h2>
+                    
+                    <!-- Total Summary Overview -->
+                    <div class="progress-overview">
+                        <div class="progress-card">
+                            <h3 style="color: #4a5568; margin-bottom: 20px;">📈 Total Performance Overview</h3>
+                            <div id="total-progress-metrics" class="progress-metrics">
+                                <!-- Total metrics will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Individual Outlet Progress -->
+                    <div class="progress-card">
+                        <h3 style="color: #4a5568; margin-bottom: 20px;">🏪 Individual Outlet Progress</h3>
+                        <div id="outlet-progress-list">
+                            <!-- Individual outlet progress will be populated here -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1318,35 +1347,6 @@
                 </div>
             </div>
         </div>
-                </div>
-                </div>
-
-                <!-- Progress Summary Tab -->
-                <div id="progress-summary" class="tab-content">
-                    <div class="progress-summary-content">
-                        <h2 class="section-title">
-                            📊 OKR Progress Summary - Baseline vs Terms Performance
-                        </h2>
-                        
-                        <!-- Total Summary Overview -->
-                        <div class="progress-overview">
-                            <div class="progress-card">
-                                <h3 style="color: #4a5568; margin-bottom: 20px;">📈 Total Performance Overview</h3>
-                                <div id="total-progress-metrics" class="progress-metrics">
-                                    <!-- Total metrics will be populated here -->
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Individual Outlet Progress -->
-                        <div class="progress-card">
-                            <h3 style="color: #4a5568; margin-bottom: 20px;">🏪 Individual Outlet Progress</h3>
-                            <div id="outlet-progress-list">
-                                <!-- Individual outlet progress will be populated here -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
     </div>
 
@@ -4438,6 +4438,9 @@
             
             currentDetailOutlet = outletCode; // Store outlet code for detail view functions
             
+            // Ensure we're on the main dashboard tab before switching to detail view
+            switchTab('main-dashboard');
+            
             // Hide card view, show detail view
             document.getElementById('dashboard-view').style.display = 'none';
             document.getElementById('detail-view').style.display = 'block';
@@ -4481,6 +4484,9 @@
             // Hide detail view and show dashboard view
             document.getElementById('detail-view').style.display = 'none';
             document.getElementById('dashboard-view').style.display = 'block';
+            
+            // Ensure we return to the main dashboard tab
+            switchTab('main-dashboard');
             
             // Clear current detail outlet
             currentDetailOutlet = null;
@@ -4914,8 +4920,12 @@ ${localBackup ? '✅ Local Backup: Available' : '⚠️ Local Backup: Not found'
             // Show selected tab content
             document.getElementById(tabName).classList.add('active');
             
-            // Add active class to clicked button
-            event.target.classList.add('active');
+            // Add active class to the correct button
+            if (tabName === 'main-dashboard') {
+                document.querySelector('.tab-button:first-child').classList.add('active');
+            } else if (tabName === 'progress-summary') {
+                document.querySelector('.tab-button:last-child').classList.add('active');
+            }
 
             // Load progress summary data when that tab is selected
             if (tabName === 'progress-summary') {
