@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phoenix Project Dashboard - Enhanced with OKR Progress Summary</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header Styles */
+        .dashboard-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .dashboard-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #4a5568;
+        }
+
+        .logout-btn {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: #c53030;
+            transform: translateY(-1px);
+        }
+
+        /* Live Backend Banner */
+        .github-pages-banner {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            animation: slideIn 0.5s ease;
+        }
+        
+        .banner-title {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        
+        .banner-text {
+            font-size: 0.9rem;
+            opacity: 0.95;
+            line-height: 1.4;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(79, 172, 254, 0.3);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* OKR Progress Summary Section */
+        .okr-progress-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .total-summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .summary-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .metric-item {
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .metric-change {
+            font-size: 0.75rem;
+            margin-top: 3px;
+        }
+
+        .metric-change.positive {
+            color: #48bb78;
+        }
+
+        .metric-change.negative {
+            color: #f56565;
+        }
+
+        /* Individual Outlet Progress Cards */
+        .outlets-progress-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .outlet-progress-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #667eea;
+        }
+
+        .outlet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .outlet-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .outlet-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-inactive {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        /* Progress Comparison Charts */
+        .progress-comparison {
+            margin-bottom: 20px;
+        }
+
+        .comparison-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .comparison-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .comparison-total {
+            font-size: 0.85rem;
+            color: #718096;
+        }
+
+        .progress-bars {
+            display: grid;
+            gap: 8px;
+        }
+
+        .progress-bar-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-label {
+            min-width: 60px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 20px;
+            background: #edf2f7;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+
+        .baseline-fill {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+        }
+
+        .term1-fill {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .term2-fill {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .term3-fill {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .progress-value {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .progress-amount {
+            min-width: 80px;
+            text-align: right;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: #4a5568;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        /* Performance Insights */
+        .performance-insights {
+            margin-top: 15px;
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .insights-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 5px;
+        }
+
+        .insight-item {
+            font-size: 0.8rem;
+            color: #718096;
+            margin-bottom: 3px;
+        }
+
+        /* Loading States */
+        .loading-placeholder {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 4px;
+            height: 20px;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .progress-overview {
+                grid-template-columns: 1fr;
+            }
+            
+            .outlets-progress-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .legend {
+                justify-content: flex-start;
+                gap: 15px;
+            }
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Live Backend Status Banner -->
+        <div class="github-pages-banner">
+            <div class="banner-title">✅ Connected to Cloudflare Live Backend</div>
+            <div class="banner-text">
+                Your OKR data is now synchronized across all devices in real-time!<br>
+                ✅ Full cross-device sync • ✅ Automatic backups • ✅ Real-time updates
+            </div>
+        </div>
+
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div class="header-top">
+                <h1 class="dashboard-title">
+                    🔥 Phoenix Project Dashboard
+                </h1>
+                <div class="user-info">
+                    <span>🏆 <span id="current-user">TOMAS (Admin)</span></span>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-phoenix-outlets">10</div>
+                    <div class="stat-label">Phoenix Outlets</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total-revenue">Rp 868,195,977</div>
+                    <div class="stat-label">Total Revenue</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="avg-progress">90%</div>
+                    <div class="stat-label">Avg Progress</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- OKR Progress Summary Section -->
+        <div class="okr-progress-section">
+            <h2 class="section-title">
+                📊 OKR Progress Summary - Baseline vs Terms Performance
+            </h2>
+            
+            <!-- Total Summary Overview -->
+            <div class="progress-overview">
+                <div class="total-summary-card">
+                    <h3 class="summary-title">📈 Total Revenue Performance</h3>
+                    <div class="metrics-grid">
+                        <div class="metric-item">
+                            <div class="metric-label">Baseline</div>
+                            <div class="metric-value" id="total-baseline-revenue">Rp 0</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Term 1</div>
+                            <div class="metric-value" id="total-term1-revenue">Rp 0</div>
+                            <div class="metric-change" id="term1-revenue-change">+0%</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Term 2</div>
+                            <div class="metric-value" id="total-term2-revenue">Rp 0</div>
+                            <div class="metric-change" id="term2-revenue-change">+0%</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Term 3</div>
+                            <div class="metric-value" id="total-term3-revenue">Rp 0</div>
+                            <div class="metric-change" id="term3-revenue-change">+0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="total-summary-card">
+                    <h3 class="summary-title">🛒 Total Transaction Performance</h3>
+                    <div class="metrics-grid">
+                        <div class="metric-item">
+                            <div class="metric-label">Baseline</div>
+                            <div class="metric-value" id="total-baseline-trano">0</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Term 1</div>
+                            <div class="metric-value" id="total-term1-trano">0</div>
+                            <div class="metric-change" id="term1-trano-change">+0%</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Term 2</div>
+                            <div class="metric-value" id="total-term2-trano">0</div>
+                            <div class="metric-change" id="term2-trano-change">+0%</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Term 3</div>
+                            <div class="metric-value" id="total-term3-trano">0</div>
+                            <div class="metric-change" id="term3-trano-change">+0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Individual Outlet Progress -->
+            <h3 class="section-title">🏪 Individual Outlet Progress</h3>
+            <div class="outlets-progress-grid" id="outlets-progress-grid">
+                <!-- Individual outlet cards will be populated here -->
+            </div>
+
+            <!-- Legend -->
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color baseline-fill"></div>
+                    <span>Baseline</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color term1-fill"></div>
+                    <span>Term 1</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color term2-fill"></div>
+                    <span>Term 2</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color term3-fill"></div>
+                    <span>Term 3</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="refreshProgressData()">
+                    🔄 Refresh Data
+                </button>
+                <button class="btn btn-secondary" onclick="exportProgressReport()">
+                    📊 Export Report
+                </button>
+                <button class="btn btn-secondary" onclick="viewDetailedAnalysis()">
+                    📈 Detailed Analysis
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let phoenixOutlets = [];
+        let storageMethod = 'localStorage';
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Enhanced Phoenix Dashboard loading...');
+            loadPhoenixData();
+        });
+
+        // Load Phoenix data from storage
+        async function loadPhoenixData() {
+            try {
+                // Try to load from cloud storage first
+                const cloudData = await loadFromCloudStorage();
+                if (cloudData && cloudData.outlets) {
+                    phoenixOutlets = Object.entries(cloudData.outlets).map(([code, data]) => ({
+                        code,
+                        ...data
+                    }));
+                    console.log(`✅ Loaded ${phoenixOutlets.length} outlets from cloud storage`);
+                } else {
+                    // Fallback to localStorage
+                    const localData = localStorage.getItem('phoenixData');
+                    if (localData) {
+                        const parsed = JSON.parse(localData);
+                        if (parsed.outlets) {
+                            phoenixOutlets = Object.entries(parsed.outlets).map(([code, data]) => ({
+                                code,
+                                ...data
+                            }));
+                            console.log(`✅ Loaded ${phoenixOutlets.length} outlets from localStorage`);
+                        }
+                    }
+                }
+
+                // If no data found, use sample data for demonstration
+                if (phoenixOutlets.length === 0) {
+                    phoenixOutlets = getSampleData();
+                    console.log('📊 Using sample data for demonstration');
+                }
+
+                // Render the dashboard
+                renderEnhancedDashboard();
+            } catch (error) {
+                console.error('❌ Error loading Phoenix data:', error);
+                // Use sample data as fallback
+                phoenixOutlets = getSampleData();
+                renderEnhancedDashboard();
+            }
+        }
+
+        // Sample data for demonstration
+        function getSampleData() {
+            return [
+                {
+                    code: 'BTTGPR1',
+                    performanceData: {
+                        baseline: { revenue: 41194983, trano: 476 },
+                        term1: { revenue: 25700643, trano: 291 },
+                        term2: { revenue: 22304104, trano: 295 },
+                        term3: { revenue: 28500000, trano: 340 }
+                    }
+                },
+                {
+                    code: 'JKJSMP1',
+                    performanceData: {
+                        baseline: { revenue: 35000000, trano: 420 },
+                        term1: { revenue: 32500000, trano: 398 },
+                        term2: { revenue: 38200000, trano: 445 },
+                        term3: { revenue: 41800000, trano: 485 }
+                    }
+                },
+                {
+                    code: 'SBYKBY1',
+                    performanceData: {
+                        baseline: { revenue: 28500000, trano: 350 },
+                        term1: { revenue: 30200000, trano: 365 },
+                        term2: { revenue: 29800000, trano: 358 },
+                        term3: { revenue: 33100000, trano: 390 }
+                    }
+                }
+            ];
+        }
+
+        // Load data from cloud storage (placeholder)
+        async function loadFromCloudStorage() {
+            try {
+                // This would connect to your Cloudflare backend
+                // For now, return null to use localStorage
+                return null;
+            } catch (error) {
+                console.log('Cloud storage unavailable, using localStorage');
+                return null;
+            }
+        }
+
+        // Main dashboard rendering function
+        function renderEnhancedDashboard() {
+            console.log('🎨 Rendering enhanced dashboard...');
+            
+            // Calculate totals and update header stats
+            calculateAndUpdateTotals();
+            
+            // Render total summary cards
+            renderTotalSummaryCards();
+            
+            // Render individual outlet progress cards
+            renderOutletProgressCards();
+        }
+
+        // Calculate totals and update header statistics
+        function calculateAndUpdateTotals() {
+            let totalRevenue = 0;
+            let totalOutlets = phoenixOutlets.length;
+
+            phoenixOutlets.forEach(outlet => {
+                const perf = outlet.performanceData || {};
+                totalRevenue += (perf.term1?.revenue || 0) + (perf.term2?.revenue || 0) + (perf.term3?.revenue || 0);
+            });
+
+            // Update header stats
+            document.getElementById('total-phoenix-outlets').textContent = totalOutlets;
+            document.getElementById('total-revenue').textContent = formatCurrency(totalRevenue);
+            document.getElementById('avg-progress').textContent = calculateAverageProgress() + '%';
+        }
+
+        // Calculate average progress across all outlets
+        function calculateAverageProgress() {
+            if (phoenixOutlets.length === 0) return 0;
+            
+            let totalProgress = 0;
+            phoenixOutlets.forEach(outlet => {
+                const perf = outlet.performanceData || {};
+                const baseline = perf.baseline?.revenue || 0;
+                const currentTotal = (perf.term1?.revenue || 0) + (perf.term2?.revenue || 0) + (perf.term3?.revenue || 0);
+                
+                if (baseline > 0) {
+                    const progress = Math.min((currentTotal / baseline) * 100, 150); // Cap at 150%
+                    totalProgress += progress;
+                } else {
+                    totalProgress += currentTotal > 0 ? 100 : 0;
+                }
+            });
+            
+            return Math.round(totalProgress / phoenixOutlets.length);
+        }
+
+        // Render total summary cards
+        function renderTotalSummaryCards() {
+            let totalBaseline = { revenue: 0, trano: 0 };
+            let totalTerm1 = { revenue: 0, trano: 0 };
+            let totalTerm2 = { revenue: 0, trano: 0 };
+            let totalTerm3 = { revenue: 0, trano: 0 };
+
+            // Calculate totals
+            phoenixOutlets.forEach(outlet => {
+                const perf = outlet.performanceData || {};
+                
+                totalBaseline.revenue += perf.baseline?.revenue || 0;
+                totalBaseline.trano += perf.baseline?.trano || 0;
+                
+                totalTerm1.revenue += perf.term1?.revenue || 0;
+                totalTerm1.trano += perf.term1?.trano || 0;
+                
+                totalTerm2.revenue += perf.term2?.revenue || 0;
+                totalTerm2.trano += perf.term2?.trano || 0;
+                
+                totalTerm3.revenue += perf.term3?.revenue || 0;
+                totalTerm3.trano += perf.term3?.trano || 0;
+            });
+
+            // Update revenue totals
+            document.getElementById('total-baseline-revenue').textContent = formatCurrency(totalBaseline.revenue);
+            document.getElementById('total-term1-revenue').textContent = formatCurrency(totalTerm1.revenue);
+            document.getElementById('total-term2-revenue').textContent = formatCurrency(totalTerm2.revenue);
+            document.getElementById('total-term3-revenue').textContent = formatCurrency(totalTerm3.revenue);
+
+            // Calculate and display percentage changes for revenue
+            const term1RevenueChange = calculatePercentageChange(totalBaseline.revenue, totalTerm1.revenue);
+            const term2RevenueChange = calculatePercentageChange(totalBaseline.revenue, totalTerm2.revenue);
+            const term3RevenueChange = calculatePercentageChange(totalBaseline.revenue, totalTerm3.revenue);
+
+            updateChangeElement('term1-revenue-change', term1RevenueChange);
+            updateChangeElement('term2-revenue-change', term2RevenueChange);
+            updateChangeElement('term3-revenue-change', term3RevenueChange);
+
+            // Update transaction totals
+            document.getElementById('total-baseline-trano').textContent = formatNumber(totalBaseline.trano);
+            document.getElementById('total-term1-trano').textContent = formatNumber(totalTerm1.trano);
+            document.getElementById('total-term2-trano').textContent = formatNumber(totalTerm2.trano);
+            document.getElementById('total-term3-trano').textContent = formatNumber(totalTerm3.trano);
+
+            // Calculate and display percentage changes for transactions
+            const term1TranoChange = calculatePercentageChange(totalBaseline.trano, totalTerm1.trano);
+            const term2TranoChange = calculatePercentageChange(totalBaseline.trano, totalTerm2.trano);
+            const term3TranoChange = calculatePercentageChange(totalBaseline.trano, totalTerm3.trano);
+
+            updateChangeElement('term1-trano-change', term1TranoChange);
+            updateChangeElement('term2-trano-change', term2TranoChange);
+            updateChangeElement('term3-trano-change', term3TranoChange);
+        }
+
+        // Render individual outlet progress cards
+        function renderOutletProgressCards() {
+            const container = document.getElementById('outlets-progress-grid');
+            
+            if (phoenixOutlets.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #718096;">
+                        <h3>📊 No outlet data available</h3>
+                        <p>Add outlets to see their progress comparison</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = phoenixOutlets.map(outlet => {
+                const perf = outlet.performanceData || {};
+                const hasData = perf.baseline || perf.term1 || perf.term2 || perf.term3;
+                
+                return `
+                    <div class="outlet-progress-card">
+                        <div class="outlet-header">
+                            <div class="outlet-name">${outlet.code}</div>
+                            <div class="outlet-status ${hasData ? 'status-active' : 'status-inactive'}">
+                                ${hasData ? 'Active' : 'No Data'}
+                            </div>
+                        </div>
+                        
+                        ${hasData ? `
+                            <!-- Revenue Comparison -->
+                            <div class="progress-comparison">
+                                <div class="comparison-header">
+                                    <div class="comparison-title">💰 Revenue Performance</div>
+                                    <div class="comparison-total">
+                                        Total: ${formatCurrency((perf.term1?.revenue || 0) + (perf.term2?.revenue || 0) + (perf.term3?.revenue || 0))}
+                                    </div>
+                                </div>
+                                <div class="progress-bars">
+                                    ${generateProgressBar('Baseline', perf.baseline?.revenue || 0, getMaxValue(perf, 'revenue'), 'baseline-fill')}
+                                    ${generateProgressBar('Term 1', perf.term1?.revenue || 0, getMaxValue(perf, 'revenue'), 'term1-fill')}
+                                    ${generateProgressBar('Term 2', perf.term2?.revenue || 0, getMaxValue(perf, 'revenue'), 'term2-fill')}
+                                    ${generateProgressBar('Term 3', perf.term3?.revenue || 0, getMaxValue(perf, 'revenue'), 'term3-fill')}
+                                </div>
+                            </div>
+
+                            <!-- Transaction Comparison -->
+                            <div class="progress-comparison">
+                                <div class="comparison-header">
+                                    <div class="comparison-title">🛒 Transaction Performance</div>
+                                    <div class="comparison-total">
+                                        Total: ${formatNumber((perf.term1?.trano || 0) + (perf.term2?.trano || 0) + (perf.term3?.trano || 0))}
+                                    </div>
+                                </div>
+                                <div class="progress-bars">
+                                    ${generateProgressBar('Baseline', perf.baseline?.trano || 0, getMaxValue(perf, 'trano'), 'baseline-fill', 'number')}
+                                    ${generateProgressBar('Term 1', perf.term1?.trano || 0, getMaxValue(perf, 'trano'), 'term1-fill', 'number')}
+                                    ${generateProgressBar('Term 2', perf.term2?.trano || 0, getMaxValue(perf, 'trano'), 'term2-fill', 'number')}
+                                    ${generateProgressBar('Term 3', perf.term3?.trano || 0, getMaxValue(perf, 'trano'), 'term3-fill', 'number')}
+                                </div>
+                            </div>
+
+                            <!-- Performance Insights -->
+                            <div class="performance-insights">
+                                <div class="insights-title">📈 Key Insights</div>
+                                ${generateInsights(outlet)}
+                            </div>
+                        ` : `
+                            <div style="text-align: center; padding: 20px; color: #718096;">
+                                <p>📊 No performance data available</p>
+                                <p style="font-size: 0.8rem; margin-top: 5px;">Add baseline and term data to see progress</p>
+                            </div>
+                        `}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Generate progress bar HTML
+        function generateProgressBar(label, value, maxValue, fillClass, type = 'currency') {
+            const percentage = maxValue > 0 ? Math.min((value / maxValue) * 100, 100) : 0;
+            const displayValue = type === 'currency' ? formatCurrency(value) : formatNumber(value);
+            
+            return `
+                <div class="progress-bar-item">
+                    <div class="progress-label">${label}</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill ${fillClass}" style="width: ${percentage}%">
+                            ${percentage > 20 ? `<div class="progress-value">${percentage.toFixed(0)}%</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="progress-amount">${displayValue}</div>
+                </div>
+            `;
+        }
+
+        // Get maximum value for scaling progress bars
+        function getMaxValue(perf, type) {
+            const values = [
+                perf.baseline?.[type] || 0,
+                perf.term1?.[type] || 0,
+                perf.term2?.[type] || 0,
+                perf.term3?.[type] || 0
+            ];
+            return Math.max(...values) || 1; // Avoid division by zero
+        }
+
+        // Generate insights for an outlet
+        function generateInsights(outlet) {
+            const perf = outlet.performanceData || {};
+            const insights = [];
+            
+            // Revenue insights
+            const baselineRevenue = perf.baseline?.revenue || 0;
+            const currentRevenue = (perf.term1?.revenue || 0) + (perf.term2?.revenue || 0) + (perf.term3?.revenue || 0);
+            
+            if (baselineRevenue > 0) {
+                const revenueGrowth = ((currentRevenue - baselineRevenue) / baselineRevenue) * 100;
+                if (revenueGrowth > 10) {
+                    insights.push(`💚 Revenue increased by ${revenueGrowth.toFixed(1)}% vs baseline`);
+                } else if (revenueGrowth < -10) {
+                    insights.push(`🔻 Revenue decreased by ${Math.abs(revenueGrowth).toFixed(1)}% vs baseline`);
+                } else {
+                    insights.push(`📊 Revenue stable (${revenueGrowth > 0 ? '+' : ''}${revenueGrowth.toFixed(1)}% vs baseline)`);
+                }
+            }
+
+            // Transaction insights
+            const baselineTrano = perf.baseline?.trano || 0;
+            const currentTrano = (perf.term1?.trano || 0) + (perf.term2?.trano || 0) + (perf.term3?.trano || 0);
+            
+            if (baselineTrano > 0) {
+                const tranoGrowth = ((currentTrano - baselineTrano) / baselineTrano) * 100;
+                if (tranoGrowth > 10) {
+                    insights.push(`🛒 Transactions up ${tranoGrowth.toFixed(1)}%`);
+                } else if (tranoGrowth < -10) {
+                    insights.push(`📉 Transactions down ${Math.abs(tranoGrowth).toFixed(1)}%`);
+                }
+            }
+
+            // Best performing term
+            const termRevenues = [perf.term1?.revenue || 0, perf.term2?.revenue || 0, perf.term3?.revenue || 0];
+            const bestTermIndex = termRevenues.indexOf(Math.max(...termRevenues));
+            if (termRevenues[bestTermIndex] > 0) {
+                insights.push(`🏆 Best term: Term ${bestTermIndex + 1}`);
+            }
+
+            return insights.length > 0 
+                ? insights.map(insight => `<div class="insight-item">${insight}</div>`).join('')
+                : '<div class="insight-item">📊 No insights available yet</div>';
+        }
+
+        // Utility functions
+        function calculatePercentageChange(baseline, current) {
+            if (baseline === 0) {
+                return current > 0 ? 100 : 0;
+            }
+            return ((current - baseline) / baseline) * 100;
+        }
+
+        function updateChangeElement(elementId, change) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                const sign = change >= 0 ? '+' : '';
+                element.textContent = `${sign}${change.toFixed(1)}%`;
+                element.className = `metric-change ${change >= 0 ? 'positive' : 'negative'}`;
+            }
+        }
+
+        function formatCurrency(amount) {
+            if (amount === 0) return 'Rp 0';
+            if (amount >= 1000000000) {
+                return `Rp ${(amount / 1000000000).toFixed(1)}B`;
+            } else if (amount >= 1000000) {
+                return `Rp ${(amount / 1000000).toFixed(1)}M`;
+            } else if (amount >= 1000) {
+                return `Rp ${(amount / 1000).toFixed(0)}K`;
+            }
+            return `Rp ${amount.toLocaleString()}`;
+        }
+
+        function formatNumber(num) {
+            if (num === 0) return '0';
+            if (num >= 1000000) {
+                return `${(num / 1000000).toFixed(1)}M`;
+            } else if (num >= 1000) {
+                return `${(num / 1000).toFixed(0)}K`;
+            }
+            return num.toLocaleString();
+        }
+
+        // Action button functions
+        function refreshProgressData() {
+            console.log('🔄 Refreshing progress data...');
+            loadPhoenixData();
+        }
+
+        function exportProgressReport() {
+            console.log('📊 Exporting progress report...');
+            // Generate CSV or PDF report
+            alert('Export functionality will be implemented');
+        }
+
+        function viewDetailedAnalysis() {
+            console.log('📈 Opening detailed analysis...');
+            // Navigate to detailed analysis page
+            alert('Detailed analysis will be implemented');
+        }
+
+        function logout() {
+            // Implement logout functionality
+            window.location.href = 'login.html';
+        }
+
+    </script>
+</body>
+</html>
