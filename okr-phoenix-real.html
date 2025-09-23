@@ -698,6 +698,129 @@
                 opacity: 1;
             }
         }
+
+        /* Tab Navigation Styles */
+        .tab-navigation {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 0;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .tab-buttons {
+            display: flex;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 20px;
+            border: none;
+            background: transparent;
+            color: #4a5568;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #2d3748;
+        }
+
+        .tab-button.active {
+            background: rgba(255, 255, 255, 1);
+            color: #667eea;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Progress Summary Styles */
+        .progress-summary-content {
+            padding: 25px;
+        }
+
+        .progress-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .progress-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .metric-progress {
+            margin-bottom: 20px;
+        }
+
+        .metric-label {
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.8s ease;
+        }
+
+        .progress-fill.green {
+            background: linear-gradient(90deg, #48bb78, #38a169);
+        }
+
+        .progress-fill.orange {
+            background: linear-gradient(90deg, #ed8936, #dd6b20);
+        }
+
+        .progress-fill.red {
+            background: linear-gradient(90deg, #f56565, #e53e3e);
+        }
+
+        .metric-values {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #718096;
+            margin-top: 8px;
+        }
         
     </style>
     
@@ -783,7 +906,20 @@
                 </div>
             </div>
 
-            <div class="dashboard-content">
+            <!-- Tab Navigation -->
+            <div class="tab-navigation">
+                <div class="tab-buttons">
+                    <button class="tab-button active" onclick="switchTab('main-dashboard')">
+                        🏪 Main Dashboard
+                    </button>
+                    <button class="tab-button" onclick="switchTab('progress-summary')">
+                        📊 Progress Summary
+                    </button>
+                </div>
+
+                <!-- Main Dashboard Tab -->
+                <div id="main-dashboard" class="tab-content active">
+                    <div class="dashboard-content">
                 <div class="section-header">
                     <h2 class="section-title">
                         🏪 Phoenix Project Outlets
@@ -1182,6 +1318,36 @@
                 </div>
             </div>
         </div>
+                </div>
+                </div>
+
+                <!-- Progress Summary Tab -->
+                <div id="progress-summary" class="tab-content">
+                    <div class="progress-summary-content">
+                        <h2 class="section-title">
+                            📊 OKR Progress Summary - Baseline vs Terms Performance
+                        </h2>
+                        
+                        <!-- Total Summary Overview -->
+                        <div class="progress-overview">
+                            <div class="progress-card">
+                                <h3 style="color: #4a5568; margin-bottom: 20px;">📈 Total Performance Overview</h3>
+                                <div id="total-progress-metrics" class="progress-metrics">
+                                    <!-- Total metrics will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Individual Outlet Progress -->
+                        <div class="progress-card">
+                            <h3 style="color: #4a5568; margin-bottom: 20px;">🏪 Individual Outlet Progress</h3>
+                            <div id="outlet-progress-list">
+                                <!-- Individual outlet progress will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
     </div>
 
     <!-- Include required scripts -->
@@ -4723,6 +4889,255 @@ ${localBackup ? '✅ Local Backup: Available' : '⚠️ Local Backup: Not found'
             } catch (error) {
                 console.error('❌ Error sharing data:', error);
                 showNotification('❌ Failed to show sharing info', 'error');
+            }
+        }
+
+        // Get progress bar color class based on percentage
+        function getProgressColorClass(percentage) {
+            if (percentage >= 110) return 'green';
+            if (percentage >= 100) return 'orange';
+            return 'red';
+        }
+
+        // Tab switching functionality
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+
+            // Load progress summary data when that tab is selected
+            if (tabName === 'progress-summary') {
+                loadProgressSummaryData();
+            }
+        }
+
+        // Progress summary functionality
+        function loadProgressSummaryData() {
+            try {
+                console.log('🔍 Loading progress summary data...');
+                console.log('phoenixData:', phoenixData);
+                console.log('phoenixOutlets array:', phoenixOutlets);
+                console.log('allOutlets:', allOutlets);
+                
+                // Check if phoenixData exists and has outlets
+                if (!phoenixData || !phoenixData.outlets || Object.keys(phoenixData.outlets).length === 0) {
+                    const debugInfo = `
+                        <div style="background: #f7fafc; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                            <strong>Debug Info:</strong><br>
+                            • phoenixData exists: ${!!phoenixData}<br>
+                            • phoenixData.outlets exists: ${!!(phoenixData && phoenixData.outlets)}<br>
+                            • phoenixData.outlets count: ${phoenixData && phoenixData.outlets ? Object.keys(phoenixData.outlets).length : 0}<br>
+                            • phoenixOutlets array length: ${phoenixOutlets ? phoenixOutlets.length : 0}<br>
+                            • allOutlets length: ${allOutlets ? allOutlets.length : 0}
+                        </div>
+                        <p style="color: #718096; font-style: italic;">No Phoenix outlets data available. Please ensure outlets are loaded in the main dashboard.</p>
+                    `;
+                    document.getElementById('total-progress-metrics').innerHTML = debugInfo;
+                    document.getElementById('outlet-progress-list').innerHTML = '<p style="color: #718096; font-style: italic;">No outlet data available</p>';
+                    return;
+                }
+
+                // Calculate total metrics
+                let totalBaseline = { revenue: 0, trano: 0 };
+                let totalTerm1 = { revenue: 0, trano: 0 };
+                let totalTerm2 = { revenue: 0, trano: 0 };
+                let totalTerm3 = { revenue: 0, trano: 0 };
+
+                const outletsWithProgress = [];
+
+                // Iterate through phoenixData.outlets instead of phoenixOutlets array
+                Object.keys(phoenixData.outlets).forEach(outletCode => {
+                    const outlet = phoenixData.outlets[outletCode];
+                    if (outlet && outlet.performanceData) {
+                        const baseline = outlet.performanceData.baseline || { revenue: 0, trano: 0 };
+                        const term1 = outlet.performanceData.term1 || { revenue: 0, trano: 0 };
+                        const term2 = outlet.performanceData.term2 || { revenue: 0, trano: 0 };
+                        const term3 = outlet.performanceData.term3 || { revenue: 0, trano: 0 };
+
+                        totalBaseline.revenue += parseFloat(baseline.revenue) || 0;
+                        totalBaseline.trano += parseFloat(baseline.trano) || 0;
+                        totalTerm1.revenue += parseFloat(term1.revenue) || 0;
+                        totalTerm1.trano += parseFloat(term1.trano) || 0;
+                        totalTerm2.revenue += parseFloat(term2.revenue) || 0;
+                        totalTerm2.trano += parseFloat(term2.trano) || 0;
+                        totalTerm3.revenue += parseFloat(term3.revenue) || 0;
+                        totalTerm3.trano += parseFloat(term3.trano) || 0;
+
+                        // Find outlet name from allOutlets or use code as fallback
+                        const outletInfo = allOutlets.find(o => o.code === outletCode) || { name: outletCode, code: outletCode };
+                        
+                        outletsWithProgress.push({
+                            outlet: outletInfo,
+                            baseline,
+                            term1,
+                            term2,
+                            term3
+                        });
+                    }
+                });
+
+                // Calculate forecasted totals based on available term data
+                let totalForecastRevenue = 0;
+                let totalForecastTrano = 0;
+                let forecastLabel = '';
+
+                if (totalTerm3.revenue > 0 || totalTerm3.trano > 0) {
+                    // Full month data available (Term 1 + Term 2 + Term 3)
+                    totalForecastRevenue = totalTerm1.revenue + totalTerm2.revenue + totalTerm3.revenue;
+                    totalForecastTrano = totalTerm1.trano + totalTerm2.trano + totalTerm3.trano;
+                    forecastLabel = 'Actual Full Month';
+                } else if (totalTerm2.revenue > 0 || totalTerm2.trano > 0) {
+                    // 20-day data available, forecast to full month (Term 1 + Term 2) × 1.5
+                    totalForecastRevenue = (totalTerm1.revenue + totalTerm2.revenue) * 1.5;
+                    totalForecastTrano = (totalTerm1.trano + totalTerm2.trano) * 1.5;
+                    forecastLabel = 'Forecasted from 20 days';
+                } else if (totalTerm1.revenue > 0 || totalTerm1.trano > 0) {
+                    // 10-day data available, forecast to full month (Term 1 × 3)
+                    totalForecastRevenue = totalTerm1.revenue * 3;
+                    totalForecastTrano = totalTerm1.trano * 3;
+                    forecastLabel = 'Forecasted from 10 days';
+                } else {
+                    // No data available
+                    totalForecastRevenue = 0;
+                    totalForecastTrano = 0;
+                    forecastLabel = 'No data available';
+                }
+
+                // Calculate progress percentages
+                const revenueProgressPct = totalBaseline.revenue > 0 ? ((totalForecastRevenue / totalBaseline.revenue) * 100) : 0;
+                const tranoProgressPct = totalBaseline.trano > 0 ? ((totalForecastTrano / totalBaseline.trano) * 100) : 0;
+
+                // Display total metrics with forecasted values and color coding
+                const totalMetricsHtml = `
+                    <div class="metric-progress">
+                        <div class="metric-label">
+                            <span>💰 Total Revenue Progress (${forecastLabel})</span>
+                            <span>Rp ${Math.round(totalForecastRevenue).toLocaleString()}</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${getProgressColorClass(revenueProgressPct)}" style="width: ${Math.min(revenueProgressPct, 100)}%"></div>
+                        </div>
+                        <div class="metric-values">
+                            <span>Baseline: Rp ${totalBaseline.revenue.toLocaleString()}</span>
+                            <span style="color: ${revenueProgressPct >= 110 ? '#38a169' : revenueProgressPct >= 100 ? '#dd6b20' : '#e53e3e'}; font-weight: 600;">Progress: ${revenueProgressPct.toFixed(1)}%</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: #718096; margin-top: 5px;">
+                            Actual - Term 1: Rp ${totalTerm1.revenue.toLocaleString()} | Term 2: Rp ${totalTerm2.revenue.toLocaleString()} | Term 3: Rp ${totalTerm3.revenue.toLocaleString()}
+                        </div>
+                    </div>
+                    <div class="metric-progress">
+                        <div class="metric-label">
+                            <span>📊 Total Transactions Progress (${forecastLabel})</span>
+                            <span>${Math.round(totalForecastTrano).toLocaleString()}</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${getProgressColorClass(tranoProgressPct)}" style="width: ${Math.min(tranoProgressPct, 100)}%"></div>
+                        </div>
+                        <div class="metric-values">
+                            <span>Baseline: ${totalBaseline.trano.toLocaleString()}</span>
+                            <span style="color: ${tranoProgressPct >= 110 ? '#38a169' : tranoProgressPct >= 100 ? '#dd6b20' : '#e53e3e'}; font-weight: 600;">Progress: ${tranoProgressPct.toFixed(1)}%</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: #718096; margin-top: 5px;">
+                            Actual - Term 1: ${totalTerm1.trano.toLocaleString()} | Term 2: ${totalTerm2.trano.toLocaleString()} | Term 3: ${totalTerm3.trano.toLocaleString()}
+                        </div>
+                    </div>
+                `;
+                document.getElementById('total-progress-metrics').innerHTML = totalMetricsHtml;
+
+                // Display individual outlet progress
+                const outletProgressHtml = outletsWithProgress.map(item => {
+                    // Calculate forecasted performance based on available term data
+                    let forecastRevenue = 0;
+                    let forecastTrano = 0;
+                    let outletForecastLabel = '';
+
+                    if (item.term3.revenue > 0 || item.term3.trano > 0) {
+                        // Full month data available (Term 1 + Term 2 + Term 3)
+                        forecastRevenue = item.term1.revenue + item.term2.revenue + item.term3.revenue;
+                        forecastTrano = item.term1.trano + item.term2.trano + item.term3.trano;
+                        outletForecastLabel = 'Actual Full Month';
+                    } else if (item.term2.revenue > 0 || item.term2.trano > 0) {
+                        // 20-day data available, forecast to full month (Term 1 + Term 2) × 1.5
+                        forecastRevenue = (item.term1.revenue + item.term2.revenue) * 1.5;
+                        forecastTrano = (item.term1.trano + item.term2.trano) * 1.5;
+                        outletForecastLabel = 'Forecasted (20d→30d)';
+                    } else if (item.term1.revenue > 0 || item.term1.trano > 0) {
+                        // 10-day data available, forecast to full month (Term 1 × 3)
+                        forecastRevenue = item.term1.revenue * 3;
+                        forecastTrano = item.term1.trano * 3;
+                        outletForecastLabel = 'Forecasted (10d→30d)';
+                    } else {
+                        // No data available
+                        forecastRevenue = 0;
+                        forecastTrano = 0;
+                        outletForecastLabel = 'No Data';
+                    }
+                    
+                    const revenueProgress = item.baseline.revenue > 0 ? ((forecastRevenue / item.baseline.revenue) * 100) : 0;
+                    const tranoProgress = item.baseline.trano > 0 ? ((forecastTrano / item.baseline.trano) * 100) : 0;
+                    
+                    return `
+                        <div class="progress-card" style="margin-bottom: 20px;">
+                            <h4 style="color: #4a5568; margin-bottom: 15px;">
+                                ${item.outlet.name} (${item.outlet.code})
+                                <span style="font-size: 0.75rem; color: #9ca3af; font-weight: normal;"> - ${outletForecastLabel}</span>
+                            </h4>
+                            <div class="progress-metrics">
+                                <div class="metric-progress">
+                                    <div class="metric-label">
+                                        <span>💰 Revenue (Forecasted)</span>
+                                        <span>Rp ${Math.round(forecastRevenue).toLocaleString()}</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill ${getProgressColorClass(revenueProgress)}" style="width: ${Math.min(revenueProgress, 100)}%"></div>
+                                    </div>
+                                    <div class="metric-values">
+                                        <span>Baseline: Rp ${item.baseline.revenue.toLocaleString()}</span>
+                                        <span style="color: ${revenueProgress >= 110 ? '#38a169' : revenueProgress >= 100 ? '#dd6b20' : '#e53e3e'}; font-weight: 600;">${revenueProgress.toFixed(1)}%</span>
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: #718096; margin-top: 3px;">
+                                        Actual - T1: Rp ${item.term1.revenue.toLocaleString()} | T2: Rp ${item.term2.revenue.toLocaleString()} | T3: Rp ${item.term3.revenue.toLocaleString()}
+                                    </div>
+                                </div>
+                                <div class="metric-progress">
+                                    <div class="metric-label">
+                                        <span>📊 Transactions (Forecasted)</span>
+                                        <span>${Math.round(forecastTrano).toLocaleString()}</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill ${getProgressColorClass(tranoProgress)}" style="width: ${Math.min(tranoProgress, 100)}%"></div>
+                                    </div>
+                                    <div class="metric-values">
+                                        <span>Baseline: ${item.baseline.trano.toLocaleString()}</span>
+                                        <span style="color: ${tranoProgress >= 110 ? '#38a169' : tranoProgress >= 100 ? '#dd6b20' : '#e53e3e'}; font-weight: 600;">${tranoProgress.toFixed(1)}%</span>
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: #718096; margin-top: 3px;">
+                                        Actual - T1: ${item.term1.trano.toLocaleString()} | T2: ${item.term2.trano.toLocaleString()} | T3: ${item.term3.trano.toLocaleString()}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                document.getElementById('outlet-progress-list').innerHTML = outletProgressHtml || '<p style="color: #718096; font-style: italic;">No outlet progress data available</p>';
+
+            } catch (error) {
+                console.error('❌ Error loading progress summary:', error);
+                document.getElementById('total-progress-metrics').innerHTML = '<p style="color: #e53e3e;">Error loading progress data</p>';
+                document.getElementById('outlet-progress-list').innerHTML = '<p style="color: #e53e3e;">Error loading outlet progress data</p>';
             }
         }
 
